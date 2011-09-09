@@ -148,13 +148,16 @@ function mk_ast($code)
 		$tags_open = 1;
 		$off = 0;
 		$last_tag_start = 0;
-		while(preg_match("/\\<((?:\\s*)|(?:\\s*\\/\\s*))ste:([a-zA-Z0-9_]*)(?:\\s+(?:[a-zA-Z0-9_]+)=(?:(?:\"(?:.*?)(?<!\\\\)\")|(?:'(?:.*?)(?<!\\\\)')))*\\s*(?<!\\/)\\>/s", $code, $matches, PREG_OFFSET_CAPTURE, $off) > 0) /* RegEx from hell! Matches all non-selfclosing <ste:> Tags. Opening and closing ones. */
+		while(preg_match("/\\<((?:\\s*)|(?:\\s*\\/\\s*))ste:([a-zA-Z0-9_]*)(?:\\s+(?:[a-zA-Z0-9_]+)=(?:(?:\"(?:.*?)(?<!\\\\)\")|(?:'(?:.*?)(?<!\\\\)')))*((?:\\s*)|(?:\\s*\\/\\s*))\\>/s", $code, $matches, PREG_OFFSET_CAPTURE, $off) > 0) /* RegEx from hell! Matches all  <ste:> Tags. Opening, closing and self-closing ones. */
 		{
-			$closingtag = trim($matches[1][0]);
-			if($closingtag[0] == "/")
-				$tags_open--;
-			else
-				$tags_open++;
+			if(trim($matches[3][0]) != "/")
+			{
+				$closingtag = trim($matches[1][0]);
+				if($closingtag[0] == "/")
+					$tags_open--;
+				else
+					$tags_open++;
+			}
 			$last_tag_start = $matches[0][1];
 			$off = $last_tag_start + strlen($matches[0][0]);
 			if($tags_open == 0)
@@ -162,9 +165,15 @@ function mk_ast($code)
 		}
 		
 		if(($tags_open != 0) or ($tag->name != $matches[2][0]))
-			throw new Exception("Missing closing \"ste:" + $tag->name + "\"-Tag. Stop.");
+			throw new Exception("Missing closing \"ste:" . $tag->name . "\"-Tag. Stop.");
 		
-		$tag->sub = mk_ast(substr($code, 0, $last_tag_start));
+		if($tag->name == "rawtext")
+		{
+			$tag = new TextNode();
+			$tag->text = substr($code, 0, $last_tag_start);
+		}
+		else
+			$tag->sub = mk_ast(substr($code, 0, $last_tag_start));
 		$code = substr($code, $off);
 	}
 	
@@ -189,6 +198,186 @@ function parse($code)
 	
 	/* Create abstract syntax tree */
 	return mk_ast($code);
+}
+
+define("MODE_SOURCE", 0);
+define("MODE_AST", 1);
+define("MODE_TRANSCOMPILED", 2);
+
+/*interface StorageAccess
+{
+	abstract public function get_load_options();
+	abstract public function get_save_options();
+	
+	abstract public function load($tpl);
+	abstract public function save($tpl, $data, $mode);
+}
+
+class FilesystemStorageAccess implements StorageAccess
+{
+	protected $sourcedir;
+	protected $astdir;
+	protected $transcompileddir;
+	
+	protected $load_options;
+	protected $save_options;
+	
+	public function __construct($src, $ast, $transc)
+	{
+		$this->sourcedir        = $src;
+		$this->astdir           = $ast;
+		$this->transcompileddir = $transc;
+		
+		if(!empty($this->sourcedir))
+		{
+			if(is_readable($this->sourcedir))
+				$this->load_options[] = MODE_SOURCE;
+			if(is_writeableable($this->sourcedir))
+				$this->save_options[] = MODE_SOURCE;
+		}
+		
+		if(!empty($this->astdir))
+		{
+			if(is_readable($this->astdir))
+				$this->load_options[] = MODE_AST;
+			if(is_writeableable($this->astdir))
+				$this->save_options[] = MODE_AST;
+		}
+		
+		if(!empty($this->transcompileddir))
+		{
+			if(is_readable($this->transcompileddir))
+				$this->load_options[] = MODE_TRANSCOMPILED;
+			if(is_writeableable($this->transcompileddir))
+				$this->save_options[] = MODE_TRANSCOMPILED;
+		}
+		
+		if(empty($this->save_options) and empty($this->load_options))
+			throw new Exception("No dir read-/writeable!");
+	}
+	
+	public function get_load_options() { return $this->load_options; }
+	public function get_save_options() { return $this->save_options; }
+	
+	public function load($tpl)
+	{
+		if(@stat($this->sourcedir)
+	}
+}*/
+
+function indent_code($code)
+{
+	return implode(
+		"\n",
+		array_map(
+			function($line) { return "\t$line"; },
+			explode("\n", $code)
+		)
+	);
+}
+
+/* We could also just eval() the $infix_math code, but this is much cooler :-D (Parser inception) */
+function shunting_yard($infix_math)
+{
+	$operators = array(
+		"+" => array()
+	);
+}
+
+$ste_builtins = array(
+	"if" => function($ast)
+	{
+		$output = "";
+		$condition = array();
+		$then = array();
+		$else = array();
+		
+		foreach($ast->sub as $node)
+		{
+			if(($node instanceof TagNode) and ($node->name == "then"))
+				$then = $node->sub;
+			else if(($node instanceof TagNode) and ($node->name == "else"))
+				$else = $node->sub;
+			else
+				$condition[] = $node;
+		}
+		
+		if(empty($then))
+			throw new Exception("Transcompile error: Missing <ste:else> in <ste:if>. Stop.");
+		
+		$output .= transcompile($condition);
+		$output .= "\$outputstack_i--;\nif(\$ste->bool(array_pop(\$outputstack)))\n{\n";
+		$output .= indent_code(transcompile($then));
+		$output .= "}\n";
+		if(!empty($else))
+		{
+			$output .= "else\n{\n";
+			$output .= indent_code(transcompile($else));
+			$output .= "}\n";
+		}
+		return $output;
+	},
+	"cmp" => function($ast)
+	{
+		
+	},
+	"not" => function($ast)
+	{
+		
+	},
+	"even" => function($ast)
+	{
+		
+	},
+	"for" => function($ast)
+	{
+		if(empty($ast->params["start"]))
+			throw new Exception("Transcompile error: Missing 'start' parameter in <ste:for>. Stop.");
+		if(empty($ast->params["end"]))
+			throw new Exception("Transcompile error: Missing 'end' parameter in <ste:for>. Stop.");
+		
+	},
+	"foreach" => function($ast)
+	{
+	
+	},
+	"infloop" => function($ast)
+	{
+	
+	},
+	"break" => function($ast)
+	{
+		return "break;\n";
+	}
+	"continue" => function($ast)
+	{
+		return "continue\n";
+	}
+	"block" => function($ast)
+	{
+	
+	},
+	"load" => function($ast)
+	{
+	
+	},
+	"mktag" => function($ast)
+	{
+	
+	},
+	"set" => function($ast)
+	{
+	
+	},
+	"calc" => function($ast)
+	{
+	
+	}
+);
+
+function transcompile($ast)
+{
+	
 }
 
 ?>
