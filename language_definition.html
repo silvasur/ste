@@ -1,0 +1,490 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en">
+<head>
+	<title>Language definition - Stupid Template Engine</title>
+	<style type="text/css" media="screen">
+		code, code pre {
+			font-family: monospace;
+			background: #eee;
+		}
+		* {
+			font-family: sans-serif;
+		}
+		table {
+			border-collapse: collapse;
+		}
+		table td, table th {
+			border: thin solid #ccc;
+			padding: 1mm;
+			margin: 0mm;
+		}
+		table th {
+			font-weight: bold;
+			background: #eee;
+		}
+	</style>
+	
+</head>
+<body>
+	<h1>The <acronym>STE</acronym> Template/Programming Language</h1>
+	<p>This is the documentation of the Template/Programming Language of the <strong>S</strong>tupid <strong>T</strong>emplate <strong>E</strong>ngine, or <acronym>STE T/PL</acronym></p>
+	
+	<h2 id="toc">TOC</h2>
+		<ol>
+			<li>
+				<a href="#basic_elems">Basic elements</a>
+				<ol>
+					<li><a href="#basic_elems_text">Text</a></li>
+					<li><a href="#basic_elems_variable">Variable</a></li>
+					<li><a href="#basic_elems_tag">Tag</a></li>
+					<li>
+						<a href="#basic_elems_tag">Pseudotag</a>
+						<ol>
+							<li><a href="#basic_elems_pseudotag_comment">ste:comment</a></li>
+							<li><a href="#basic_elems_pseudotag_rawtext">ste:rawtext</a></li>
+						</ol>
+					</li>
+				</ol>
+			</li>
+			<li><a href="#escaping">Escaping special chars</a></li>
+			<li>
+				<a href="#builtin">Builtin tags</a>
+				<ol>
+					<li><a href="#builtin_if">ste:if</a></li>
+					<li><a href="#builtin_cmp">ste:cmp</a></li>
+					<li><a href="#builtin_not">ste:not</a></li>
+					<li><a href="#builtin_even">ste:even</a></li>
+					<li><a href="#builtin_for">ste:for</a></li>
+					<li><a href="#builtin_foreach">ste:foreach</a></li>
+					<li><a href="#builtin_infloop">ste:infloop</a></li>
+					<li><a href="#builtin_break">ste:break</a></li>
+					<li><a href="#builtin_continue">ste:continue</a></li>
+					<li><a href="#builtin_load">ste:load</a></li>
+					<li><a href="#builtin_block">ste:block</a></li>
+					<li><a href="#builtin_set">ste:set</a></li>
+					<li><a href="#builtin_calc">ste:calc</a></li>
+					<li><a href="#builtin_mktag">ste:mktag</a></li>
+				</ol>
+			</li>
+		</ol>
+	
+	<h2 id="basic_elems">Basic Elements</h2>
+		<p>The <acronym>STE T/PL</acronym> consists of four basic elements:</p>
+	
+		<h3 id="basic_elems_text">Text</h3>
+			<p>Everything that is not a <a href="#basic_elems_variable">Variable</a>, a <a href="#basic_elems_tag">Tag</a> or a <a href="#basic_elems_pseudotag">Pseudotag</a> is Text.</p>
+			<p>Also everything that is wrapped in the <a href="#basic_elems_pseudotag_rawtext">ste:rawtext</a> <a href="#basic_elems_pseudotag">pseudotag</a> will be Text, whereby all <a href="#basic_elems_tag">Tags</a> and <a href="#basic_elems_variable">Variables</a> will not be parsed.</p>
+			<h4>Example:</h4>
+			<p>
+			<code><pre><![CDATA[<ste:rawtext>Foo <ste:bar>$baz[herpdederp]</ste:baz></ste:rawtext>]]></pre></code>
+			Will result in one text-element, but
+			<code><pre><![CDATA[Foo <ste:bar>$baz[herpdederp]</ste:baz>]]></pre></code>
+			will result in one text-element and one tag-element containing one variable-element.
+			</p>
+	
+		<h3 id="basic_elems_variable">Variable</h3>
+			<p>Variables start with a <code>$</code> or can be wrapped within <code>${</code> and <code>}</code>, so vou can write this: <code>${foo}ish</code></p>
+			<p>Variable have names, these names can consist of letters (english alphabet; upper and lower case), numbers and underscores (<code>_</code>). As a regex: <code>[a-zA-Z0-9_]+</code></p>
+			<p>A variable can also be an array. To access an array, wrap the desired fieldname within <code>[</code> and <code>]</code>. A fieldname can be constructed of <a href="#basic_elems_text">Text</a> and othe Variables. So you can dynamically access fields: <code>$foo[$bar]</code>. These fieldnames can also be nested or concatenated: <code>$foo[$bar[baz]][herp][$de[derp]]</code></p>
+			<p>If you want a literal <code>$</code> char, you can escape it: <code>\$</code></p>
+			<p>Variables in <acronym>STE T/PL</acronym> are typeless, everything ist text. In a boolean context, empty text usually represents false, else true.</p>
+	
+		<h3 id="basic_elems_tag">Tag</h3>
+			<p>A Tag can be compared to a function. A Tag can have parameters and children <a href="#basic_elems">elements</a>.</p>
+			<p>
+				A Tag looks like a XML-Tag with the ste-Namespace.
+				Just like their XML counterparts, they can wrap other elements (<code><![CDATA[<ste:foo>bar<ste:baz>herpdederp</ste:baz></ste:foo>]]></code>) or can be self-closing (<code><![CDATA[<ste:foo />]]></code>).
+				And they can have additional parameters (or "attributes", using the XML terminology): <code><![CDATA[<ste:foo bar="baz" />]]></code>
+			</p>
+			<p>A Tag is wrapped in <code>&lt;</code> and <code>&gt;</code>. The tag's name always start with <code>ste:</code> and can then consist of letters, numbers and underscores (Regex: <code>[a-zA-Z0-9_]+</code>).<p>
+			<p>If the tag is self-closing, the last char is a <code>/</code> (e.g.: <code><![CDATA[<ste:foo />]]></code>).</p>
+			<p>If the tag is a closing one, the first char is a <code>/</code>. An opening Tag does not have a <code>/</code>.An example of an opening-closing Tag pair wrapping the text <code>bar</code>: <code><![CDATA[<ste:foo>bar</ste:foo>]]></code></p>
+			<p>
+				Parameters of a tag consists of a name and the corresponding value (wrapped in <code>"</code> or <code>'</code>) seperated by an <code>=</code> .<br />
+				Parameters are seperated by any whitespace (space, tab or newline) char.<br />
+				Parameter values can consist of <a href="#basic_elems_text">Text</a> and <a href="#basic_elems_variable">Variable</a> elements <em>but not of Tags</em>!<br />
+				If you need a literal <code>"</code> or <code>'</code> in a parameter value, you can escape them: <code>\"</code> or <code>\'</code> .<br />
+				When using variables in paramter values, they will be "replaced" by their value. Because many tags need the variable and not its content, they expect only the variable's name. If you then write <code>foo="$bar"</code>, the tag will not operate on the <code>bar</code> variable but on the Variable with the name stored in <code>$bar</code>! So read the instructions to the tag carefully!
+			</p>
+			<p>Example: <code><![CDATA[<ste:foo bar="baz" herp="literal quote sign: \"">de <ste:derp hehe="hoho$wtf[xd]" /></ste:foo>]]></code></p>
+	
+		<h3 id="basic_elems_pseudotag">Pseudotag</h3>
+			<p>Pseudotags look like normal tags, but they perform special tasks. There are currently two pseudotags:</p>
+			<h4 id="basic_elems_pseudotag_comment">ste:comment</h4>
+			<p>With the ste:comment pseudotag you can comment your template/code. Everything between <code>&lt;ste:comment&gt;</code> and <code>&lt;/ste:comment&gt;</code> will be ignored, before the real tokenization of the code starts.</p>
+			<h4 id="basic_elems_pseudotag_rawtext">ste:rawtext</h4>
+			<p>The ste:rawtext pseudotag will output a <a href="#basic_elems_text">Text</a> element with its wrapped content. It will prevent parsing of the content. Useful if you are embedding another script language, which uses the <code>$</code> char or also has a XML-Like syntax. No <a href="#escaping">escape sequences</a> will be translated! Can not be used in <a href="#basic_elems_tag">Tag</a> parameter values!</p>
+	
+	<h2 id="escaping">Escaping special chars</h2>
+		<p>To get a literal <code>$</code>, <code>"</code> or other special chars, <acronym>STE T/PL</acronym> gives you the following escape sequences:</p>
+		<table>
+		<thead>
+			<tr>
+				<th>Escape Sequence</th>
+				<th>Result</th>
+				<th>Can be used in</th>
+				<th>Notes</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>\$</td>
+				<td>$</td>
+				<td><a href="#basic_elems_text">Text elements</a></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>\"</td>
+				<td>"</td>
+				<td><a href="#basic_elems_tag">Tag</a> parameter values</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>\'</td>
+				<td>'</td>
+				<td><a href="#basic_elems_tag">Tag</a> parameter values</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td>\?</td>
+				<td>?</td>
+				<td><a href="#basic_elems_text">Text elements</a></td>
+				<td>More info: <a href="#builtin_if_short">short if-clause</a></td>
+			</tr>
+			<tr>
+				<td>\{</td>
+				<td>{</td>
+				<td><a href="#basic_elems_text">Text elements</a></td>
+				<td>More info: <a href="#builtin_if_short">short if-clause</a></td>
+			</tr>
+			<tr>
+				<td>\}</td>
+				<td>}</td>
+				<td><a href="#basic_elems_text">Text elements</a></td>
+				<td>More info: <a href="#builtin_if_short">short if-clause</a></td>
+			</tr>
+			<tr>
+				<td>\|</td>
+				<td>|</td>
+				<td><a href="#basic_elems_text">Text elements</a></td>
+				<td>More info: <a href="#builtin_if_short">short if-clause</a></td>
+			</tr>
+			<tr>
+				<td>\\</td>
+				<td>\</td>
+				<td>Everywhere, where the other escape sequences are valid</td>
+				<td></td>
+			</tr>
+		</tbody>
+		</table>
+		<p>Escape sequences are not translated in <a href="#basic_elems_pseudotag">Pseudotags</a></p>
+	
+	<h2 id="builtin">Builtin Tags</h2>
+		<p><acronym>STE</acronym> has some builtin <a href="#basic_elems_tag">Tags</a>, that makes programming in <acronym>STE T/PL</acronym> possible.</p>
+	
+		<h3 id="builtin_if">ste:if</h3>
+			<p>The ste:if Tag provides an if-clause to <acronym>STE T/PL</acronym>.</p>
+			<p>ste:if can have the subtags ste:then and ste:else. Everything between <code>&lt;ste:if&gt;</code> and <code>&lt;/ste:if&gt;</code>, that is <strong>not</strong> an ste:then or ste:else tag, will be used as the condition.</p>
+			<p>Because <acronym>STE T/PL</acronym> is typeless, every empty string (trailing whitespaces will be ignored) is considered as false, everything else is true.</p>
+			<p>If the condition is true (i.e. not empty), the content of the ste:then block will be executed. Otherwise the ste:else tag (if present) will be executed.</p>
+			<p>The ste:then Tag is mandatory, the ste:else tag is optional.</p>
+			<p>
+				Example:<br />
+<code><pre><![CDATA[<ste:if>
+	$foo
+	<ste:then>Bar</ste:then>
+	<ste:else>Baz</ste:else>
+</ste:if>]]></pre></code>
+				If <code>$foo</code> is not empty, then <code>Bar</code> will be executed, otherwise <code>Baz</code>.
+			</p>
+			<h4 id="builtin_if_short">Short syntax for if-clause</h4>
+				<p>Because if-clauses are used often, there is an short syntax:</p>
+				<p><code>?{condition|then|else}</code></p>
+				<p>This is equavilent to:</p>
+				<p><code><![CDATA[<ste:if>condition<ste:then>then</ste:then><ste:else>else</ste:else></ste:if>]]></code></p>
+				<p><code>?</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
+				<p>In this variant, the else part <strong>is not optional</strong>!</p>
+		
+		<h3 id="builtin_cmp">ste:cmp</h3>
+			<p>With the ste:cmp tag you can compare two values.</p>
+			<p>ste:cmp is selfclosing, the compared values are passed by parameters.</p>
+			<p>It compares two values, a and b using an operator.</p>
+			<p>
+				a and b can be passed in two ways:
+				<ul>
+					<li>With the <code>var_x</code> parameter. The parameter value is a <em>variable name</em>.</li>
+					<li>With the <code>text_x</code> parameter. The parameter value is a <em>text</em>.</li>
+				</ul>
+				(where <code>x</code> is either <code>a</code> or <code>b</code>).
+			</p>
+			<p>
+				The operator is passed wth the <code>op</code> parameter. Following parameters are available:
+				<table>
+				<thead>
+					<tr>
+						<th><code>op</code> value</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><code>eq</code></td>
+						<td>a and b are equal</td>
+					</tr>
+					<tr>
+						<td><code>neq</code></td>
+						<td>a and b are not equal</td>
+					</tr>
+					<tr>
+						<td><code>lt</code></td>
+						<td>a is less than b</td>
+					</tr>
+					<tr>
+						<td><code>lte</code></td>
+						<td>a is less or equal b</td>
+					</tr>
+					<tr>
+						<td><code>gt</code></td>
+						<td>a is greater than b</td>
+					</tr>
+					<tr>
+						<td><code>gte</code></td>
+						<td>a is greater or equal b</td>
+					</tr>
+				</tbody>
+				</table>
+			</p>
+			<p>If the comparasion was true, a non-empty text will be returned, otherwise an empty text, so you can use ste:cmp with <a href="#builtin_if">ste:if</a> </p>
+			<p>
+				Example:<br />
+<code><pre><![CDATA[<ste:if>
+	<ste:cmp var_a="foo" op="eq" text_b="bar" />
+	<ste:then>:-)</ste:then>
+	<ste:else>:-(</ste:else>
+</ste:if>]]></pre></code>
+				If the variable <code>foo</code> has the content <code>bar</code>, <code>:-)</code> will be returned, <code>:-(</code> otherwise.
+			</p>
+		
+		<h3 id="builtin_not">ste:not</h3>
+			<p>The ste:not Tag will logically invert its content. If it is an empty text (i.e. false), it will return a non-empty text (i.e. true) and vice versa.</p>
+			<p>
+				Example:<br />
+<code><pre><![CDATA[<ste:if>
+	<ste:not>$foo</ste:not>
+	<ste:then>:-)</ste:then>
+	<ste:else>:-(</ste:else>
+</ste:if>]]></pre></code>
+				If the variable <code>foo</code> is empty (i.e. false), <code>:-)</code> will be returned, <code>:-(</code> otherwise.
+			</p>
+		
+		<h3 id="builtin_even">ste:even</h3>
+			<p>If the enclosed text is a number, and the number is even, this tag will return a non-empty text (i.e. true), an empty text (i.e. false) otherwise.</p>
+		
+		<h3 id="builtin_for">ste:for</h3>
+			<p>ste:for provides a counter loop.</p>
+			<p>
+				ste:for has these parameters:<br />
+				<table>
+				<thead>
+					<tr>
+						<th>parameter name</th>
+						<th>Mandatory?</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><code>start</code></td>
+						<td>Yes</td>
+						<td>Begin counting at this number.</td>
+					</tr>
+					<tr>
+						<td><code>stop</code></td>
+						<td>Yes</td>
+						<td>Stop counting at this number (inclusive).</td>
+					</tr>
+					<tr>
+						<td><code>step</code></td>
+						<td>No</td>
+						<td>What amount should be added to the counter at each round? (Default: 1)</td>
+					</tr>
+					<tr>
+						<td><code>counter</code></td>
+						<td>No</td>
+						<td>The current number will be stored in this <a href="#basic_elems_variable">variable</a> (expects a variable name).</td>
+					</tr>
+				</tbody>
+				</table>
+			</p>
+			<p>
+				Example:<br />
+<code><pre><![CDATA[<ste:for start="10" stop="0" step="-1" counter="i">
+	$i<br />
+</ste:for>]]></pre></code>
+				Will count from 10 down to 0 and output the number followed by an HTML line break.
+			</p>
+		
+		<h3 id="builtin_foreach">ste:foreach</h3>
+			<p>ste:foreach will loop through an array.</p>
+			<p>
+				ste:foreach has these parameters:<br />
+				<table>
+				<thead>
+					<tr>
+						<th>parameter name</th>
+						<th>Mandatory?</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><code>array</code></td>
+						<td>Yes</td>
+						<td>The array to be looped through.</td>
+					</tr>
+					<tr>
+						<td><code>key</code></td>
+						<td>No</td>
+						<td>The array key will be stored in this variable (expects variable name).</td>
+					</tr>
+					<tr>
+						<td><code>value</code></td>
+						<td>Yes</td>
+						<td>The value of the current element will be stored in this variable (expects variable name).</td>
+					</tr>
+					<tr>
+						<td><code>counter</code></td>
+						<td>No</td>
+						<td>Expects a variable name. If given, the current number of iterations will be stored in this variable. Starts with 0.</td>
+					</tr>
+				</tbody>
+				</table>
+			</p>
+			<p>
+				Example:<br />
+<code><pre><![CDATA[<ste:foreach array="foo" key="k" value="v" counter="i">
+	Number: $i<br />
+	Key: $k<br />
+	Value: $v<br />
+	<br />
+</ste:foreach>]]></pre></code>
+				This code will loop through the array <code>foo</code> and return the counter <code>$i</code>, the key <code>$k</code> and the value <code>$v</code> of the current iteration.
+			</p>
+		
+		<h3 id="builtin_infloop">ste:infloop</h3>
+			<p>Create an infinitive loop. You can get out of the loop using the <a href="#builtin_break">ste:break</a> tag. Can be used to emulate othe loop constructs like while loops.</p>
+			<p>
+				Example:<br />
+<code><pre><![CDATA[<ste:infloop>
+	<ste:if>
+		<ste:foo />
+		<ste:then><ste:break /></ste:then>
+	</ste:if>
+	...
+<ste:infloop>]]></pre></code>
+				This code will return <code>...</code> while <code>&lt;ste:foo /&gt;</code> returns an empty text (i.e. false).
+			</p>
+		
+		<h3 id="builtin_break">ste:break</h3>
+			<p>When this self-closing tag is called, the current loop (<a href="builtin_for">ste:for</a>, <a href="builtin_foreach">ste:foreach</a>, <a href="builtin_infloop">ste:infloop</a>) will be aborted.</p>
+		
+		<h3 id="builtin_continue">ste:continue</h3>
+			<p>When this self-closing tag is called, the current loop(<a href="builtin_for">ste:for</a>, <a href="builtin_foreach">ste:foreach</a>, <a href="builtin_infloop">ste:infloop</a>) will go to the next iteration, aborting the current iteration. </p>
+		
+		<h3 id="builtin_load">ste:load</h3>
+			<p>This self-closing tag loads and executes anoter template. The <code>name</code> parameter (mandatory) defines the template to load.</p>
+			<p>Because each template must be parseable and transcompilable by itself, this is not a inclusion of another template. So you can not do this:</p>
+			<p>
+				slave.tpl:<br />
+<code><pre><![CDATA[<ste:foo>
+	bla]]></pre></code>
+				master.tpl<br />
+<code><pre><![CDATA[<ste:load name="slave.tpl" />
+</ste:foo>]]></pre></code>
+			</p>
+			<p>But you can do this:</p>
+			<p>
+				slave.tpl:<br />
+<code><pre><![CDATA[<ste:foo>$bar</ste:foo>]]></pre></code>
+				master.tpl<br />
+<code><pre><![CDATA[<ste:baz>
+	<ste:load name="slave.tpl" />
+</ste:baz>]]></pre></code>
+			</p>
+		
+		<h3 id="builtin_block">ste:block</h3>
+			<p>ste:block provides an easy way for writing master templates. Every block has a name. When a block is defined twice, the second will overwrite the first one.</p>
+			<p>The name can be set with the <code>name</code> parameter.</p>
+			<p>
+				Example:<br />
+				master.tpl
+<code><pre><![CDATA[<h1>Content:</h1>
+<ste:block name="content">
+	Default content
+</ste:block>
+<div class="sidebar">
+	<ste:block name="sidebar">
+		Default sidebar
+	</ste:block>
+</div>]]></pre></code>
+				slave.tpl:<br />
+<code><pre><![CDATA[<ste:load name="master.tpl" />
+<ste:block name="content">
+	Much cooler content :-)
+</ste:block>]]></pre></code>
+				When executing slave.tpl, master.tpl will be loaded and its <code>content</code> block will be replaced with the new one (<code>Much cooler content :-)</code>) but leave the original <code>sidebar</code> block.
+			</p>
+			<p>Code in blocks will be executed at last.</p>
+		
+		<h3 id="builtin_set">ste:set</h3>
+			<p>ste:set will set a variable. The parameter <code>var</code> takes the name of the variable to set. The content of the <a href="#basic_elems_tag">Tag</a> will be the new content of the variable.</p>
+			<p>
+				Example:<br />
+<code><pre><![CDATA[<ste:set var="foo">bar</ste:set>]]></pre></code>
+				This will set the variable <code>foo</code> to <code>bar</code>.
+			</p>
+			<p>
+				<a href="#basic_elems_tag">Tag</a> parameter values can not contain Tags. ste:set can be used to bypass this:<br />
+<code><pre><![CDATA[<ste:set var="temp"><ste:foo /></ste:set>
+<ste:bar baz="$temp" />]]></pre></code>
+			</p>
+		
+		<h3 id="builtin_calc">ste:calc</h3>
+			<p>To perform mathematical calculations, you can use ste:math. ste:math calculates the mathematical formula it is wrapped around and returns the result. The formula is in the usual <a href="http://en.wikipedia.org/wiki/Infix_notation">infix-notation [ext. Link]</a> and has these operators: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> and <code>^</code>. Numbers are always decimal, the decimal mark is <code>.</code> and numbers can be prefixed with an <code>-</code> to indicate a negative number. It is a good idea to wrap a negative number in brackets to prevent wrong evaluation (because <code>-</code> is also an operator). Calculations can be grouped with brackets: <code>(</code> and <code>)</code>.</p>
+			<p>Real numbers are supported, complex numbers not.</p>
+			<p>Formulas are evaluated at runtime, not during transcompilation.</p>
+			<p>
+				Example:<br />
+				<code><![CDATA[<ste:calc>(2+3+4) * (1.5 - (-0.5))</ste:calc>]]></code> will return <code>18</code>.
+			</p>
+		
+		<h3 id="builtin_mktag">ste:mktag</h3>
+			<p>ste:mktag allows you to define own <a href="#basic_elems_tag">Tags</a> using <acronym>STE T/PL</acronym>.</p>
+			<p>The parameter <code>name</code> (mandatory) expects the name of the new tag. If your tag requires some parameters, you can specify them using the optional <code>mandatory</code> parameter. Names of the mandatory parameters are seperated by <code>|</code>.</p>
+			<p>The <a href="#basic_elems_variable">Variable</a> <code>_tag_parameters</code> (associative array) will hold all given parameters and their values.</p>
+			<p>With the ste:tagcontent tag you can execute the tags content.</p>
+			<p>ste:mktag will be transcompiled like any other code. So your custom tag will be almost as fast as a plugin coded in PHP.</p>
+			<p>
+				Example:
+<code><pre><![CDATA[<ste:mktag name="countdown" mandatory="from|counter">
+	<ste:for start="$_tag_parameters[from]" stop="0" step="-1" counter="$_tag_parameters[counter]">
+		<ste:tagcontent />
+	</ste:for>
+</ste:mktag>
+<ste:mktag name="double">
+	<ste:math><ste:tagcontent /> * 2</ste:math>
+</ste:mktag>
+<ste:countdown from="5" counter="i">
+	<ste:double>$i</ste:double><br />
+</ste:countdown>]]></pre></code>
+				Will output:<br />
+<code><pre><![CDATA[10<br/>
+8<br />
+6<br />
+4<br />
+2<br />
+0<br />]]></pre></code>
+			</p>
+</body>
+</html>
