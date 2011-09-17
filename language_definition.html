@@ -205,6 +205,7 @@
 				<p><code><![CDATA[<ste:if>condition<ste:then>then</ste:then><ste:else>else</ste:else></ste:if>]]></code></p>
 				<p><code>?</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
 				<p>In this variant, the else part <strong>is not optional</strong>!</p>
+				<p><strong>WARNING:</strong> short if-clauses can not be nested!</p>
 		
 		<h3 id="builtin_cmp">ste:cmp</h3>
 			<p>With the ste:cmp tag you can compare two values.</p>
@@ -435,7 +436,7 @@
 </ste:block>]]></pre></code>
 				When executing slave.tpl, master.tpl will be loaded and its <code>content</code> block will be replaced with the new one (<code>Much cooler content :-)</code>) but leave the original <code>sidebar</code> block.
 			</p>
-			<p>Code in blocks will be executed at last.</p>
+			<p>Blocks can not be nested.</p>
 		
 		<h3 id="builtin_set">ste:set</h3>
 			<p>ste:set will set a variable. The parameter <code>var</code> takes the name of the variable to set. The content of the <a href="#basic_elems_tag">Tag</a> will be the new content of the variable.</p>
