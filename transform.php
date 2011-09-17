@@ -1,5 +1,7 @@
 <?php
 
+namespace ste;
+
 class TextNode
 {
 	public $text;
@@ -16,6 +18,28 @@ class VariableNode
 {
 	public $name;
 	public $arrayfields;
+	public function transcompile()
+	{
+		$varaccess = '@$ste->vars[' . (is_numeric($this->name) ? $this->name : '\'' . escape_text($this->name) . '\''). ']';
+		foreach($this->arrayfields as $af)
+		{
+			if((count($af) == 1) and ($af[0] instanceof TextNode) and is_numeric($af->text))
+				$varaccess .= '[' . $af->text . ']';
+			else
+				$varaccess .= '[' . implode(".",
+					array_map(
+						function($node)
+						{
+							if($node instanceof TextNode)
+								return "'" . escape_text($node->text) . "'";
+							else if($node instanceof VariableNode)
+								return $node->transcompile;
+						}, $af
+					)
+				). ']';
+		}
+		return $varaccess;
+	}
 }
 
 /* $text must start after the first opening bracket */
@@ -201,69 +225,73 @@ function parse($code)
 }
 
 define("MODE_SOURCE", 0);
-define("MODE_AST", 1);
-define("MODE_TRANSCOMPILED", 2);
+define("MODE_TRANSCOMPILED", 1);
 
-/*interface StorageAccess
+interface StorageAccess
 {
-	abstract public function get_load_options();
-	abstract public function get_save_options();
-	
-	abstract public function load($tpl);
-	abstract public function save($tpl, $data, $mode);
+	public function load($tpl, &$mode);
+	public function save($tpl, $data, $mode);
 }
 
 class FilesystemStorageAccess implements StorageAccess
 {
 	protected $sourcedir;
-	protected $astdir;
 	protected $transcompileddir;
 	
-	protected $load_options;
-	protected $save_options;
-	
-	public function __construct($src, $ast, $transc)
+	public function __construct($src, $transc)
 	{
 		$this->sourcedir        = $src;
-		$this->astdir           = $ast;
 		$this->transcompileddir = $transc;
-		
-		if(!empty($this->sourcedir))
-		{
-			if(is_readable($this->sourcedir))
-				$this->load_options[] = MODE_SOURCE;
-			if(is_writeableable($this->sourcedir))
-				$this->save_options[] = MODE_SOURCE;
-		}
-		
-		if(!empty($this->astdir))
-		{
-			if(is_readable($this->astdir))
-				$this->load_options[] = MODE_AST;
-			if(is_writeableable($this->astdir))
-				$this->save_options[] = MODE_AST;
-		}
-		
-		if(!empty($this->transcompileddir))
-		{
-			if(is_readable($this->transcompileddir))
-				$this->load_options[] = MODE_TRANSCOMPILED;
-			if(is_writeableable($this->transcompileddir))
-				$this->save_options[] = MODE_TRANSCOMPILED;
-		}
-		
-		if(empty($this->save_options) and empty($this->load_options))
-			throw new Exception("No dir read-/writeable!");
 	}
 	
-	public function get_load_options() { return $this->load_options; }
-	public function get_save_options() { return $this->save_options; }
-	
-	public function load($tpl)
+	public function load($tpl, &$mode)
 	{
-		if(@stat($this->sourcedir)
+		$src_fn    = $this->sourcedir        . "/" . $tpl;
+		$transc_fn = $this->transcompileddir . "/" . $tpl;
+		
+		if($mode == MODE_SOURCE)
+		{
+			$content = @file_get_contents($src_fn);
+			if($content === False)
+				throw new Exception("Template not found.");
+			return $content;
+		}
+		
+		$src_stat    = @stat($src_fn);
+		$transc_stat = @stat($transc_fn);
+		
+		if(($src_stat === False) and ($transc_stat === False))
+			throw new Exception("Template not found.");
+		else if($transc_stat === False)
+		{
+			$mode = MODE_SOURCE;
+			return file_get_contents($src_fn);
+		}
+		else if($src_stat === False)
+		{
+			include($transc_fn);
+			return $transcompile_fx;
+		}
+		else
+		{
+			if($src_stat["mtime"] > $transc_stat["mtime"])
+			{
+				$mode = MODE_SOURCE;
+				return file_get_contents($src_fn);
+			}
+			else
+			{
+				include($transc_fn);
+				return $transcompile_fx;
+			}
+		}
 	}
-}*/
+	
+	public function save($tpl, $data, $mode)
+	{
+		file_put_contents((($mode == MODE_SOURCE) ? $this->sourcedir : $this->transcompileddir) . "/" . $tpl, $data);
+	}
+}
 
 function indent_code($code)
 {
@@ -280,8 +308,134 @@ function indent_code($code)
 function shunting_yard($infix_math)
 {
 	$operators = array(
-		"+" => array()
+		"+" => array("l", 2),
+		"-" => array("l", 2),
+		"*" => array("l", 3),
+		"/" => array("l", 3),
+		"^" => array("r", 4),
+		"_" => array("r", 5),
+		"(" => array("", 0), 
+		")" => array("", 0)
 	);
+	
+	preg_match_all("/\s*(?:(?:[+\\-\\*\\/\\^\\(\\)])|(\\d*[\\.]?\\d*))\\s*/s", $infix_math, $tokens, PREG_PATTERN_ORDER);
+	$tokens_raw = array_filter(array_map('trim', $tokens[0]), function($x) { return !empty($x); });
+	
+	$output_queue = array();
+	$op_stack     = array();
+	
+	$lastpriority = NULL;
+	/* Make - unary, if neccessary */
+	$tokens = array();
+	foreach($tokens_raw as $token)
+	{
+		$priority = isset($operators[$token]) ? $operators[$token][1] : -1;
+		if(($token == "-") and (($lastpriority === NULL) or ($lastpriority >= 0)))
+		{
+			$priority = $operators["_"][1];
+			$tokens[] = "_";
+		}
+		else
+			$tokens[] = $token;
+		$lastpriority = $priority;
+	}
+	
+	while(!empty($tokens))
+	{
+		$token = array_shift($tokens);
+		if(is_numeric($token))
+			$output_queue[] = $token;
+		else if($token == "(")
+			$op_stack[] = $token;
+		else if($token == ")")
+		{
+			$lbr_found = False;
+			while(!empty($op_stack))
+			{
+				$op = array_pop($op_stack);
+				if($op == "(")
+				{
+					$lbr_found = True;
+					break;
+				}
+				$output_queue[] = $op;
+			}
+			if(!$lbr_found)
+				throw new Exception("Bracket mismatch.");
+		}
+		else if(!isset($operators[$token]))
+			throw new Exception("Invalid token ($token): Not a number, bracket or operator. Stop.");
+		else
+		{
+			$priority = $operators[$token][1];
+			if($operators[$token][0] == "l")
+				while((!empty($op_stack)) and ($priority <= $operators[$op_stack[count($op_stack)-1]][1]))
+					$output_queue[] = array_pop($op_stack);
+			else
+				while((!empty($op_stack)) and ($priority < $operators[$op_stack[count($op_stack)-1]][1]))
+					$output_queue[] = array_pop($op_stack);
+			$op_stack[] = $token;
+		}
+	}
+	
+	while(!empty($op_stack))
+	{
+		$op = array_pop($op_stack);
+		if($op == "(")
+			throw new Exception("Bracket mismatch...");
+		$output_queue[] = $op;
+	}
+	
+	return $output_queue;
+}
+
+function pop2(&$array)
+{
+	$rv = array(array_pop($array), array_pop($array));
+	if(array_search(NULL, $rv, True) === False)
+		throw new Exception("Not enough numbers on stack. Invalid formula.");
+	return $rv;
+}
+
+function calc_rpn($rpn)
+{
+	$stack = array();
+	foreach($rpn as $token)
+	{
+		switch($token)
+		{
+			case "+":
+				list($b, $a) = pop2($stack);
+				$stack[] = $a + $b;
+				break;
+			case "-":
+				list($b, $a) = pop2($stack);
+				$stack[] = $a - $b;
+				break;
+			case "*":
+				list($b, $a) = pop2($stack);
+				$stack[] = $a * $b;
+				break;
+			case "/":
+				list($b, $a) = pop2($stack);
+				$stack[] = $a / $b;
+				break;
+			case "^":
+				list($b, $a) = pop2($stack);
+				$stack[] = pow($a, $b);
+				break;
+			case "_":
+				$a = array_pop($stack);
+				if($a === NULL)
+					throw new Exception("Not enough numbers on stack. Invalid formula.");
+				$stack[] = -$a;
+				break;
+			default:
+				$stack[] = $token;
+				break;
+		}
+	}
+	return array_pop($stack);
 }
 
 $ste_builtins = array(
@@ -305,7 +459,8 @@ $ste_builtins = array(
 		if(empty($then))
 			throw new Exception("Transcompile error: Missing <ste:else> in <ste:if>. Stop.");
 		
-		$output .= transcompile($condition);
+		$output .= "\$outputstack[] = \"\";\n\$outputstack_i++;\n";
+		$output .= _transcompile($condition);
 		$output .= "\$outputstack_i--;\nif(\$ste->bool(array_pop(\$outputstack)))\n{\n";
 		$output .= indent_code(transcompile($then));
 		$output .= "}\n";
@@ -319,65 +474,488 @@ $ste_builtins = array(
 	},
 	"cmp" => function($ast)
 	{
+		$code = "";
 		
+		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		if(isset($ast->params["var_b"]))
+		{
+			$code .= _transcompile($ast->params["var_b"]);
+			$b = '$ste->get_var_by_name(array_pop($outputstack))';
+		}
+		else if(isset($ast->params["text_b"]))
+		{
+			$code .= _transcompile($ast->params["text_b"]);
+			$b = 'array_pop($outputstack)';
+		}
+		else
+			throw new Exception("Transcompile error: neiter var_b nor text_b set in <ste:cmp>. Stop.");
+		
+		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		if(isset($ast->params["var_a"]))
+		{
+			$code .= _transcompile($ast->params["var_a"]);
+			$a = '$ste->get_var_by_name(array_pop($outputstack))';
+		}
+		else if(isset($ast->params["text_a"]))
+		{
+			$code .= _transcompile($ast->params["text_a"]);
+			$a = 'array_pop($outputstack)';
+		}
+		else
+			throw new Exception("Transcompile error: neiter var_a nor text_a set in <ste:cmp>. Stop.");
+		
+		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		if(isset($ast->params["op"]))
+			$code .= _transcompile($ast->params["op"]);
+		else
+			throw new Exception("Transcompile error: op not given in <ste:cmp>. Stop.");
+		
+		$code .= "\$outputstack_i -= 3;\nswitch(trim(array_pop(\$outputstack)))\n{\n\t";
+		$code .= implode("", array_map(
+				function($op) use ($a,$b)
+				{
+					list($op_stetpl, $op_php) = $op;
+					return "case '$op_stetpl':\n\t\$outputstack[\$outputstack_i] .= (($a) $op_php ($b)) ? 'yes' : '';\n\tbreak;\n\t";
+				},
+				array(
+					array('eq', '=='),
+					array('neq', '!='),
+					array('lt', '<'),
+					array('lte', '<='),
+					array('gt', '>'),
+					array('gte', '>=')
+				)
+			));
+		$code .= "default: throw new Exception('Runtime Error: Unknown operator in <ste:cmp>.');\n}\n";
+		return $code;
 	},
 	"not" => function($ast)
 	{
-		
+		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->sub);
+		$code .= "\$outputstack_i--;\n\$outputstack[\$outputstack_i] .= (!\$ste->bool(array_pop(\$outputstack))) ? 'yes' : '';\n";
+		return $code;
 	},
 	"even" => function($ast)
 	{
-		
+		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->sub);
+		$code .= "\$outputstack_i--;\$tmp_even = array_pop(\$outputstack);\n\$outputstack[] .= (is_numeric(\$tmp_even) and (\$tmp_even % 2 == 0)) ? 'yes' : '';\n";
 	},
 	"for" => function($ast)
 	{
+		$code = "";
+		$loopname = "forloop_" . str_replace(".", "_", uniqid("",True));
 		if(empty($ast->params["start"]))
 			throw new Exception("Transcompile error: Missing 'start' parameter in <ste:for>. Stop.");
+		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->params["start"]);
+		$code .= "\$outputstack_i--;\n\$${loopname}_start = array_pop(\$outputstack);\n";
+		
 		if(empty($ast->params["end"]))
 			throw new Exception("Transcompile error: Missing 'end' parameter in <ste:for>. Stop.");
+		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->params["end"]);
+		$code .= "\$outputstack_i--;\n\$${loopname}_end = array_pop(\$outputstack);\n";
 		
+		if(empty($ast->params["step"]))
+			$code .= "\$${loopname}_step = 1;\n";
+		else
+		{
+			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+			$code .= _transcompile($ast->params["step"]);
+			$code .= "\$outputstack_i--;\n\$${loopname}_step = array_pop(\$outputstack);\n";
+		}
+		
+		if(!empty($ast->params["counter"]))
+		{
+			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+			$code .= _transcompile($ast->params["counter"]);
+			$code .= "\$outputstack_i--;\n\$${loopname}_countername = array_pop(\$outputstack);\n";
+		}
+		
+		$loopbody = empty($ast->params["counter"]) ? "\$ste->set_var_by_name(\$${loopname}_countername, \$${loopname}_counter);\n\n" : "";
+		$loopbody .= _transcompile($ast->sub);
+		$loopbody = indent_code("{\n" . indent_code($loopbody) . "}\n");
+		
+		$code .= "if(\$${loopname}_step == 0)\n\tthrow new Exception('Runtime Error: step can not be 0 in <ste:for>. Stop.');\n";
+		$code .= "if(\$${loopname}_step > 0)\n{\n";
+		$code .= "\tfor(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_start <= \$${loopname}_end; \$${loopname}_start += \$${loopname}_step)\n";
+		$code .= $loopbody;
+		$code .= "\n}\nelse\n{\n";
+		$code .= "\tfor(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_start >= \$${loopname}_end; \$${loopname}_start += \$${loopname}_step)\n";
+		$code .= $loopbody;
+		$code .= "\n}\n";
+		
+		return $code;
 	},
 	"foreach" => function($ast)
 	{
-	
+		$loopname = "foreachloop_" . str_replace(".", "_", uniqid("",True));
+		$code = "";
+		
+		if(empty($ast->params["array"]))
+			throw new Exception("Transcompile Error: array not givein in <ste:foreach>. Stop.");
+		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->params["array"]);
+		$code .= "\$outputstack_i--;\n\$${loopname}_arrayvar = array_pop(\$outputstack);\n";
+		
+		if(empty($ast->params["value"]))
+			throw new Exception("Transcompile Error: value not givein in <ste:foreach>. Stop.");
+		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->params["value"]);
+		$code .= "\$outputstack_i--;\n\$${loopname}_valuevar = array_pop(\$outputstack);\n";
+		
+		if(!empty($ast->params["key"]))
+		{
+			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+			$code .= _transcompile($ast->params["key"]);
+			$code .= "\$outputstack_i--;\n\$${loopname}_keyvar = array_pop(\$outputstack);\n";
+		}
+		
+		if(!empty($ast->params["counter"]))
+		{
+			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+			$code .= _transcompile($ast->params["counter"]);
+			$code .= "\$outputstack_i--;\n\$${loopname}_countervar = array_pop(\$outputstack);\n";
+		}
+		
+		$code .= "\$${loopname}_array = \$ste->get_var_by_name(\$${loopname}_arrayvar);\n";
+		$code .= "\$${loopname}_counter = 0;\n";
+		
+		$loopbody = "\$${loopname}_counter++;\n\$ste->set_var_by_name(\$${loopname}_valuevar, \$${loopname}_value);\n";
+		if(!empty($ast->params["key"]))
+			$loopbody .= "\$ste->set_var_by_name(\$${loopname}_keyvar, \$${loopname}_key);\n";
+		if(!empty($ast->params["counter"]))
+			$loopbody .= "\$ste->set_var_by_name(\$${loopname}_countervar, \$${loopname}_counter);\n";
+		$loopbody .= "\n";
+		$loopbody .= _transcompile($ast->sub);
+		$loopbody = "{\n" . indent_code($loopbody) . "}\n";
+		
+		$code .= "foreach(\$${loopname}_array as \$${loopname}_key => \$${loopname}_value)\n$loopbody\n";
+		
+		return $code;
 	},
 	"infloop" => function($ast)
 	{
-	
+		return "while(True)\n{\n" . indent_code(_transcompile($ast->sub)) . "}\n";
 	},
 	"break" => function($ast)
 	{
 		return "break;\n";
-	}
+	},
 	"continue" => function($ast)
 	{
-		return "continue\n";
-	}
+		return "continue;\n";
+	},
 	"block" => function($ast)
 	{
-	
+		if(empty($ast->name))
+			throw new Exception("Transcompile Error: name missing in <ste:block>. Stop.");
+		
+		$blknamevar = "blockname_" . str_replace(".", "_", uniqid("", True));
+		
+		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->name);
+		$code .= "\$outputstack_i--;\n\$${blknamevar} = array_pop(\$outputstack);\n";
+		
+		$tmpblk = uniqid("", True);
+		$code .= "\$ste->blocks['$tmpblk'] = array_pop(\$outputstack);\n\$ste->blockorder[] = '$tmpblk';\n\$outputstack = array('');\n\$outputstack_i = 0;\n";
+		
+		$code .= _transcompile($ast->sub);
+		
+		$code .= "\$ste->blocks[\$${blknamevar}] = array_pop(\$outputstack);\n";
+		$code .= "if(array_search(\$${blknamevar}, \$ste->blockorder) === FALSE)\n\t\$ste->blockorder[] = '$tmpblk';\n\$outputstack = array('');\n\$outputstack_i = 0;\n";
+		
+		return $code;
 	},
 	"load" => function($ast)
 	{
-	
+		if(empty($ast->params["name"]))
+			throw new Exception("Transcompile Error: name missing in <ste:load>. Stop.");
+		
+		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->params["name"]);
+		$code .= "\$outputstack_i--;\n\$outputstack[\$outputstack_i] .= \$ste->load(array_pop(\$outputstack));\n";
+		
+		return $code;
 	},
 	"mktag" => function($ast)
 	{
-	
+		if(empty($ast->params["name"]))
+			throw new Exception("Transcompile Error: name missing in <ste:mktag>. Stop.");
+		
+		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->params["name"]);
+		$code .= "\$outputstack_i--;\n\$tagname = array_pop(\$outputstack);\n";
+		
+		$fxbody = "\$outputstack = array(); \$outputstack_i = 0;\$ste->vars['_tag_parameters'] = \$params;\n";
+		
+		if(!empty($ast->params["mandatory"]))
+		{
+			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+			$code .= _transcompile($ast->params["mandatory"]);
+			$code .= "\$outputstack_i--;\n\$mandatory_params = explode('|', array_pop(\$outputstack));\n";
+			
+			$fxbody .= "foreach(\$mandatory_params as \$mp)\n{\n\tif(!isset(\$params[\$mp]))\n\t\tthrow new Exception(\"Runtime Error: \$mp missing in <ste:\$tagname>. Stop.\");\n}";
+		}
+		
+		$fxbody .= _transcompile($ast->sub);
+		$fxbody .= "return array_pop(\$outputstack);";
+		
+		$code .= "\$tag_fx = function(\$ste, \$params, \$sub) use (\$tagname, \$mandatory_params)\n{\n" . indent_code($fxbody) . "\n}\n";
+		$code .= "\$ste->register_tag(\$tagname, \$tag_fx);";
+		
+		return $code;
+	},
+	"tagcontent" => function($ast)
+	{
+		return "\$outputstack[\$outputstack_i] .= \$sub(\$ste);";
 	},
 	"set" => function($ast)
 	{
-	
+		if(empty($ast->params["var"]))
+			throw new Exception("Transcompile Error: var missing in <ste:set>. Stop.");
+		
+		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->params["var"]);
+		
+		$code -= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->sub);
+		
+		$code .= "\$outputstack_i -= 2;\n\$newvartext = array_pop(\$outputstack);\n\$varname = array_pop(\$outputstack);\n";
+		$code .= "\$ste->set_var_by_name(\$varname, \$newvartext);\n";
+		
+		return $code;
 	},
 	"calc" => function($ast)
 	{
-	
+		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
+		$code .= _transcompile($ast->sub);
+		$code .= "\$outputstack_i--;\n\$outputstack[\$outputstack_i] .= \$ste->calc(array_pop(\$outputstack));\n";
+		
+		return $code;
 	}
 );
 
-function transcompile($ast)
+function escape_text($text)
 {
+	return addcslashes($text, "\0.\x1f\r\n\t\\'\x7f..\xff");
+}
+
+function _transcompile($ast) /* The real transcompile function, does not add boilerplate code. */
+{
+	$code = "";
+	global $ste_builtins;
 	
+	foreach($ast as $node)
+	{
+		if($node instanceof TextNode)
+			$code .= "\$outputstack[\$outputstack_i] .= '" . escape_text($node->text) . "';\n";
+		else if($node instanceof VariableNode)
+			$code .= "\$outputstack[\$outputstack_i] .= " . $node->transcompile() . ";\n";
+		else if($node instanceof TagNode)
+		{
+			if(isset($ste_builtins[$node->name]))
+				$code .= $ste_builtins[$node->name]($node);
+			else
+			{
+				$paramarray = "parameters_" . str_replace(".", "_", uniqid("", True));
+				$code .= "\$$paramarray = array();\n";
+				
+				foreach($node->params as $pname => $pcontent)
+				{
+					$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
+					$code .= _transcompile($pcontent);
+					$code .= "\$outputstack_i--;\n\$${paramarray}['" . escape_text($pname) . "'] = array_pop(\$outputstack);\n";
+				}
+				
+				$code .= "\$outputstack[\$outputstack_i] .= \$ste->call_tag('" . escape_text($node->name) . "', \$${paramarray}, " . transcompile($node->sub) . ");";
+			}
+		}
+	}
+	
+	return $code;
+}
+
+$ste_transc_boilerplate = "\$outputstack = array('');\n\$outputstack_i = 0;\n";
+
+function transcompile($ast) /* Transcompile and add some boilerplate code. */
+{
+	return "function(\$ste)\n{\n" . indent_code($ste_transc_boilerplate . _transcompile($ast) . "return array_pop(\$outputstack);") . "\n}";
+}
+
+class STECore
+{
+	private $tags;
+	private $storage_access;
+	private $cur_tpl_dir;
+	public $blocks;
+	public $blockorder;
+	public $vars;
+	
+	public function __construct($storage_access)
+	{
+		$this->storage_access = $storage_access;
+		$this->cur_tpl_dir = "/";
+		STEStandardLibrary->_register_lib($this);
+		$this->vars = array();
+	}
+	
+	public function register_tag($name, $callback)
+	{
+		if(!is_callable($callback))
+			throw new Exception("Can not register tag \"$name\", not callable.");
+		if(empty($name))
+			throw new Exception("Can not register tag, empty name.");
+		$this->tags[$name] = $callback;
+	}
+	
+	public function call_tag($name, $params, $sub)
+	{
+		if(!isset($this->tags[$name]))
+			throw new Exception("Can not call tag \"$name\": Does not exist.");
+		return $this->tags[$name]($this, $params, $sub);
+	}
+	
+	public function calc($expression)
+	{
+		return calc_rpn(shunting_yard($expression));
+	}
+	
+	public function exectemplate($tpl)
+	{
+		$output = "";
+		$lastblock = $this->load($tpl);
+		
+		foreach($this->blockorder as $blockname)
+			$output .= $this->blocks[$blockname];
+		
+		return $output . $lastblock;
+	}
+	
+	private function get_var_reference(&$from, $name, $create_if_not_exist)
+	{
+		$bracket_open = strpos($name, "[");
+		if($bracket_open === False)
+		{
+			if(isset($from[$name]) or $create_if_not_exist)
+				return &$from[$name];
+			else
+				return NULL;
+		}
+		else
+		{
+			$old_varname = $varname;
+			$bracket_close = strpos($name, "]", $bracket_open);
+			if($bracket_close === FALSE)
+				throw new Excpeption("Runtime Error: Invalid varname \"$varname\". Missing closing \"]\".");
+			$varname = substr($name, 0, $bracket_open);
+			$name    = substr($name, $bracket_open + 1, $bracket_close - $bracket_open - 1) . substr($name, $bracket_close + 1);
+			if(!is_array($from[$varname]))
+			{
+				if($create_if_not_exist)
+					$from[$varname] = array();
+				else
+					return NULL;
+			}
+			try
+			{
+				return $self->get_var_reference($from[$varname], $name, $create_if_not_exist);
+			}
+			catch(Exception $e)
+			{
+				throw new Excpeption("Runtime Error: Invalid varname \"$old_varname\". Missing closing \"]\".");
+			}
+		}
+	}
+	
+	public function set_var_by_name($name, $val)
+	{
+		$ref = $this->get_var_reference($this->vars, $name, True);
+		$ref = (string) $val;
+	}
+	
+	public function get_var_by_name($name)
+	{
+		$ref = $this->get_var_reference($this->vars, $name, False);
+		return $ref === NULL ? "" : (string) $ref;
+	}
+	
+	public function load($tpl, $quiet=False)
+	{
+		$tpldir_b4 = $this->cur_tpl_dir;
+		
+		/* Resolve ".", ".." and protect from possible LFI */
+		$tpl = str_replace("\\", "/", $tpl);
+		if($tpl[0] != "/")
+			$tpl = $this->cur_tpl_dir . "/" . $tpl;
+		$pathex = array_filter(array_slice(explode("/", $tpl), 1), function($s) { return $s != "."; });
+		while(($i = array_search("..", $pathex)) !== False)
+		{
+			if($i == 0)
+				$pathex = array_slice($pathex, 1);
+			else
+				$pathex = array_merge(array_slice($pathex, 0, $i), array_slice($pathex, $i + 2));
+		}
+		$tpl = implode("/", $pathex);
+		
+		if($quiet)
+		{
+			$blocks_back     = clone $this->blocks;
+			$blockorder_back = clone $this->blockorder;
+		}
+		
+		$mode = MODE_TRANSCOMPILED;
+		$content = $this->storage_access->load($tpl, $mode);
+		if($mode == MODE_SOURCE)
+		{
+			$ast    = parse($content);
+			$transc = transcompile($ast);
+			$this->storage_access->save($tpl, $transc, MODE_TRANSCOMPILED);
+			eval("\$content = $transc;");
+		}
+		
+		$output = $content($ste);
+		
+		$this->cur_tpl_dir = $tpldir_b4;
+		
+		if($quiet)
+		{
+			$this->blocks     = $blocks_back;
+			$this->blockorder = $blockorder_back;
+		}
+		else
+			return $output;
+	}
+}
+
+class STEStandardLibrary
+{
+	static public function _register_lib($ste)
+	{
+		foreach(get_class_methods(__CLASS__) as $method)
+			if($method[0] != "_")
+				$ste->register_tag($method, array(__CLASS__, $method));
+	}
+	
+	static public function escape($ste, $params, $sub)
+	{
+		return htmlentities($sub($ste), ENT_QUOTES, "UTF-8");
+	}
+	
+	static public function strlen($ste, $params, $sub)
+	{
+		return strlen($sub($ste));
+	}
+	
+	static public function array_len($ste, $params, $sub)
+	{
+		if(empty($params["var"]))
+			throw new Exception("Runtime Error: missing var parameter in <ste:array_len>.");
+		$a = $ste->get_var_by_name($params["var"]);
+		return (is_array($a)) ? count($a) : "";
+	}
 }
 
 ?>
