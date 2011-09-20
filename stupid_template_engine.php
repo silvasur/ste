@@ -3,6 +3,10 @@
 /*
  * File: stupid_template_engine.php
  * The implementation of the Stupid Template Engine.
+ * 
+ * About: License
+ * This file is licensed under the MIT/X11 License.
+ * See COPYING for more details.
  */
 
 /*
