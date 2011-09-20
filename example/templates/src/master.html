@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en">
+<head>
+	<title>?{$title|$title - example|example}</title><ste:comment>If $title given, set title to "$title - example", else "example"</ste:comment>
+	<style type="text/css">
+		* {
+			font-family: sans-serif;
+		}
+		.online {
+			color: #0a0;
+		}
+		.offline {
+			color: #555;
+			font-style: italic;
+			
+		}
+	</style>
+	
+</head>
+<body>
+	<h1>example</h1>
+	
+	<div id="content">
+		<ste:block name="content">
+			Default content.
+		</ste:block>
+	</div>
+	<div id="otherstuff">
+		<ste:block name="otherstuff">
+			<h2>List of users</h2>
+			<ste:comment>Lets loop through the users...</ste:comment>
+			<ul>
+				<ste:foreach array="users" value="user">
+					<li class="?{$user[online]|online|offline}">$user[name] ($user[username])</li>
+				</ste:foreach>
+			</ul>
+		</ste:block>
+	</div>
+</body>
+</html>

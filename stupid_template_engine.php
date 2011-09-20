@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * File: stupid_template_engine.php
+ * The implementation of the Stupid Template Engine.
+ */
+
+/*
+ * Namespace: ste
+ * Everything in this file is in this namespace.
+ */
 namespace ste;
 
 class TextNode
@@ -205,6 +214,17 @@ function mk_ast($code)
 	return array_merge($ast, strlen($code) > 0 ? mk_ast($code) : array());
 }
 
+/*
+ * Function: parse
+ * Parsing a STE T/PL template.
+ * You only need this function, if you want to manually transcompile a template.
+ * 
+ * Parameters:
+ * 	$code - The STE T/PL code.
+ * 
+ * Returns:
+ * 	An abstract syntax tree, whic can be used with <transcompile>.
+ */
 function parse($code)
 {
 	/* Precompiling... */
@@ -222,78 +242,6 @@ function parse($code)
 	
 	/* Create abstract syntax tree */
 	return mk_ast($code);
-}
-
-define("MODE_SOURCE", 0);
-define("MODE_TRANSCOMPILED", 1);
-
-interface StorageAccess
-{
-	public function load($tpl, &$mode);
-	public function save($tpl, $data, $mode);
-}
-
-class FilesystemStorageAccess implements StorageAccess
-{
-	protected $sourcedir;
-	protected $transcompileddir;
-	
-	public function __construct($src, $transc)
-	{
-		$this->sourcedir        = $src;
-		$this->transcompileddir = $transc;
-	}
-	
-	public function load($tpl, &$mode)
-	{
-		$src_fn    = $this->sourcedir        . "/" . $tpl;
-		$transc_fn = $this->transcompileddir . "/" . $tpl . ".php";
-		
-		if($mode == MODE_SOURCE)
-		{
-			$content = @file_get_contents($src_fn);
-			if($content === False)
-				throw new \Exception("Template not found.");
-			return $content;
-		}
-		
-		$src_stat    = @stat($src_fn);
-		$transc_stat = @stat($transc_fn);
-		
-		if(($src_stat === False) and ($transc_stat === False))
-			throw new \Exception("Template not found.");
-		else if($transc_stat === False)
-		{
-			$mode = MODE_SOURCE;
-			return file_get_contents($src_fn);
-		}
-		else if($src_stat === False)
-		{
-			include($transc_fn);
-			return $transcompile_fx;
-		}
-		else
-		{
-			if($src_stat["mtime"] > $transc_stat["mtime"])
-			{
-				$mode = MODE_SOURCE;
-				return file_get_contents($src_fn);
-			}
-			else
-			{
-				include($transc_fn);
-				return $transcompile_fx;
-			}
-		}
-	}
-	
-	public function save($tpl, $data, $mode)
-	{
-		$fn = (($mode == MODE_SOURCE) ? $this->sourcedir : $this->transcompileddir) . "/" . $tpl . (($mode == MODE_TRANSCOMPILED) ? ".php" : "");
-		@mkdir(dirname($fn), 0777, True);
-		file_put_contents($fn, "<?php \$transcompile_fx = $data; ?>");
-		chmod($fn, 0777); /* FIXME: Remove this line after debugging... */
-	}
 }
 
 function indent_code($code)
@@ -630,7 +578,7 @@ $ste_builtins = array(
 		
 		$code .= "\$${loopname}_array = \$ste->get_var_by_name(\$${loopname}_arrayvar);\n";
 		$code .= "if(!is_array(\$${loopname}_array))\n\t\$${loopname}_array = array();\n";
-		$code .= "\$${loopname}_counter = 0;\n";
+		$code .= "\$${loopname}_counter = -1;\n";
 		
 		$loopbody = "\$${loopname}_counter++;\n\$ste->set_var_by_name(\$${loopname}_valuevar, \$${loopname}_value);\n";
 		if(!empty($ast->params["key"]))
@@ -651,11 +599,11 @@ $ste_builtins = array(
 	},
 	"break" => function($ast)
 	{
-		return "\$ste->break_loop();\n";
+		return "throw new \\ste\\BreakException();\n";
 	},
 	"continue" => function($ast)
 	{
-		return "\$ste->continue_loop();\n";
+		return "throw new \\ste\\ContinueException();\n";
 	},
 	"block" => function($ast)
 	{
@@ -749,7 +697,7 @@ $ste_builtins = array(
 
 function escape_text($text)
 {
-	return addcslashes($text, "\r\n\t\$\0..\x1f\\'\x7f..\xff");
+	return addcslashes($text, "\r\n\t\$\0..\x1f\\'\"\x7f..\xff");
 }
 
 function _transcompile($ast) /* The real transcompile function, does not add boilerplate code. */
@@ -789,24 +737,169 @@ function _transcompile($ast) /* The real transcompile function, does not add boi
 
 $ste_transc_boilerplate = "\$outputstack = array('');\n\$outputstack_i = 0;\n";
 
+/*
+ * Function: transcompile
+ * Transcompiles an abstract syntax tree to PHP.
+ * 
+ * Parameters:
+ * 	$ast - The abstract syntax tree to transcompile.
+ * 
+ * Returns:
+ * 	PHP code. The PHP code is an anonymous function expecting a <STECore> instance as its parameter and returns a string (everything that was not pached into a section).
+ */
 function transcompile($ast) /* Transcompile and add some boilerplate code. */
 {
 	global $ste_transc_boilerplate;
 	return "function(\$ste)\n{\n" . indent_code($ste_transc_boilerplate . _transcompile($ast) . "return array_pop(\$outputstack);") . "\n}";
 }
 
+/*
+ * Constants: Template modes
+ * 
+ * MODE_SOURCE - The Templates source
+ * MODE_TRANSCOMPILED - The transcompiled template
+ */
+const MODE_SOURCE        = 0;
+const MODE_TRANSCOMPILED = 1;
+
+/*
+ * Class: StorageAccess
+ * An interface.
+ * A StorageAccess implementation is used to access the templates from any storage.
+ * This means, that you are not limited to store the Templates inside directories, you can also use a database or something else.
+ */
+interface StorageAccess
+{
+	/*
+	 * Function: load
+	 * Loading a template.
+	 * 
+	 * Parameters:
+	 * 	$tpl - The name of the template.
+	 * 	&$mode - Which mode is preferred? One of the <Template modes>.
+	 * 	         If <MODE_SOURCE>, the raw sourcecode is expected, if <MODE_TRANSCOMPILED> the transcompiled template *as a callable function* (expecting an <STECore> instance as first parameter) is expected.
+	 * 	         If the transcompiled version is not available or older than the source, you can set this parameter to <MODE_SOURCE> and return the source.
+	 * 
+	 * Returns:
+	 * 	Either the sourcecode or a callable function (first, and only parameter: an <STECore> instance).
+	 */
+	public function load($tpl, &$mode);
+	
+	/*
+	 * Function: save
+	 * Saves a template.
+	 * 
+	 * Parameters:
+	 * 	$tpl -The name of the template.
+	 * 	$data - The data to be saved.
+	 * 	$mode - A <Template mode> constant.
+	 */
+	public function save($tpl, $data, $mode);
+}
+
+/*
+ * Class: FilesystemStorageAccess
+ * The default <StorageAccess> implementation for loading / saving templates into a directory structure.
+ */
+class FilesystemStorageAccess implements StorageAccess
+{
+	protected $sourcedir;
+	protected $transcompileddir;
+	
+	/*
+	 * Constructor: __construct
+	 * 
+	 * Parameters:
+	 * 	$src - The directory with the sources (Writing permissions are not mandatory, because STE does not save template sources).
+	 * 	$transc - The directory with the transcompiled templates (the PHP instance / the HTTP Server needs writing permissions to this directory).
+	 */
+	public function __construct($src, $transc)
+	{
+		$this->sourcedir        = $src;
+		$this->transcompileddir = $transc;
+	}
+	
+	public function load($tpl, &$mode)
+	{
+		$src_fn    = $this->sourcedir        . "/" . $tpl;
+		$transc_fn = $this->transcompileddir . "/" . $tpl . ".php";
+		
+		if($mode == MODE_SOURCE)
+		{
+			$content = @file_get_contents($src_fn);
+			if($content === False)
+				throw new \Exception("Template not found.");
+			return $content;
+		}
+		
+		$src_stat    = @stat($src_fn);
+		$transc_stat = @stat($transc_fn);
+		
+		if(($src_stat === False) and ($transc_stat === False))
+			throw new \Exception("Template not found.");
+		else if($transc_stat === False)
+		{
+			$mode = MODE_SOURCE;
+			return file_get_contents($src_fn);
+		}
+		else if($src_stat === False)
+		{
+			include($transc_fn);
+			return $transcompile_fx;
+		}
+		else
+		{
+			if($src_stat["mtime"] > $transc_stat["mtime"])
+			{
+				$mode = MODE_SOURCE;
+				return file_get_contents($src_fn);
+			}
+			else
+			{
+				include($transc_fn);
+				return $transcompile_fx;
+			}
+		}
+	}
+	
+	public function save($tpl, $data, $mode)
+	{
+		$fn = (($mode == MODE_SOURCE) ? $this->sourcedir : $this->transcompileddir) . "/" . $tpl . (($mode == MODE_TRANSCOMPILED) ? ".php" : "");
+		@mkdir(dirname($fn), 0777, True);
+		file_put_contents($fn, "<?php \$transcompile_fx = $data; ?>");
+	}
+}
+
 class BreakException    extends \Exception { }
 class ContinueException extends \Exception { }
 
+/*
+ * Class: STECore
+ * The Core of STE
+ */
 class STECore
 {
 	private $tags;
 	private $storage_access;
 	private $cur_tpl_dir;
+	
+	/*
+	 * Variables: Public variables
+	 * 
+	 * $blocks - Associative array of blocks (see the language definition).
+	 * $blockorder - The order of the blocks (an array)
+	 * $vars - Associative array of all template variables. Use this to pass data to your templates.
+	 */
 	public $blocks;
 	public $blockorder;
 	public $vars;
 	
+	/*
+	 * Constructor: __construct
+	 * 
+	 * Parameters:
+	 * 	$storage_access - An Instance of a <StorageAccess> implementation.
+	 */
 	public function __construct($storage_access)
 	{
 		$this->storage_access = $storage_access;
@@ -817,6 +910,14 @@ class STECore
 		$this->blocks = array();
 	}
 	
+	/*
+	 * Function: register_tag
+	 * Register a custom tag.
+	 * 
+	 * Parameters:
+	 * 	$name - The name of the tag.
+	 * 	$callback - A callable function (This must tage three parameters: The <STECore> instance, an associative array of parameters, and a function representing the tags content(This expects the <STECore> instance as its only parameter and returns its text result, i.e to get the text, you neeed to call this function with the <STECore> instance as a parameter)).
+	 */
 	public function register_tag($name, $callback)
 	{
 		if(!is_callable($callback))
@@ -826,6 +927,18 @@ class STECore
 		$this->tags[$name] = $callback;
 	}
 	
+	/*
+	 * Function: call_tag
+	 * Calling a custom tag (builtin ones can not be called)
+	 * 
+	 * Parameters:
+	 * 	$name - The Tag's name
+	 * 	$params - Associative array of parameters
+	 * 	$sub - A callable function (expecting an <STECore> instance as it's parameter) that represents the tag's content.
+	 * 
+	 * Returns:
+	 * 	The output of the tag.
+	 */
 	public function call_tag($name, $params, $sub)
 	{
 		if(!isset($this->tags[$name]))
@@ -833,21 +946,21 @@ class STECore
 		return call_user_func($this->tags[$name], $this, $params, $sub);
 	}
 	
-	public function break_loop()
-	{
-		throw new BreakException();
-	}
-	
-	public function continue_loop()
-	{
-		throw new ContinueException();
-	}
-	
 	public function calc($expression)
 	{
 		return calc_rpn(shunting_yard($expression));
 	}
 	
+	/*
+	 * Function: exectemplate
+	 * Executes a template and returns the result. The huge difference to <load> is that this function will also output all blocks.
+	 * 
+	 * Parameters:
+	 * 	$tpl - The name of the template to execute.
+	 * 
+	 * Returns:
+	 * 	The output of the template.
+	 */
 	public function exectemplate($tpl)
 	{
 		$output = "";
@@ -859,7 +972,26 @@ class STECore
 		return $output . $lastblock;
 	}
 	
-	private function &get_var_reference(&$from, $name, $create_if_not_exist)
+	/*
+	 * Function: get_var_reference
+	 * Get a reference to a template variable using a variable name.
+	 * This can be used,if your custom tag takes a variable name as a parameter.
+	 * 
+	 * Parameters:
+	 * 	$name - The variables name.
+	 * 	$create_if_not_exist - Should the variable be created, if it does not exist? Otherwise NULL will be returned, if the variable does not exist.
+	 * 
+	 * Returns:
+	 * 	A Reference to the variable.
+	 */
+	
+	public function &get_var_reference($name, $create_if_not_exist)
+	{
+		$ref = $this->_get_var_reference($this->vars, $name, $create_if_not_exist);
+		return $ref;
+	}
+	
+	private function &_get_var_reference(&$from, $name, $create_if_not_exist)
 	{
 		$bracket_open = strpos($name, "[");
 		if($bracket_open === False)
@@ -889,7 +1021,7 @@ class STECore
 			}
 			try
 			{
-				$ref = &$self->get_var_reference($from[$varname], $name, $create_if_not_exist);
+				$ref = &$this->_get_var_reference($from[$varname], $name, $create_if_not_exist);
 				return $ref;
 			}
 			catch(Exception $e)
@@ -899,18 +1031,49 @@ class STECore
 		}
 	}
 	
+	/*
+	 * Function set_var_by_name
+	 * Set a template variable by its name.
+	 * This can be used,if your custom tag takes a variable name as a parameter.
+	 * 
+	 * Parameters:
+	 * 	$name - The variables name.
+	 * 	$val - The new value.
+	 */
 	public function set_var_by_name($name, $val)
 	{
-		$ref = &$this->get_var_reference($this->vars, $name, True);
+		$ref = &$this->_get_var_reference($this->vars, $name, True);
 		$ref = $val;
 	}
 	
+	/*
+	 * Function: get_var_by_name
+	 * Get a template variable by its name.
+	 * This can be used,if your custom tag takes a variable name as a parameter.
+	 * 
+	 * Parameters:
+	 * 	$name - The variables name.
+	 * 
+	 * Returns:
+	 * 	The variables value.
+	 */
 	public function get_var_by_name($name)
 	{
-		$ref = $this->get_var_reference($this->vars, $name, False);
+		$ref = $this->_get_var_reference($this->vars, $name, False);
 		return $ref === NULL ? "" : $ref;
 	}
 	
+	/*
+	 * Function: load
+	 * Load a template and return its result (blocks not included, use <exectemplate> for this).
+	 * 
+	 * Parameters:
+	 * 	$tpl - The name of the template to be loaded.
+	 * 	$quiet - If true, do not output anything and do notmodify the blocks. This can be useful to load custom tags that are programmed in STE T/PL. Default: false.
+	 * 
+	 * Returns:
+	 * 	The result of the template (if $quiet == false).
+	 */
 	public function load($tpl, $quiet=False)
 	{
 		$tpldir_b4 = $this->cur_tpl_dir;
@@ -959,6 +1122,16 @@ class STECore
 			return $output;
 	}
 	
+	/*
+	 * Function: evalbool
+	 * Test, if a text represents false (an empty / only whitespace text) or true (everything else).
+	 * 
+	 * Parameters:
+	 * 	$txt - The text to test.
+	 * 
+	 * Returns:
+	 * 	true/false.
+	 */
 	public function evalbool($txt)
 	{
 		return trim($txt) != "";
@@ -984,12 +1157,33 @@ class STEStandardLibrary
 		return strlen($sub($ste));
 	}
 	
-	static public function array_len($ste, $params, $sub)
+	static public function arraylen($ste, $params, $sub)
+	{
+		if(empty($params["array"]))
+			throw new \Exception("Runtime Error: missing array parameter in <ste:arraylen>.");
+		$a = $ste->get_var_by_name($params["array"]);
+		return (is_array($a)) ? count($a) : "";
+	}
+	
+	static public function inc($ste, $params, $sub)
 	{
 		if(empty($params["var"]))
-			throw new \Exception("Runtime Error: missing var parameter in <ste:array_len>.");
-		$a = $ste->get_var_by_name($params["var"]);
-		return (is_array($a)) ? count($a) : "";
+			throw new \Exception("Runtime Error: missing var parameter in <ste:inc>.");
+		$ref = $ste->_get_var_reference($ste->vars, $params["var"]);
+		$ref++;
+	}
+	
+	static public function dec($ste, $params, $sub)
+	{
+		if(empty($params["var"]))
+			throw new \Exception("Runtime Error: missing var parameter in <ste:dec>.");
+		$ref = $ste->_get_var_reference($ste->vars, $params["var"]);
+		$ref--;
+	}
+	
+	static public function date($ste, $params, $sub)
+	{
+		return @date($sub($ste), empty($params["timestamp"]) ? @time() : (int) $params["timestamp"]);
 	}
 }
 

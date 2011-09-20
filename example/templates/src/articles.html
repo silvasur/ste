@@ -1,0 +1,49 @@
+<ste:load name="custom_tags.tpl" />
+<ste:load name="master.html" />
+<ste:comment>Lets overwrite the content section</ste:comment>
+<ste:block name="content">
+	<h2>Some Articles</h2>
+	<ste:foreach_limit array="articles" value="article" max="3" counter="i">
+		<h3><ste:uppercase><ste:escape>$article[title]</ste:escape></ste:uppercase></h3>
+		<div class="author">Author: <ste:escape>$article[author]</ste:escape></div>
+		<div class="date"><ste:date timestamp="$article[timestamp]">d. M. Y, H:i:s</ste:date></div>
+		<div class="article_content">
+			<ste:if>
+				<ste:cmp var_a="i" op="eq" text_b="0" />
+				<ste:then>
+					<ste:comment>First entry, lets show the whole text</ste:comment>
+					$article[full]
+				</ste:then>
+				<ste:else>
+					$article[excerpt]
+				</ste:else>
+			</ste:if>
+		</div>
+		<hr />
+	</ste:foreach_limit>
+	<ste:comment>There are more than 3 articles?</ste:comment>
+	<ste:set var="articles_n"><ste:arraylen array="articles" /></ste:set>
+	<ste:if>
+		<ste:cmp var_a="articles_n" op="gt" text_b="3" />
+		<ste:then>
+			<p>There are <a href="#">more articles</a>.</p>
+		</ste:then>
+	</ste:if>
+	
+	<h2>Some more useless demo stuff...</h2>
+		<h3>Counting from 10 to 0...</h3>
+		<p>but take only the even ones and multiply by 5...</p>
+		<ste:for start="10" stop="0" step="-1" counter="i">
+			<ste:if>
+				<ste:even>$i</ste:even>
+				<ste:then>
+					<ste:calc>$i * 5</ste:calc><br />
+				</ste:then>
+			</ste:if>
+		</ste:for>
+		
+		<h3>Repeat some text...</h3>
+		<ste:repeat n="10">
+			<p>Bla</p>
+		</ste:repeat>
+</ste:block>

@@ -67,6 +67,17 @@
 					<li><a href="#builtin_mktag">ste:mktag</a></li>
 				</ol>
 			</li>
+			<li>
+				<a href="#stdlib">Standard Library</a>
+				<ol>
+					<li><a href="#stdlib_escape">ste:escape</a></li>
+					<li><a href="#stdlib_strlen">ste:strlen</a></li>
+					<li><a href="#stdlib_arraylen">ste:arraylen</a></li>
+					<li><a href="#stdlib_inc">ste:inc</a></li>
+					<li><a href="#stdlib_dec">ste:dec</a></li>
+					<li><a href="#stdlib_date">ste:date</a></li>
+				</ol>
+			</li>
 		</ol>
 	
 	<h2 id="basic_elems">Basic Elements</h2>
@@ -459,6 +470,7 @@
 				Example:<br />
 				<code><![CDATA[<ste:calc>(2+3+4) * (1.5 - (-0.5))</ste:calc>]]></code> will return <code>18</code>.
 			</p>
+			<p>This Tag is pretty slow, because the formula is not transcompiled and only evaluated at runtime. For some simple increment and decrement operations it is better to use the <a href="#stdlib_inc">ste:inc</a> and <a href="#stdlib_dec">ste:dec</a> Tags from the <a href="#stdlib">standard library</a>.</p>
 		
 		<h3 id="builtin_mktag">ste:mktag</h3>
 			<p>ste:mktag allows you to define own <a href="#basic_elems_tag">Tags</a> using <acronym>STE T/PL</acronym>.</p>
@@ -486,6 +498,38 @@
 4<br />
 2<br />
 0<br />]]></pre></code>
+			</p>
+		
+	<h2 id="stdlib">Standard Library</h2>
+		<p>The Standard Library contains some useful tags, which are not <a href="#builtin">builtin</a> but still always available.</p>
+		<h3 id="stdlib_escape">ste:escape</h3>
+			<p>Escapes characters that are reserved for HTML (e.g. <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, <code>&amp;</code>). The text to escape ist the tag's content.
+			<p>
+				Example:<br />
+				<code><pre><![CDATA[<ste:escape>Foo & bar...</ste:escape>]]></pre></code>
+				Result:<br />
+				<code><pre><![CDATA[<ste:escape>Foo &amp; bar...</ste:escape>]]></pre></code>
+			</p>
+		
+		<h3 id="stdlib_strlen">ste:strlen</h3>
+			<p>Returns the length of then content.</p>
+		
+		<h3 id="stdlib_arraylen">ste:arraylen</h3>
+			<p>Returns the number of elements in the array (variable name given by parameter <code>array</code>).</p>
+		
+		<h3 id="stdlib_inc">ste:inc</h3>
+			<p>Increments (i.e. add 1) a variable (variable name given by parameter <code>var</code>).</p>
+		
+		<h3 id="stdlib_dec">ste:dec</h3>
+			<p>Decrements (i.e. substract 1) a variable (variable name given by parameter <code>var</code>).</p>
+		
+		<h3 id="stdlib_date">ste:date</h3>
+			<p>Formats a time using PHPs <a href="http://php.net/manual/en/function.date.php">date format [ext. Link]</a>. The format is given in the tag's content. You can specify a time (unix timestamp) using the <code>timestamp</code> parameter (defaults to the current time).</p>
+			<p>
+				Example:<br />
+				<code><pre><![CDATA[<ste:date timestamp="1316357360">d. M. Y, H:i:s</ste:date>]]></pre></code>
+				Result:<br />
+				<code><pre><![CDATA[18. Sep. 2011, 16:49:20]]></pre></code>
 			</p>
 </body>
 </html>
