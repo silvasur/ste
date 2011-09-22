@@ -94,7 +94,7 @@ function tokenize_text($text)
 	if(preg_match("/(?:(?<!\\\\)\\$)/s", $text, $match, PREG_OFFSET_CAPTURE) == 0)
 	{
 		$node = new TextNode();
-		$node->text = unescape_text($text);
+		$node->text = preg_replace("/^\\n\\s*/s", "", unescape_text($text));
 		return (strlen($node->text) == 0) ? array() : array($node);
 	}
 	
