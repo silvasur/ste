@@ -24,7 +24,7 @@
 	<ste:comment>There are more than 3 articles?</ste:comment>
 	<ste:set var="articles_n"><ste:arraylen array="articles" /></ste:set>
 	<ste:if>
-		<ste:cmp var_a="articles_n" op="gt" text_b="3" />
+		~{$articles_n|gt|3}
 		<ste:then>
 			<p>There are <a href="#">more articles</a>.</p>
 		</ste:then>

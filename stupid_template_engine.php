@@ -83,8 +83,7 @@ function find_closing_bracket($text, $opening, $closing)
 
 function unescape_text($text)
 {
-	$text = preg_replace("/(?:(?<!\\\\)\\\\\\\$)/s", "$", $text);
-	return str_replace("\\\\", "\\", $text);
+	return stripcslashes($text);
 }
 
 function tokenize_text($text)
@@ -233,13 +232,19 @@ function parse($code)
 {
 	/* Precompiling... */
 	$code = preg_replace("/\\<\\s*ste:comment\\s*\\>.*?\\<\\s*\\/\\s*ste:comment\\s*\\>/s", "", $code); /* Remove comments */
+	$code = preg_replace( /* Transform short form of comparison (~{a|op|b}) to long form */
+		"/(?:(?<!\\\\)~)(?:(?<!\\\\)\\{)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\})/s",
+		"<ste:cmp text_a=\"\$1\" op=\"\$2\" text_b=\"\$3\" />",
+		$code
+	);
 	$code = preg_replace( /* Transform short form of if-clause (?{cond|then|else}) to long form */
 		"/(?:(?<!\\\\)\\?)(?:(?<!\\\\)\\{)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\})/s",
 		"<ste:if>\$1<ste:then>\$2</ste:then><ste:else>\$3</ste:else></ste:if>",
 		$code
 	);
-	/* Unescape \? \{ \} \| */
+	/* Unescape \? \~ \{ \} \| */
 	$code = preg_replace("/(?:(?<!\\\\)\\\\\\?)/s", "?", $code);
+	$code = preg_replace("/(?:(?<!\\\\)\\\\~)/s", "~", $code);
 	$code = preg_replace("/(?:(?<!\\\\)\\\\\\{)/s", "{", $code);
 	$code = preg_replace("/(?:(?<!\\\\)\\\\\\})/s", "}", $code);
 	$code = preg_replace("/(?:(?<!\\\\)\\\\\\|)/s", "|", $code);
