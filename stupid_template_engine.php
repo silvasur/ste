@@ -1091,7 +1091,7 @@ class STECore
 		$tpl = str_replace("\\", "/", $tpl);
 		if($tpl[0] != "/")
 			$tpl = $this->cur_tpl_dir . "/" . $tpl;
-		$pathex = array_filter(array_slice(explode("/", $tpl), 1), function($s) { return ($s != ".") and (!empty($s)); });
+		$pathex = array_filter(explode("/", $tpl), function($s) { return ($s != ".") and (!empty($s)); });
 		$pathex = array_merge($pathex);
 		while(($i = array_search("..", $pathex)) !== False)
 		{
