@@ -24,9 +24,6 @@ Why should you use it?
 Annoying things.
 ----------------
 
-* The error messages the parser returns, when your template has errors, are not
-  very helpful, i.e. the position of the error is not returned. You have to seek
-  it yourself.
 * No caching. Could be slow on websites with many hits.
 
 WARNING

@@ -15,19 +15,30 @@
  */
 namespace ste;
 
-class TextNode
+abstract class ASTNode
+{
+	public $tpl;
+	public $offset;
+	public function __construct($tpl, $off)
+	{
+		$this->tpl    = $tpl;
+		$this->offset = $off;
+	}
+}
+
+class TextNode extends ASTNode
 {
 	public $text;
 }
 
-class TagNode
+class TagNode extends ASTNode
 {
 	public $name;
 	public $params;
 	public $sub;
 }
 
-class VariableNode
+class VariableNode extends ASTNode
 {
 	public $name;
 	public $arrayfields;
@@ -52,6 +63,28 @@ class VariableNode
 				). ']';
 		}
 		return $varaccess;
+	}
+}
+
+class ParseCompileError extends \Exception
+{
+	public $msg;
+	public $tpl;
+	public $off;
+	
+	public function __construct($msg, $tpl, $offset, $code = 0, $previous = NULL)
+	{
+		$this->msg = $msg;
+		$this->tpl = $tpl;
+		$this->off = $offset;
+		$this->message = "$msg (Template $tpl, Offset $offset)";
+	}
+	
+	public function rewrite($code)
+	{
+		$line = substr_count(str_replace("\r\n", "\n", $code), "\n", 0, $this->off + 1) + 1;
+		$this->message = "{$this->msg} (Template $tpl, Line $line)";
+		$this->is_rewritten = True;
 	}
 }
 
@@ -86,80 +119,98 @@ function unescape_text($text)
 	return stripcslashes($text);
 }
 
-function tokenize_text($text)
+function tokenize_text($text, $tpl, $off)
 {
 	$tokens = array();
 	/* Find next non-escaped $-char */
 	if(preg_match("/(?:(?<!\\\\)\\$)/s", $text, $match, PREG_OFFSET_CAPTURE) == 0)
 	{
-		$node = new TextNode();
+		$node = new TextNode($tpl, $off);
 		$node->text = preg_replace("/^\\n\\s*/s", "", unescape_text($text));
 		return (strlen($node->text) == 0) ? array() : array($node);
 	}
 	
 	if($match[0][1] > 0)
 	{
-		$node = new TextNode();
+		$node = new TextNode($tpl, $off);
 		$node->text = unescape_text(substr($text, 0, $match[0][1]));
 		$tokens[] = $node;
 	}
 	
 	if($text[$match[0][1] + 1] == "{")
 	{
-		$varend = find_closing_bracket(substr($text, $match[0][1] + 2), "{", "}") + $match[0][1] + 2;
+		try
+		{
+			$varend = find_closing_bracket(substr($text, $match[0][1] + 2), "{", "}") + $match[0][1] + 2;
+		}
+		catch(\Exception $e)
+		{
+			throw new ParseCompileError("Parse Error: Missing closing '}'", $tpl, $off + $match[0][1] + 1);
+		}
 		return array_merge(
 			$tokens,
-			tokenize_text("\$" . substr($text, $match[0][1] + 2, ($varend - 1) - ($match[0][1] + 1))),
-			tokenize_text(substr($text, $varend + 1))
+			tokenize_text("\$" . substr($text, $match[0][1] + 2, ($varend - 1) - ($match[0][1] + 1)), $tpl, $off + $match[0][1] + 2),
+			tokenize_text(substr($text, $varend + 1), $tpl, $off + $varend + 1)
 		);
 	}
 	
 	$text = substr($text, $match[0][1] + 1);
+	$off += $match[0][1] + 1;
 	if(preg_match("/^[a-zA-Z0-9_]+/s", $text, $match, PREG_OFFSET_CAPTURE) == 0)
 	{
-		$nexttokens = tokenize_text($text);
-		if($nexttokens[0] instanceof Text)
+		$nexttokens = tokenize_text($text, $tpl, $off);
+		if($nexttokens[0] instanceof TextNode)
 			$nexttokens[0]->text = "\$" . $nexttokens[0]->text;
 		else
 		{
-			$node = new TextNode();
+			$node = new TextNode($tpl, $off);
 			$node->text = "\$";
 			$tokens[] = $node;
 		}
 		return array_merge($tokens, $nexttokens);
 	}
 	
-	$node = new VariableNode();
+	$node = new VariableNode($tpl, $off + $match[0][1]);
 	$node->name = $match[0][0];
 	$node->arrayfields = array();
 	
 	$text = substr($text, $match[0][1] + strlen($match[0][0]));
+	$off += $match[0][1] + strlen($match[0][0]);
 	while(@$text[0] == "[")
 	{
 		$text = substr($text, 1);
-		$fieldend = find_closing_bracket($text, "[", "]");
-		$node->arrayfields[] = tokenize_text(substr($text, 0, $fieldend));
+		$off += 1;
+		try
+		{
+			$fieldend = find_closing_bracket($text, "[", "]");
+		}
+		catch(\Exception $e)
+		{
+			throw new ParseCompileError("Parse Error: Missing closing ']'", $tpl, $off - 1);
+		}
+		$node->arrayfields[] = tokenize_text(substr($text, 0, $fieldend), $tpl, $off);
 		$text = substr($text, $fieldend + 1);
+		$off += $fieldend + 1;
 	}
 	
 	$tokens[] = $node;
 	
-	return strlen($text) > 0 ? array_merge($tokens, tokenize_text($text)) : $tokens;
+	return strlen($text) > 0 ? array_merge($tokens, tokenize_text($text, $tpl, $off)) : $tokens;
 }
 
-function mk_ast($code)
+function mk_ast($code, $tpl, $err_off)
 {
 	$ast = array();
 	
 	if(preg_match("/\\<\\s*ste:([a-zA-Z0-9_]*)/s", $code, $matches, PREG_OFFSET_CAPTURE) == 0)
-		return tokenize_text($code);
+		return tokenize_text($code, $tpl, $err_off);
 	
-	$ast = tokenize_text(substr($code, 0, $matches[0][1]));
-	
-	$tag = new TagNode();
+	$ast = tokenize_text(substr($code, 0, $matches[0][1]), $tpl, $err_off);
+	$tag = new TagNode($tpl, $err_off + $matches[0][1]);
 	$tag->name = $matches[1][0];
 	
 	$code = substr($code, $matches[0][1] + strlen($matches[0][0]));
+	$err_off += $matches[0][1] + strlen($matches[0][0]);
 	
 	$tag->params = array();
 	
@@ -168,14 +219,16 @@ function mk_ast($code)
 		$paramval = substr($code, $matches[2][1] + 1, strlen($matches[2][0]) - 2);
 		$paramval = str_replace("\\\"", "\"", $paramval);
 		$paramval = str_replace("\\'", "'", $paramval);
-		$tag->params[$matches[1][0]] = tokenize_text($paramval);
+		$tag->params[$matches[1][0]] = tokenize_text($paramval, $tpl, $err_off + $matches[2][1] + 1);
 		$code = substr($code, strlen($matches[0][0]));
+		$err_off += strlen($matches[0][0]);
 	}
 	
 	if(preg_match("/^\\s*([\\/]?)\\s*\\>/s", $code, $matches) == 0)
-		throw new \Exception("Missing closing '>' in \"" . $tag->name . "\"-Tag. Stop. (:::CODE START:::$code:::CODE END:::)");
+		throw new ParseCompileError("Parse Error: Missing closing '>' in \"" . $tag->name . "\"-Tag.", $tpl, $tag->offset);
 	
 	$code = substr($code, strlen($matches[0]));
+	$err_off += strlen($matches[0]);
 	
 	$tag->sub = array();
 	
@@ -201,37 +254,39 @@ function mk_ast($code)
 		}
 		
 		if(($tags_open != 0) or ($tag->name != $matches[2][0]))
-			throw new \Exception("Missing closing \"ste:" . $tag->name . "\"-Tag. Stop.");
+			throw new ParseCompileError("Parse Error: Missing closing \"ste:" . $tag->name . "\"-Tag.", $tpl, $tag->offset);
 		
 		if($tag->name == "rawtext")
 		{
-			$tag = new TextNode();
+			$tag = new TextNode($tpl, $err_off);
 			$tag->text = substr($code, 0, $last_tag_start);
 		}
+		else if($tag->name == "comment")
+			$tag = NULL; /* All this work to remove a comment ... */
 		else
-			$tag->sub = mk_ast(substr($code, 0, $last_tag_start));
+			$tag->sub = mk_ast(substr($code, 0, $last_tag_start), $tpl, $err_off);
 		$code = substr($code, $off);
+		$err_off += $off;
 	}
 	
-	$ast[] = $tag;
-	return array_merge($ast, strlen($code) > 0 ? mk_ast($code) : array());
+	if($tag !== NULL)
+		$ast[] = $tag;
+	return array_merge($ast, strlen($code) > 0 ? mk_ast($code, $tpl, $err_off) : array());
 }
 
 /*
- * Function: parse
- * Parsing a STE T/PL template.
+ * Function: precompile
+ * Precompiling STE T/PL templates.
  * You only need this function, if you want to manually transcompile a template.
  * 
  * Parameters:
- * 	$code - The STE T/PL code.
+ * 	$code - The input code
  * 
  * Returns:
- * 	An abstract syntax tree, whic can be used with <transcompile>.
+ * 	The precompiled code.
  */
-function parse($code)
+function precompile($code)
 {
-	/* Precompiling... */
-	$code = preg_replace("/\\<\\s*ste:comment\\s*\\>.*?\\<\\s*\\/\\s*ste:comment\\s*\\>/s", "", $code); /* Remove comments */
 	$code = preg_replace( /* Transform short form of comparison (~{a|op|b}) to long form */
 		"/(?:(?<!\\\\)~)(?:(?<!\\\\)\\{)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\})/s",
 		"<ste:cmp text_a=\"\$1\" op=\"\$2\" text_b=\"\$3\" />",
@@ -244,13 +299,29 @@ function parse($code)
 	);
 	/* Unescape \? \~ \{ \} \| */
 	$code = preg_replace("/(?:(?<!\\\\)\\\\\\?)/s", "?", $code);
-	$code = preg_replace("/(?:(?<!\\\\)\\\\~)/s", "~", $code);
+	$code = preg_replace("/(?:(?<!\\\\)\\\\~)/s",   "~", $code);
 	$code = preg_replace("/(?:(?<!\\\\)\\\\\\{)/s", "{", $code);
 	$code = preg_replace("/(?:(?<!\\\\)\\\\\\})/s", "}", $code);
 	$code = preg_replace("/(?:(?<!\\\\)\\\\\\|)/s", "|", $code);
 	
-	/* Create abstract syntax tree */
-	return mk_ast($code);
+	return $code;
+}
+
+/*
+ * Function: parse
+ * Parsing a STE T/PL template.
+ * You only need this function, if you want to manually transcompile a template.
+ * 
+ * Parameters:
+ * 	$code - The STE T/PL code.
+ * 	$tpl  - The name of the template.
+ * 
+ * Returns:
+ * 	An abstract syntax tree, which can be used with <transcompile>.
+ */
+function parse($code, $tpl)
+{
+	return mk_ast($code, $tpl, 0);
 }
 
 function indent_code($code)
@@ -407,8 +478,8 @@ $ste_builtins = array(
 	{
 		$output = "";
 		$condition = array();
-		$then = array();
-		$else = array();
+		$then = NULL;
+		$else = NULL;
 		
 		foreach($ast->sub as $node)
 		{
@@ -420,15 +491,15 @@ $ste_builtins = array(
 				$condition[] = $node;
 		}
 		
-		if(empty($then))
-			throw new \Exception("Transcompile error: Missing <ste:else> in <ste:if>. Stop.");
+		if($then === NULL)
+			throw new ParseCompileError("Transcompile error: Missing <ste:then> in <ste:if>.", $ast->tpl, $ast->offset);
 		
 		$output .= "\$outputstack[] = \"\";\n\$outputstack_i++;\n";
 		$output .= _transcompile($condition);
 		$output .= "\$outputstack_i--;\nif(\$ste->evalbool(array_pop(\$outputstack)))\n{\n";
 		$output .= indent_code(_transcompile($then));
 		$output .= "\n}\n";
-		if(!empty($else))
+		if($else !== NULL)
 		{
 			$output .= "else\n{\n";
 			$output .= indent_code(_transcompile($else));
@@ -452,7 +523,7 @@ $ste_builtins = array(
 			$b = 'array_pop($outputstack)';
 		}
 		else
-			throw new \Exception("Transcompile error: neiter var_b nor text_b set in <ste:cmp>. Stop.");
+			throw new ParseCompileError("Transcompile error: neiter var_b nor text_b set in <ste:cmp>.", $ast->tpl, $ast->offset);
 		
 		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		if(isset($ast->params["var_a"]))
@@ -466,13 +537,13 @@ $ste_builtins = array(
 			$a = 'array_pop($outputstack)';
 		}
 		else
-			throw new \Exception("Transcompile error: neiter var_a nor text_a set in <ste:cmp>. Stop.");
+			throw new ParseCompileError("Transcompile error: neiter var_a nor text_a set in <ste:cmp>.", $ast->tpl, $ast->offset);
 		
 		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		if(isset($ast->params["op"]))
 			$code .= _transcompile($ast->params["op"]);
 		else
-			throw new \Exception("Transcompile error: op not given in <ste:cmp>. Stop.");
+			throw new ParseCompileError("Transcompile error: op not given in <ste:cmp>.", $ast->tpl, $ast->offset);
 		
 		$code .= "\$outputstack_i -= 3;\nswitch(trim(array_pop(\$outputstack)))\n{\n\t";
 		$code .= implode("", array_map(
@@ -512,13 +583,13 @@ $ste_builtins = array(
 		$code = "";
 		$loopname = "forloop_" . str_replace(".", "_", uniqid("",True));
 		if(empty($ast->params["start"]))
-			throw new \Exception("Transcompile error: Missing 'start' parameter in <ste:for>. Stop.");
+			throw new ParseCompileError("Transcompile error: Missing 'start' parameter in <ste:for>.", $ast->tpl, $ast->offset);
 		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		$code .= _transcompile($ast->params["start"]);
 		$code .= "\$outputstack_i--;\n\$${loopname}_start = array_pop(\$outputstack);\n";
 		
 		if(empty($ast->params["stop"]))
-			throw new \Exception("Transcompile error: Missing 'end' parameter in <ste:for>. Stop.");
+			throw new ParseCompileError("Transcompile error: Missing 'end' parameter in <ste:for>.", $ast->tpl, $ast->offset);
 		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		$code .= _transcompile($ast->params["stop"]);
 		$code .= "\$outputstack_i--;\n\$${loopname}_stop = array_pop(\$outputstack);\n";
@@ -560,13 +631,13 @@ $ste_builtins = array(
 		$code = "";
 		
 		if(empty($ast->params["array"]))
-			throw new \Exception("Transcompile Error: array not givein in <ste:foreach>. Stop.");
+			throw new ParseCompileError("Transcompile Error: array not given in <ste:foreach>.", $ast->tpl, $ast->offset);
 		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		$code .= _transcompile($ast->params["array"]);
 		$code .= "\$outputstack_i--;\n\$${loopname}_arrayvar = array_pop(\$outputstack);\n";
 		
 		if(empty($ast->params["value"]))
-			throw new \Exception("Transcompile Error: value not givein in <ste:foreach>. Stop.");
+			throw new ParseCompileError("Transcompile Error: value not given in <ste:foreach>.", $ast->tpl, $ast->offset);
 		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		$code .= _transcompile($ast->params["value"]);
 		$code .= "\$outputstack_i--;\n\$${loopname}_valuevar = array_pop(\$outputstack);\n";
@@ -616,8 +687,8 @@ $ste_builtins = array(
 	},
 	"block" => function($ast)
 	{
-		if(empty($ast->name))
-			throw new \Exception("Transcompile Error: name missing in <ste:block>. Stop.");
+		if(empty($ast->params["name"]))
+			throw new ParseCompileError("Transcompile Error: name missing in <ste:block>.", $ast->tpl, $ast->offset);
 		
 		$blknamevar = "blockname_" . str_replace(".", "_", uniqid("", True));
 		
@@ -638,7 +709,7 @@ $ste_builtins = array(
 	"load" => function($ast)
 	{
 		if(empty($ast->params["name"]))
-			throw new \Exception("Transcompile Error: name missing in <ste:load>. Stop.");
+			throw new ParseCompileError("Transcompile Error: name missing in <ste:load>.", $ast->tpl, $ast->offset);
 		
 		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		$code .= _transcompile($ast->params["name"]);
@@ -649,7 +720,7 @@ $ste_builtins = array(
 	"mktag" => function($ast)
 	{
 		if(empty($ast->params["name"]))
-			throw new \Exception("Transcompile Error: name missing in <ste:mktag>. Stop.");
+			throw new ParseCompileError("Transcompile Error: name missing in <ste:mktag>.", $ast->tpl, $ast->offset);
 		
 		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		$code .= _transcompile($ast->params["name"]);
@@ -681,7 +752,7 @@ $ste_builtins = array(
 	"set" => function($ast)
 	{
 		if(empty($ast->params["var"]))
-			throw new \Exception("Transcompile Error: var missing in <ste:set>. Stop.");
+			throw new ParseCompileError("Transcompile Error: var missing in <ste:set>.", $ast->tpl, $ast->offset);
 		
 		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		$code .= _transcompile($ast->params["var"]);
@@ -749,6 +820,7 @@ $ste_transc_boilerplate = "\$outputstack = array('');\n\$outputstack_i = 0;\n";
 /*
  * Function: transcompile
  * Transcompiles an abstract syntax tree to PHP.
+ * You only need this function, if you want to manually transcompile a template.
  * 
  * Parameters:
  * 	$ast - The abstract syntax tree to transcompile.
@@ -1112,8 +1184,17 @@ class STECore
 		$content = $this->storage_access->load($tpl, $mode);
 		if($mode == MODE_SOURCE)
 		{
-			$ast    = parse($content);
-			$transc = transcompile($ast);
+			$content = precompile($content);
+			try
+			{
+				$ast     = parse($content, $tpl, 0);
+				$transc  = transcompile($ast);
+			}
+			catch(ParseCompileError $e)
+			{
+				$e->rewrite($content);
+				throw $e;
+			}
 			$this->storage_access->save($tpl, $transc, MODE_TRANSCOMPILED);
 			eval("\$content = $transc;");
 		}
