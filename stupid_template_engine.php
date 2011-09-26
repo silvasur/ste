@@ -114,6 +114,16 @@ function find_closing_bracket($text, $opening, $closing)
 	return $i;
 }
 
+function instance_in_array($classname, $a)
+{
+	foreach($a as $v)
+	{
+		if($v instanceof $classname)
+			return True;
+	}
+	return False;
+}
+
 function unescape_text($text)
 {
 	return stripcslashes($text);
@@ -509,59 +519,62 @@ $ste_builtins = array(
 	},
 	"cmp" => function($ast)
 	{
+		$operators = array(
+			array('eq', '=='),
+			array('neq', '!='),
+			array('lt', '<'),
+			array('lte', '<='),
+			array('gt', '>'),
+			array('gte', '>=')
+		);
+		
 		$code = "";
 		
-		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		if(isset($ast->params["var_b"]))
-		{
-			$code .= _transcompile($ast->params["var_b"]);
-			$b = '$ste->get_var_by_name(array_pop($outputstack))';
-		}
+			$b = '$ste->get_var_by_name(' . _transcompile($ast->params["var_b"], True) . ')';
 		else if(isset($ast->params["text_b"]))
-		{
-			$code .= _transcompile($ast->params["text_b"]);
-			$b = 'array_pop($outputstack)';
-		}
+			$b = _transcompile($ast->params["text_b"], True);
 		else
 			throw new ParseCompileError("Transcompile error: neiter var_b nor text_b set in <ste:cmp>.", $ast->tpl, $ast->offset);
 		
-		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		if(isset($ast->params["var_a"]))
-		{
-			$code .= _transcompile($ast->params["var_a"]);
-			$a = '$ste->get_var_by_name(array_pop($outputstack))';
-		}
+			$a = '$ste->get_var_by_name(' . _transcompile($ast->params["var_a"], True) . ')';
 		else if(isset($ast->params["text_a"]))
-		{
-			$code .= _transcompile($ast->params["text_a"]);
-			$a = 'array_pop($outputstack)';
-		}
+			$a = _transcompile($ast->params["text_a"], True);
 		else
 			throw new ParseCompileError("Transcompile error: neiter var_a nor text_a set in <ste:cmp>.", $ast->tpl, $ast->offset);
 		
-		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		if(isset($ast->params["op"]))
-			$code .= _transcompile($ast->params["op"]);
-		else
+		if(!isset($ast->params["op"]))
 			throw new ParseCompileError("Transcompile error: op not given in <ste:cmp>.", $ast->tpl, $ast->offset);
-		
-		$code .= "\$outputstack_i -= 3;\nswitch(trim(array_pop(\$outputstack)))\n{\n\t";
-		$code .= implode("", array_map(
-				function($op) use ($a,$b)
+		if((count($ast->params["op"]) == 1) and ($ast->params["op"][0] instanceof TextNode))
+		{
+			/* Operator is known at compile time, this saves *a lot* of output code! */
+			$op = trim($ast->params["op"][0]->text);
+			$op_php = NULL;
+			foreach($operators as $v)
+			{
+				if($v[0] == $op)
 				{
-					list($op_stetpl, $op_php) = $op;
-					return "case '$op_stetpl':\n\t\$outputstack[\$outputstack_i] .= (($a) $op_php ($b)) ? 'yes' : '';\n\tbreak;\n\t";
-				},
-				array(
-					array('eq', '=='),
-					array('neq', '!='),
-					array('lt', '<'),
-					array('lte', '<='),
-					array('gt', '>'),
-					array('gte', '>=')
-				)
-			));
-		$code .= "default: throw new \Exception('Runtime Error: Unknown operator in <ste:cmp>.');\n}\n";
+					$op_php = $v[1];
+					break;
+				}
+			}
+			if($op_php === NULL)
+				throw new ParseCompileError("Transcompile Error: Unknown operator in <ste:cmp>", $ast->tpl, $ast->offset);
+			$code .= "\$outputstack[\$outputstack_i] .= (($a) $op_php ($b)) ? 'yes' : '';\n";
+		}
+		else
+		{
+			$code .= "switch(trim(" . _transcompile($ast->params["op"], True) . "))\n{\n\t";
+			$code .= implode("", array_map(
+					function($op) use ($a,$b)
+					{
+						list($op_stetpl, $op_php) = $op;
+						return "case '$op_stetpl':\n\t\$outputstack[\$outputstack_i] .= (($a) $op_php ($b)) ? 'yes' : '';\n\tbreak;\n\t";
+					}, $operators
+				));
+			$code .= "default: throw new \Exception('Runtime Error: Unknown operator in <ste:cmp>.');\n}\n";
+		}
 		return $code;
 	},
 	"not" => function($ast)
@@ -584,44 +597,44 @@ $ste_builtins = array(
 		$loopname = "forloop_" . str_replace(".", "_", uniqid("",True));
 		if(empty($ast->params["start"]))
 			throw new ParseCompileError("Transcompile error: Missing 'start' parameter in <ste:for>.", $ast->tpl, $ast->offset);
-		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		$code .= _transcompile($ast->params["start"]);
-		$code .= "\$outputstack_i--;\n\$${loopname}_start = array_pop(\$outputstack);\n";
+		$code .= "\$${loopname}_start = " . _transcompile($ast->params["start"], True) . ";\n";
 		
 		if(empty($ast->params["stop"]))
 			throw new ParseCompileError("Transcompile error: Missing 'end' parameter in <ste:for>.", $ast->tpl, $ast->offset);
-		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		$code .= _transcompile($ast->params["stop"]);
-		$code .= "\$outputstack_i--;\n\$${loopname}_stop = array_pop(\$outputstack);\n";
+		$code .= "\$${loopname}_stop = " . _transcompile($ast->params["stop"], True) . ";\n";
 		
+		$step = NULL; /* i.e. not known at compilation time */
 		if(empty($ast->params["step"]))
-			$code .= "\$${loopname}_step = 1;\n";
+			$step = 1;
+		else if((count($ast->params["step"]) == 1) and ($ast->params["step"][0] instanceof TextNode))
+			$step = $ast->params["step"][0] + 0;
 		else
-		{
-			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-			$code .= _transcompile($ast->params["step"]);
-			$code .= "\$outputstack_i--;\n\$${loopname}_step = array_pop(\$outputstack);\n";
-		}
+			$code .= "\$${loopname}_step = " . _transcompile($ast->params["step"], True) . ";\n";
 		
 		if(!empty($ast->params["counter"]))
-		{
-			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-			$code .= _transcompile($ast->params["counter"]);
-			$code .= "\$outputstack_i--;\n\$${loopname}_countername = array_pop(\$outputstack);\n";
-		}
+			$code .= "\$${loopname}_countername = " . _transcompile($ast->params["counter"], True) . ";\n";
 		
 		$loopbody = empty($ast->params["counter"]) ? "" : "\$ste->set_var_by_name(\$${loopname}_countername, \$${loopname}_counter);\n";
 		$loopbody .= _transcompile($ast->sub);
 		$loopbody = indent_code("{\n" . loopbody(indent_code($loopbody)) . "\n}\n");
 		
-		$code .= "if(\$${loopname}_step == 0)\n\tthrow new \Exception('Runtime Error: step can not be 0 in <ste:for>. Stop.');\n";
-		$code .= "if(\$${loopname}_step > 0)\n{\n";
-		$code .= "\tfor(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_counter <= \$${loopname}_stop; \$${loopname}_counter += \$${loopname}_step)\n";
-		$code .= $loopbody;
-		$code .= "\n}\nelse\n{\n";
-		$code .= "\tfor(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_counter >= \$${loopname}_stop; \$${loopname}_counter += \$${loopname}_step)\n";
-		$code .= $loopbody;
-		$code .= "\n}\n";
+		if($step === NULL)
+		{
+			$code .= "if(\$${loopname}_step == 0)\n\tthrow new \Exception('Runtime Error: step can not be 0 in <ste:for>.');\n";
+			$code .= "if(\$${loopname}_step > 0)\n{\n";
+			$code .= "\tfor(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_counter <= \$${loopname}_stop; \$${loopname}_counter += \$${loopname}_step)\n";
+			$code .= $loopbody;
+			$code .= "\n}\nelse\n{\n";
+			$code .= "\tfor(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_counter >= \$${loopname}_stop; \$${loopname}_counter += \$${loopname}_step)\n";
+			$code .= $loopbody;
+			$code .= "\n}\n";
+		}
+		else if($step == 0)
+			throw new ParseCompileError("Transcompile Error: step can not be 0 in <ste:for>.", $ast->tpl, $ast->offset);
+		else if($step > 0)
+			$code .= "for(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_counter <= \$${loopname}_stop; \$${loopname}_counter += $step)\n$loopbody\n";
+		else
+			$code .= "for(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_counter >= \$${loopname}_stop; \$${loopname}_counter += $step)\n$loopbody\n";
 		
 		return $code;
 	},
@@ -632,39 +645,30 @@ $ste_builtins = array(
 		
 		if(empty($ast->params["array"]))
 			throw new ParseCompileError("Transcompile Error: array not given in <ste:foreach>.", $ast->tpl, $ast->offset);
-		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		$code .= _transcompile($ast->params["array"]);
-		$code .= "\$outputstack_i--;\n\$${loopname}_arrayvar = array_pop(\$outputstack);\n";
+		$code .= "\$${loopname}_arrayvar = " . _transcompile($ast->params["array"], True) . ";\n";
 		
 		if(empty($ast->params["value"]))
 			throw new ParseCompileError("Transcompile Error: value not given in <ste:foreach>.", $ast->tpl, $ast->offset);
-		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		$code .= _transcompile($ast->params["value"]);
-		$code .= "\$outputstack_i--;\n\$${loopname}_valuevar = array_pop(\$outputstack);\n";
+		$code .= "\$${loopname}_valuevar = " . _transcompile($ast->params["value"], True) . ";\n";
 		
 		if(!empty($ast->params["key"]))
-		{
-			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-			$code .= _transcompile($ast->params["key"]);
-			$code .= "\$outputstack_i--;\n\$${loopname}_keyvar = array_pop(\$outputstack);\n";
-		}
+			$code .= "\$${loopname}_keyvar = " . _transcompile($ast->params["key"], True) . ";\n";
 		
 		if(!empty($ast->params["counter"]))
-		{
-			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-			$code .= _transcompile($ast->params["counter"]);
-			$code .= "\$outputstack_i--;\n\$${loopname}_countervar = array_pop(\$outputstack);\n";
-		}
+			$code .= "\$${loopname}_countervar = " . _transcompile($ast->params["counter"], True) . ";\n";
 		
+		$loopbody = "";
 		$code .= "\$${loopname}_array = \$ste->get_var_by_name(\$${loopname}_arrayvar);\n";
 		$code .= "if(!is_array(\$${loopname}_array))\n\t\$${loopname}_array = array();\n";
-		$code .= "\$${loopname}_counter = -1;\n";
+		if(!empty($ast->params["counter"]))
+		{
+			$code .= "\$${loopname}_counter = -1;\n";
+			$loopbody .= "\$${loopname}_counter++;\n\$ste->set_var_by_name(\$${loopname}_countervar, \$${loopname}_counter);\n";
+		}
 		
-		$loopbody = "\$${loopname}_counter++;\n\$ste->set_var_by_name(\$${loopname}_valuevar, \$${loopname}_value);\n";
+		$loopbody = "\$ste->set_var_by_name(\$${loopname}_valuevar, \$${loopname}_value);\n";
 		if(!empty($ast->params["key"]))
 			$loopbody .= "\$ste->set_var_by_name(\$${loopname}_keyvar, \$${loopname}_key);\n";
-		if(!empty($ast->params["counter"]))
-			$loopbody .= "\$ste->set_var_by_name(\$${loopname}_countervar, \$${loopname}_counter);\n";
 		$loopbody .= "\n";
 		$loopbody .= _transcompile($ast->sub);
 		$loopbody = "{\n" . loopbody(indent_code($loopbody)) . "\n}\n";
@@ -692,9 +696,7 @@ $ste_builtins = array(
 		
 		$blknamevar = "blockname_" . str_replace(".", "_", uniqid("", True));
 		
-		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		$code .= _transcompile($ast->params["name"]);
-		$code .= "\$outputstack_i--;\n\$${blknamevar} = array_pop(\$outputstack);\n";
+		$code = "\$${blknamevar} = " . _transcompile($ast->params["name"], True) . ";\n";
 		
 		$tmpblk = uniqid("", True);
 		$code .= "\$ste->blocks['$tmpblk'] = array_pop(\$outputstack);\n\$ste->blockorder[] = '$tmpblk';\n\$outputstack = array('');\n\$outputstack_i = 0;\n";
@@ -711,20 +713,14 @@ $ste_builtins = array(
 		if(empty($ast->params["name"]))
 			throw new ParseCompileError("Transcompile Error: name missing in <ste:load>.", $ast->tpl, $ast->offset);
 		
-		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		$code .= _transcompile($ast->params["name"]);
-		$code .= "\$outputstack_i--;\n\$outputstack[\$outputstack_i] .= \$ste->load(array_pop(\$outputstack));\n";
-		
-		return $code;
+		return "\$outputstack[\$outputstack_i] .= \$ste->load(" . _transcompile($ast->params["name"], True) . ");\n";
 	},
 	"mktag" => function($ast)
 	{
 		if(empty($ast->params["name"]))
 			throw new ParseCompileError("Transcompile Error: name missing in <ste:mktag>.", $ast->tpl, $ast->offset);
 		
-		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		$code .= _transcompile($ast->params["name"]);
-		$code .= "\$outputstack_i--;\n\$tagname = array_pop(\$outputstack);\n";
+		$tagname = _transcompile($ast->params["name"], True);
 		
 		$fxbody = "\$outputstack = array(); \$outputstack_i = 0;\$ste->vars['_tag_parameters'] = \$params;\n";
 		
@@ -734,14 +730,14 @@ $ste_builtins = array(
 			$code .= _transcompile($ast->params["mandatory"]);
 			$code .= "\$outputstack_i--;\n\$mandatory_params = explode('|', array_pop(\$outputstack));\n";
 			
-			$fxbody .= "foreach(\$mandatory_params as \$mp)\n{\n\tif(!isset(\$params[\$mp]))\n\t\tthrow new \Exception(\"Runtime Error: \$mp missing in <ste:\$tagname>. Stop.\");\n}";
+			$fxbody .= "foreach(\$mandatory_params as \$mp)\n{\n\tif(!isset(\$params[\$mp]))\n\t\tthrow new \Exception(\"Runtime Error: \$mp missing in <ste:\" . $tagname . \">. Stop.\");\n}";
 		}
 		
 		$fxbody .= _transcompile($ast->sub);
 		$fxbody .= "return array_pop(\$outputstack);";
 		
-		$code .= "\$tag_fx = function(\$ste, \$params, \$sub) use (\$tagname, \$mandatory_params)\n{\n" . indent_code($fxbody) . "\n};\n";
-		$code .= "\$ste->register_tag(\$tagname, \$tag_fx);\n";
+		$code .= "\$tag_fx = function(\$ste, \$params, \$sub) use (\$mandatory_params)\n{\n" . indent_code($fxbody) . "\n};\n";
+		$code .= "\$ste->register_tag($tagname, \$tag_fx);\n";
 		
 		return $code;
 	},
@@ -755,13 +751,10 @@ $ste_builtins = array(
 			throw new ParseCompileError("Transcompile Error: var missing in <ste:set>.", $ast->tpl, $ast->offset);
 		
 		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
-		$code .= _transcompile($ast->params["var"]);
-		
-		$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 		$code .= _transcompile($ast->sub);
+		$code .= "\$outputstack_i--;\n";
 		
-		$code .= "\$outputstack_i -= 2;\n\$newvartext = array_pop(\$outputstack);\n\$varname = array_pop(\$outputstack);\n";
-		$code .= "\$ste->set_var_by_name(\$varname, \$newvartext);\n";
+		$code .= "\$ste->set_var_by_name(" . _transcompile($ast->params["var"], True) . ", array_pop(\$outputstack));\n";
 		
 		return $code;
 	},
@@ -780,19 +773,26 @@ function escape_text($text)
 	return addcslashes($text, "\r\n\t\$\0..\x1f\\'\"\x7f..\xff");
 }
 
-function _transcompile($ast) /* The real transcompile function, does not add boilerplate code. */
+function _transcompile($ast, $no_outputstack = False) /* The real transcompile function, does not add boilerplate code. */
 {
 	$code = "";
 	global $ste_builtins;
 	
+	$text_and_var_buffer = array();
+	
 	foreach($ast as $node)
 	{
 		if($node instanceof TextNode)
-			$code .= "\$outputstack[\$outputstack_i] .= \"" . escape_text($node->text) . "\";\n";
+			$text_and_var_buffer[] = '"' . escape_text($node->text) . '"';
 		else if($node instanceof VariableNode)
-			$code .= "\$outputstack[\$outputstack_i] .= " . $node->transcompile() . ";\n";
+			$text_and_var_buffer[] = $node->transcompile();
 		else if($node instanceof TagNode)
 		{
+			if(!empty($text_and_var_buffer))
+			{
+				$code .= "\$outputstack[\$outputstack_i] .= " . implode (" . ", $text_and_var_buffer) . ";\n";
+				$text_and_var_buffer = array();
+			}
 			if(isset($ste_builtins[$node->name]))
 				$code .= $ste_builtins[$node->name]($node);
 			else
@@ -801,15 +801,23 @@ function _transcompile($ast) /* The real transcompile function, does not add boi
 				$code .= "\$$paramarray = array();\n";
 				
 				foreach($node->params as $pname => $pcontent)
-				{
-					$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
-					$code .= _transcompile($pcontent);
-					$code .= "\$outputstack_i--;\n\$${paramarray}['" . escape_text($pname) . "'] = array_pop(\$outputstack);\n";
-				}
+					$code .= "\$${paramarray}['" . escape_text($pname) . "'] = " . _transcompile($pcontent, True) . ";\n";
 				
-				$code .= "\$outputstack[\$outputstack_i] .= \$ste->call_tag('" . escape_text($node->name) . "', \$${paramarray}, " . transcompile($node->sub) . ");\n";
+				$code .= "\$outputstack[\$outputstack_i] .= \$ste->call_tag('" . escape_text($node->name) . "', \$${paramarray}, ";
+				$code .= empty($node->sub) ? "function(\$ste) { return ''; }" : transcompile($node->sub);
+				$code .= ");\n";
 			}
 		}
+	}
+	
+	if(!empty($text_and_var_buffer))
+	{
+		if(!$no_outputstack)
+			$code .= "\$outputstack[\$outputstack_i] .= ";
+		$code .= implode (" . ", $text_and_var_buffer);
+		if(!$no_outputstack)
+			$code .= ";\n";
+		$text_and_var_buffer = array();
 	}
 	
 	return $code;
