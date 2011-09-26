@@ -1181,6 +1181,7 @@ class STECore
 				$pathex = array_merge(array_slice($pathex, 0, $i), array_slice($pathex, $i + 2));
 		}
 		$tpl = implode("/", $pathex);
+		$this->cur_tpl_dir = dirname($tpl);
 		
 		if($quiet)
 		{
