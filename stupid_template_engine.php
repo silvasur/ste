@@ -1121,7 +1121,7 @@ class STECore
 	}
 	
 	/*
-	 * Function set_var_by_name
+	 * Function: set_var_by_name
 	 * Set a template variable by its name.
 	 * This can be used,if your custom tag takes a variable name as a parameter.
 	 * 
