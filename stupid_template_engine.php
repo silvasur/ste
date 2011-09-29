@@ -607,7 +607,7 @@ $ste_builtins = array(
 		if(empty($ast->params["step"]))
 			$step = 1;
 		else if((count($ast->params["step"]) == 1) and ($ast->params["step"][0] instanceof TextNode))
-			$step = $ast->params["step"][0] + 0;
+			$step = $ast->params["step"][0]->text + 0;
 		else
 			$code .= "\$${loopname}_step = " . _transcompile($ast->params["step"], True) . ";\n";
 		
