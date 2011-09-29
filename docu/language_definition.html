@@ -538,10 +538,10 @@
 			<p>Decrements (i.e. substract 1) a variable (variable name given by parameter <code>var</code>).</p>
 		
 		<h3 id="stdlib_date">ste:date</h3>
-			<p>Formats a time using PHPs <a href="http://php.net/manual/en/function.date.php">date format [ext. Link]</a>. The format is given in the tag's content. You can specify a time (unix timestamp) using the <code>timestamp</code> parameter (defaults to the current time).</p>
+			<p>Formats a time using PHPs <a href="http://php.net/manual/en/function.strftime.php">strftime format [ext. Link]</a>. The format is given in the tag's content. You can specify a time (unix timestamp) using the <code>timestamp</code> parameter (defaults to the current time).</p>
 			<p>
 				Example:<br />
-				<code><pre><![CDATA[<ste:date timestamp="1316357360">d. M. Y, H:i:s</ste:date>]]></pre></code>
+				<code><pre><![CDATA[<ste:date timestamp="1316357360">%d. %h. %Y, %H:%M:%S</ste:date>]]></pre></code>
 				Result:<br />
 				<code><pre><![CDATA[18. Sep. 2011, 16:49:20]]></pre></code>
 			</p>

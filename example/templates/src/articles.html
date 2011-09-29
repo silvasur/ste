@@ -6,7 +6,7 @@
 	<ste:foreach_limit array="articles" value="article" max="3" counter="i">
 		<h3><ste:uppercase><ste:escape>$article[title]</ste:escape></ste:uppercase></h3>
 		<div class="author">Author: <ste:escape>$article[author]</ste:escape></div>
-		<div class="date"><ste:date timestamp="$article[timestamp]">d. M. Y, H:i:s</ste:date></div>
+		<div class="date"><ste:date timestamp="$article[timestamp]">%d. %h. %Y, %H:%M:%S</ste:date></div>
 		<div class="article_content">
 			<ste:if>
 				<ste:cmp var_a="i" op="eq" text_b="0" />

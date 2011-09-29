@@ -1282,7 +1282,7 @@ class STEStandardLibrary
 	
 	static public function date($ste, $params, $sub)
 	{
-		return @date($sub($ste), empty($params["timestamp"]) ? @time() : (int) $params["timestamp"]);
+		return @strftime($sub($ste), empty($params["timestamp"]) ? @time() : (int) $params["timestamp"]);
 	}
 }
 
