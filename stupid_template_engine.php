@@ -57,7 +57,7 @@ class VariableNode extends ASTNode
 							if($node instanceof TextNode)
 								return "\"" . escape_text($node->text) . "\"";
 							else if($node instanceof VariableNode)
-								return $node->transcompile;
+								return $node->transcompile();
 						}, $af
 					)
 				). ']';
@@ -244,26 +244,30 @@ function mk_ast($code, $tpl, $err_off)
 	
 	if($matches[1][0] != "/")
 	{
-		$tags_open = 1;
 		$off = 0;
 		$last_tag_start = 0;
+		$tagstack = array(array($tag->name, $tag->offset));
 		while(preg_match("/\\<((?:\\s*)|(?:\\s*\\/\\s*))ste:([a-zA-Z0-9_]*)(?:\\s+(?:[a-zA-Z0-9_]+)=(?:(?:\"(?:.*?)(?<!\\\\)\")|(?:'(?:.*?)(?<!\\\\)')))*((?:\\s*)|(?:\\s*\\/\\s*))\\>/s", $code, $matches, PREG_OFFSET_CAPTURE, $off) > 0) /* RegEx from hell! Matches all  <ste:> Tags. Opening, closing and self-closing ones. */
 		{
 			if(trim($matches[3][0]) != "/")
 			{
 				$closingtag = trim($matches[1][0]);
 				if($closingtag[0] == "/")
-					$tags_open--;
+				{
+					list($matching_opentag, $mo_off) = array_pop($tagstack);
+					if($matching_opentag != $matches[2][0])
+						throw new ParseCompileError("Parse Error: Missing closing \"ste:$matching_opentag\"-Tag.", $tpl, $mo_off + $err_off);
+				}
 				else
-					$tags_open++;
+					$tagstack[] = array($matches[2][0], $matches[0][1]);
 			}
 			$last_tag_start = $matches[0][1];
 			$off = $last_tag_start + strlen($matches[0][0]);
-			if($tags_open == 0)
+			if(empty($tagstack))
 				break;
 		}
 		
-		if(($tags_open != 0) or ($tag->name != $matches[2][0]))
+		if((!empty($tagstack)) or ($tag->name != $matches[2][0]))
 			throw new ParseCompileError("Parse Error: Missing closing \"ste:" . $tag->name . "\"-Tag.", $tpl, $tag->offset);
 		
 		if($tag->name == "rawtext")
