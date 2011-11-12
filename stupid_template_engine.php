@@ -670,7 +670,7 @@ $ste_builtins = array(
 			$loopbody .= "\$${loopname}_counter++;\n\$ste->set_var_by_name(\$${loopname}_countervar, \$${loopname}_counter);\n";
 		}
 		
-		$loopbody = "\$ste->set_var_by_name(\$${loopname}_valuevar, \$${loopname}_value);\n";
+		$loopbody .= "\$ste->set_var_by_name(\$${loopname}_valuevar, \$${loopname}_value);\n";
 		if(!empty($ast->params["key"]))
 			$loopbody .= "\$ste->set_var_by_name(\$${loopname}_keyvar, \$${loopname}_key);\n";
 		$loopbody .= "\n";
