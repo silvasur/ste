@@ -95,11 +95,11 @@
 			</p>
 	
 		<h3 id="basic_elems_variable">Variable</h3>
-			<p>Variables start with a <code>$</code> or can be wrapped within <code>${</code> and <code>}</code>, so vou can write this: <code>${foo}ish</code></p>
+			<p>Variables start with a <code>$</code> or can be wrapped within <code>${</code> and <code>}</code>, so you can write this: <code>${foo}ish</code></p>
 			<p>Variable have names, these names can consist of letters (english alphabet; upper and lower case), numbers and underscores (<code>_</code>). As a regex: <code>[a-zA-Z0-9_]+</code></p>
-			<p>A variable can also be an array. To access an array, wrap the desired fieldname within <code>[</code> and <code>]</code>. A fieldname can be constructed of <a href="#basic_elems_text">Text</a> and othe Variables. So you can dynamically access fields: <code>$foo[$bar]</code>. These fieldnames can also be nested or concatenated: <code>$foo[$bar[baz]][herp][$de[derp]]</code></p>
+			<p>A variable can also be an array. To access an array, wrap the desired fieldname within <code>[</code> and <code>]</code>. A fieldname can be constructed of <a href="#basic_elems_text">Text</a> and other Variables. So you can dynamically access fields: <code>$foo[$bar]</code>. These fieldnames can also be nested or concatenated: <code>$foo[$bar[baz]][herp][$de[derp]]</code></p>
 			<p>If you want a literal <code>$</code> char, you can escape it: <code>\$</code></p>
-			<p>Variables in <acronym>STE T/PL</acronym> are typeless, everything ist text. In a boolean context, empty text usually represents false, else true.</p>
+			<p>Variables in <acronym>STE T/PL</acronym> are typeless, everything is text. In a boolean context, empty text usually represents false, else true.</p>
 	
 		<h3 id="basic_elems_tag">Tag</h3>
 			<p>A Tag can be compared to a function. A Tag can have parameters and children <a href="#basic_elems">elements</a>.</p>
@@ -112,11 +112,11 @@
 			<p>If the tag is self-closing, the last char is a <code>/</code> (e.g.: <code><![CDATA[<ste:foo />]]></code>).</p>
 			<p>If the tag is a closing one, the first char is a <code>/</code>. An opening Tag does not have a <code>/</code>.An example of an opening-closing Tag pair wrapping the text <code>bar</code>: <code><![CDATA[<ste:foo>bar</ste:foo>]]></code></p>
 			<p>
-				Parameters of a tag consists of a name and the corresponding value (wrapped in <code>"</code> or <code>'</code>) seperated by an <code>=</code> .<br />
-				Parameters are seperated by any whitespace (space, tab or newline) char.<br />
+				Parameters of a tag consists of a name and the corresponding value (wrapped in <code>"</code> or <code>'</code>) separated by an <code>=</code> .<br />
+				Parameters are separated by any whitespace (space, tab or newline) char.<br />
 				Parameter values can consist of <a href="#basic_elems_text">Text</a> and <a href="#basic_elems_variable">Variable</a> elements <em>but not of Tags</em>!<br />
 				If you need a literal <code>"</code> or <code>'</code> in a parameter value, you can escape them: <code>\"</code> or <code>\'</code> .<br />
-				When using variables in paramter values, they will be "replaced" by their value. Because many tags need the variable and not its content, they expect only the variable's name. If you then write <code>foo="$bar"</code>, the tag will not operate on the <code>bar</code> variable but on the Variable with the name stored in <code>$bar</code>! So read the instructions to the tag carefully!
+				When using variables in parameter values, they will be "replaced" by their value. Because many tags need the variable and not its content, they expect only the variable's name. If you then write <code>foo="$bar"</code>, the tag will not operate on the <code>bar</code> variable but on the Variable with the name stored in <code>$bar</code>! So read the instructions to the tag carefully!
 			</p>
 			<p>Example: <code><![CDATA[<ste:foo bar="baz" herp="literal quote sign: \"">de <ste:derp hehe="hoho$wtf[xd]" /></ste:foo>]]></code></p>
 	
@@ -167,25 +167,25 @@
 				<td>\~</td>
 				<td>~</td>
 				<td><a href="#basic_elems_text">Text elements</a></td>
-				<td>More info: <a href="#builtin_if_short">short comparasions</a></td>
+				<td>More info: <a href="#builtin_if_short">short comparisons</a></td>
 			</tr>
 			<tr>
 				<td>\{</td>
 				<td>{</td>
 				<td><a href="#basic_elems_text">Text elements</a></td>
-				<td>More info: <a href="#builtin_if_short">short if-clause</a>, <a href="#builtin_if_short">short comparasions</a></td>
+				<td>More info: <a href="#builtin_if_short">short if-clause</a>, <a href="#builtin_if_short">short comparisons</a></td>
 			</tr>
 			<tr>
 				<td>\}</td>
 				<td>}</td>
 				<td><a href="#basic_elems_text">Text elements</a></td>
-				<td>More info: <a href="#builtin_if_short">short if-clause</a>, <a href="#builtin_if_short">short comparasions</a></td>
+				<td>More info: <a href="#builtin_if_short">short if-clause</a>, <a href="#builtin_if_short">short comparisons</a></td>
 			</tr>
 			<tr>
 				<td>\|</td>
 				<td>|</td>
 				<td><a href="#basic_elems_text">Text elements</a></td>
-				<td>More info: <a href="#builtin_if_short">short if-clause</a>, <a href="#builtin_if_short">short comparasions</a></td>
+				<td>More info: <a href="#builtin_if_short">short if-clause</a>, <a href="#builtin_if_short">short comparisons</a></td>
 			</tr>
 			<tr>
 				<td>\\</td>
@@ -218,7 +218,7 @@
 			<h4 id="builtin_if_short">Short syntax for if-clause</h4>
 				<p>Because if-clauses are used often, there is an short syntax:</p>
 				<p><code>?{condition|then|else}</code></p>
-				<p>This is equavilent to:</p>
+				<p>This is equivalent to:</p>
 				<p><code><![CDATA[<ste:if>condition<ste:then>then</ste:then><ste:else>else</ste:else></ste:if>]]></code></p>
 				<p><code>?</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
 				<p>In this variant, the else part <strong>is not optional</strong>!</p>
@@ -237,7 +237,7 @@
 				(where <code>x</code> is either <code>a</code> or <code>b</code>).
 			</p>
 			<p>
-				The operator is passed wth the <code>op</code> parameter. Following parameters are available:
+				The operator is passed with the <code>op</code> parameter. Following parameters are available:
 				<table>
 				<thead>
 					<tr>
@@ -273,7 +273,7 @@
 				</tbody>
 				</table>
 			</p>
-			<p>If the comparasion was true, a non-empty text will be returned, otherwise an empty text, so you can use ste:cmp with <a href="#builtin_if">ste:if</a> </p>
+			<p>If the comparisons was true, a non-empty text will be returned, otherwise an empty text, so you can use ste:cmp with <a href="#builtin_if">ste:if</a> </p>
 			<p>
 				Example:<br />
 <code><pre><![CDATA[<ste:if>
@@ -286,11 +286,11 @@
 			<h4 id="builtin_cmp_short">Short syntax for if-clause</h4>
 				<p>Because comparisons are used often, there is an short syntax:</p>
 				<p><code>~{a|operator|b}</code></p>
-				<p>This is equavilent to:</p>
+				<p>This is equivalent to:</p>
 				<p><code><![CDATA[<ste:cmp text_a="a" op="operator" text_b="b" />]]></code></p>
 				<p><code>~</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
 				<p>Because this is implemented as a simple substitution, you can only use <a href="#basic_elems_text">Text</a> and <a href="#basic_elems_variable">Variables</a>. And <code>"</code> must be escaped.</p>
-				<p><strong>WARNING:</strong> short comparasions can not be nested! They can be inside <a href="#builtin_if_short">short if-clauses</a>, but not the other way around!</p>
+				<p><strong>WARNING:</strong> short comparisons can not be nested! They can be inside <a href="#builtin_if_short">short if-clauses</a>, but not the other way around!</p>
 		
 		<h3 id="builtin_not">ste:not</h3>
 			<p>The ste:not Tag will logically invert its content. If it is an empty text (i.e. false), it will return a non-empty text (i.e. true) and vice versa.</p>
@@ -399,7 +399,7 @@
 			</p>
 		
 		<h3 id="builtin_infloop">ste:infloop</h3>
-			<p>Create an infinitive loop. You can get out of the loop using the <a href="#builtin_break">ste:break</a> tag. Can be used to emulate othe loop constructs like while loops.</p>
+			<p>Create an infinitive loop. You can get out of the loop using the <a href="#builtin_break">ste:break</a> tag. Can be used to emulate other loop constructs like while loops.</p>
 			<p>
 				Example:<br />
 <code><pre><![CDATA[<ste:infloop>
@@ -419,7 +419,7 @@
 			<p>When this self-closing tag is called, the current loop(<a href="builtin_for">ste:for</a>, <a href="builtin_foreach">ste:foreach</a>, <a href="builtin_infloop">ste:infloop</a>) will go to the next iteration, aborting the current iteration. </p>
 		
 		<h3 id="builtin_load">ste:load</h3>
-			<p>This self-closing tag loads and executes anoter template. The <code>name</code> parameter (mandatory) defines the template to load.</p>
+			<p>This self-closing tag loads and executes another template. The <code>name</code> parameter (mandatory) defines the template to load.</p>
 			<p>Because each template must be parseable and transcompilable by itself, this is not a inclusion of another template. So you can not do this:</p>
 			<p>
 				slave.tpl:<br />
@@ -477,7 +477,7 @@
 			</p>
 		
 		<h3 id="builtin_calc">ste:calc</h3>
-			<p>To perform mathematical calculations, you can use ste:math. ste:math calculates the mathematical formula it is wrapped around and returns the result. The formula is in the usual <a href="http://en.wikipedia.org/wiki/Infix_notation">infix-notation [ext. Link]</a> and has these operators: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> and <code>^</code>. Numbers are always decimal, the decimal mark is <code>.</code> and numbers can be prefixed with an <code>-</code> to indicate a negative number. It is a good idea to wrap a negative number in brackets to prevent wrong evaluation (because <code>-</code> is also an operator). Calculations can be grouped with brackets: <code>(</code> and <code>)</code>.</p>
+			<p>To perform mathematical calculations, you can use ste:calc. ste:calc calculates the mathematical formula it is wrapped around and returns the result. The formula is in the usual <a href="http://en.wikipedia.org/wiki/Infix_notation">infix-notation [ext. Link]</a> and has these operators: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> and <code>^</code>. Numbers are always decimal, the decimal mark is <code>.</code> and numbers can be prefixed with an <code>-</code> to indicate a negative number. It is a good idea to wrap a negative number in brackets to prevent wrong evaluation (because <code>-</code> is also an operator). Calculations can be grouped with brackets: <code>(</code> and <code>)</code>.</p>
 			<p>Real numbers are supported, complex numbers not.</p>
 			<p>Formulas are evaluated at runtime, not during transcompilation.</p>
 			<p>
@@ -488,7 +488,7 @@
 		
 		<h3 id="builtin_mktag">ste:mktag</h3>
 			<p>ste:mktag allows you to define own <a href="#basic_elems_tag">Tags</a> using <acronym>STE T/PL</acronym>.</p>
-			<p>The parameter <code>name</code> (mandatory) expects the name of the new tag. If your tag requires some parameters, you can specify them using the optional <code>mandatory</code> parameter. Names of the mandatory parameters are seperated by <code>|</code>.</p>
+			<p>The parameter <code>name</code> (mandatory) expects the name of the new tag. If your tag requires some parameters, you can specify them using the optional <code>mandatory</code> parameter. Names of the mandatory parameters are separated by <code>|</code>.</p>
 			<p>The <a href="#basic_elems_variable">Variable</a> <code>_tag_parameters</code> (associative array) will hold all given parameters and their values.</p>
 			<p>With the ste:tagcontent tag you can execute the tags content.</p>
 			<p>ste:mktag will be transcompiled like any other code. So your custom tag will be almost as fast as a plugin coded in PHP.</p>
@@ -500,7 +500,7 @@
 	</ste:for>
 </ste:mktag>
 <ste:mktag name="double">
-	<ste:math><ste:tagcontent /> * 2</ste:math>
+	<ste:calc><ste:tagcontent /> * 2</ste:calc>
 </ste:mktag>
 <ste:countdown from="5" counter="i">
 	<ste:double>$i</ste:double><br />
@@ -517,7 +517,7 @@
 	<h2 id="stdlib">Standard Library</h2>
 		<p>The Standard Library contains some useful tags, which are not <a href="#builtin">builtin</a> but still always available.</p>
 		<h3 id="stdlib_escape">ste:escape</h3>
-			<p>Escapes characters that are reserved for HTML (e.g. <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, <code>&amp;</code>). The text to escape ist the tag's content.
+			<p>Escapes characters that are reserved for HTML (e.g. <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, <code>&amp;</code>). The text to escape is the tag's content.
 			<p>
 				Example:<br />
 				<code><pre><![CDATA[<ste:escape>Foo & bar...</ste:escape>]]></pre></code>
@@ -535,7 +535,7 @@
 			<p>Increments (i.e. add 1) a variable (variable name given by parameter <code>var</code>).</p>
 		
 		<h3 id="stdlib_dec">ste:dec</h3>
-			<p>Decrements (i.e. substract 1) a variable (variable name given by parameter <code>var</code>).</p>
+			<p>Decrements (i.e. subtract 1) a variable (variable name given by parameter <code>var</code>).</p>
 		
 		<h3 id="stdlib_date">ste:date</h3>
 			<p>Formats a time using PHPs <a href="http://php.net/manual/en/function.strftime.php">strftime format [ext. Link]</a>. The format is given in the tag's content. You can specify a time (unix timestamp) using the <code>timestamp</code> parameter (defaults to the current time).</p>
