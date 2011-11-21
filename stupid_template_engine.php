@@ -823,6 +823,10 @@ function _transcompile($ast, $no_outputstack = False) /* The real transcompile f
 			$code .= ";\n";
 		$text_and_var_buffer = array();
 	}
+	else if($no_outputstack)
+	{
+		$code = "\"\"";
+	}
 	
 	return $code;
 }
