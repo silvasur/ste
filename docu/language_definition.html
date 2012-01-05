@@ -88,9 +88,9 @@
 			<p>Also everything that is wrapped in the <a href="#basic_elems_pseudotag_rawtext">ste:rawtext</a> <a href="#basic_elems_pseudotag">pseudotag</a> will be Text, whereby all <a href="#basic_elems_tag">Tags</a> and <a href="#basic_elems_variable">Variables</a> will not be parsed.</p>
 			<h4>Example:</h4>
 			<p>
-			<code><pre><![CDATA[<ste:rawtext>Foo <ste:bar>$baz[herpdederp]</ste:baz></ste:rawtext>]]></pre></code>
+			<code><pre>&lt;ste:rawtext&gt;Foo &lt;ste:bar&gt;$baz[herpdederp]&lt;/ste:baz&gt;&lt;/ste:rawtext&gt;</pre></code>
 			Will result in one text-element, but
-			<code><pre><![CDATA[Foo <ste:bar>$baz[herpdederp]</ste:baz>]]></pre></code>
+			<code><pre>Foo &lt;ste:bar&gt;$baz[herpdederp]&lt;/ste:baz&gt;</pre></code>
 			will result in one text-element and one tag-element containing one variable-element.
 			</p>
 	
@@ -105,12 +105,12 @@
 			<p>A Tag can be compared to a function. A Tag can have parameters and children <a href="#basic_elems">elements</a>.</p>
 			<p>
 				A Tag looks like a XML-Tag with the ste-Namespace.
-				Just like their XML counterparts, they can wrap other elements (<code><![CDATA[<ste:foo>bar<ste:baz>herpdederp</ste:baz></ste:foo>]]></code>) or can be self-closing (<code><![CDATA[<ste:foo />]]></code>).
-				And they can have additional parameters (or "attributes", using the XML terminology): <code><![CDATA[<ste:foo bar="baz" />]]></code>
+				Just like their XML counterparts, they can wrap other elements (<code>&lt;ste:foo&gt;bar&lt;ste:baz&gt;herpdederp&lt;/ste:baz&gt;&lt;/ste:foo&gt;</code>) or can be self-closing (<code>&lt;ste:foo /&gt;</code>).
+				And they can have additional parameters (or "attributes", using the XML terminology): <code>&lt;ste:foo bar="baz" /&gt;</code>
 			</p>
 			<p>A Tag is wrapped in <code>&lt;</code> and <code>&gt;</code>. The tag's name always start with <code>ste:</code> and can then consist of letters, numbers and underscores (Regex: <code>[a-zA-Z0-9_]+</code>).<p>
-			<p>If the tag is self-closing, the last char is a <code>/</code> (e.g.: <code><![CDATA[<ste:foo />]]></code>).</p>
-			<p>If the tag is a closing one, the first char is a <code>/</code>. An opening Tag does not have a <code>/</code>.An example of an opening-closing Tag pair wrapping the text <code>bar</code>: <code><![CDATA[<ste:foo>bar</ste:foo>]]></code></p>
+			<p>If the tag is self-closing, the last char is a <code>/</code> (e.g.: <code>&lt;ste:foo /&gt;</code>).</p>
+			<p>If the tag is a closing one, the first char is a <code>/</code>. An opening Tag does not have a <code>/</code>.An example of an opening-closing Tag pair wrapping the text <code>bar</code>: <code>&lt;ste:foo&gt;bar&lt;/ste:foo&gt;</code></p>
 			<p>
 				Parameters of a tag consists of a name and the corresponding value (wrapped in <code>"</code> or <code>'</code>) separated by an <code>=</code> .<br />
 				Parameters are separated by any whitespace (space, tab or newline) char.<br />
@@ -118,7 +118,7 @@
 				If you need a literal <code>"</code> or <code>'</code> in a parameter value, you can escape them: <code>\"</code> or <code>\'</code> .<br />
 				When using variables in parameter values, they will be "replaced" by their value. Because many tags need the variable and not its content, they expect only the variable's name. If you then write <code>foo="$bar"</code>, the tag will not operate on the <code>bar</code> variable but on the Variable with the name stored in <code>$bar</code>! So read the instructions to the tag carefully!
 			</p>
-			<p>Example: <code><![CDATA[<ste:foo bar="baz" herp="literal quote sign: \"">de <ste:derp hehe="hoho$wtf[xd]" /></ste:foo>]]></code></p>
+			<p>Example: <code>&lt;ste:foo bar="baz" herp="literal quote sign: \""&gt;de &lt;ste:derp hehe="hoho$wtf[xd]" /&gt;&lt;/ste:foo&gt;</code></p>
 	
 		<h3 id="basic_elems_pseudotag">Pseudotag</h3>
 			<p>Pseudotags look like normal tags, but they perform special tasks. There are currently two pseudotags:</p>
@@ -208,18 +208,14 @@
 			<p>The ste:then Tag is mandatory, the ste:else tag is optional.</p>
 			<p>
 				Example:<br />
-<code><pre><![CDATA[<ste:if>
-	$foo
-	<ste:then>Bar</ste:then>
-	<ste:else>Baz</ste:else>
-</ste:if>]]></pre></code>
+<code><pre>&lt;ste:if&gt;<br />	$foo<br />	&lt;ste:then&gt;Bar&lt;/ste:then&gt;<br />	&lt;ste:else&gt;Baz&lt;/ste:else&gt;<br />&lt;/ste:if&gt;</pre></code>
 				If <code>$foo</code> is not empty, then <code>Bar</code> will be executed, otherwise <code>Baz</code>.
 			</p>
 			<h4 id="builtin_if_short">Short syntax for if-clause</h4>
 				<p>Because if-clauses are used often, there is an short syntax:</p>
 				<p><code>?{condition|then|else}</code></p>
 				<p>This is equivalent to:</p>
-				<p><code><![CDATA[<ste:if>condition<ste:then>then</ste:then><ste:else>else</ste:else></ste:if>]]></code></p>
+				<p><code>&lt;ste:if&gt;condition&lt;ste:then&gt;then&lt;/ste:then&gt;&lt;ste:else&gt;else&lt;/ste:else&gt;&lt;/ste:if&gt;</code></p>
 				<p><code>?</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
 				<p>In this variant, the else part <strong>is not optional</strong>!</p>
 				<p><strong>WARNING:</strong> short if-clauses can not be nested!</p>
@@ -276,18 +272,14 @@
 			<p>If the comparisons was true, a non-empty text will be returned, otherwise an empty text, so you can use ste:cmp with <a href="#builtin_if">ste:if</a> </p>
 			<p>
 				Example:<br />
-<code><pre><![CDATA[<ste:if>
-	<ste:cmp var_a="foo" op="eq" text_b="bar" />
-	<ste:then>:-)</ste:then>
-	<ste:else>:-(</ste:else>
-</ste:if>]]></pre></code>
+<code><pre>&lt;ste:if&gt;<br />	&lt;ste:cmp var_a="foo" op="eq" text_b="bar" /&gt;<br />	&lt;ste:then&gt;:-)&lt;/ste:then&gt;<br />	&lt;ste:else&gt;:-(&lt;/ste:else&gt;<br />&lt;/ste:if&gt;</pre></code>
 				If the variable <code>foo</code> has the content <code>bar</code>, <code>:-)</code> will be returned, <code>:-(</code> otherwise.
 			</p>
 			<h4 id="builtin_cmp_short">Short syntax for if-clause</h4>
 				<p>Because comparisons are used often, there is an short syntax:</p>
 				<p><code>~{a|operator|b}</code></p>
 				<p>This is equivalent to:</p>
-				<p><code><![CDATA[<ste:cmp text_a="a" op="operator" text_b="b" />]]></code></p>
+				<p><code>&lt;ste:cmp text_a="a" op="operator" text_b="b" /&gt;</code></p>
 				<p><code>~</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
 				<p>Because this is implemented as a simple substitution, you can only use <a href="#basic_elems_text">Text</a> and <a href="#basic_elems_variable">Variables</a>. And <code>"</code> must be escaped.</p>
 				<p><strong>WARNING:</strong> short comparisons can not be nested! They can be inside <a href="#builtin_if_short">short if-clauses</a>, but not the other way around!</p>
@@ -296,11 +288,7 @@
 			<p>The ste:not Tag will logically invert its content. If it is an empty text (i.e. false), it will return a non-empty text (i.e. true) and vice versa.</p>
 			<p>
 				Example:<br />
-<code><pre><![CDATA[<ste:if>
-	<ste:not>$foo</ste:not>
-	<ste:then>:-)</ste:then>
-	<ste:else>:-(</ste:else>
-</ste:if>]]></pre></code>
+<code><pre>&lt;ste:if&gt;<br />	&lt;ste:not&gt;$foo&lt;/ste:not&gt;<br />	&lt;ste:then&gt;:-)&lt;/ste:then&gt;<br />	&lt;ste:else&gt;:-(&lt;/ste:else&gt;<br />&lt;/ste:if&gt;</pre></code>
 				If the variable <code>foo</code> is empty (i.e. false), <code>:-)</code> will be returned, <code>:-(</code> otherwise.
 			</p>
 		
@@ -345,9 +333,7 @@
 			</p>
 			<p>
 				Example:<br />
-<code><pre><![CDATA[<ste:for start="10" stop="0" step="-1" counter="i">
-	$i<br />
-</ste:for>]]></pre></code>
+<code><pre>&lt;ste:for start="10" stop="0" step="-1" counter="i"&gt;<br />	$i&lt;br /&gt;<br />&lt;/ste:for&gt;</pre></code>
 				Will count from 10 down to 0 and output the number followed by an HTML line break.
 			</p>
 		
@@ -389,12 +375,7 @@
 			</p>
 			<p>
 				Example:<br />
-<code><pre><![CDATA[<ste:foreach array="foo" key="k" value="v" counter="i">
-	Number: $i<br />
-	Key: $k<br />
-	Value: $v<br />
-	<br />
-</ste:foreach>]]></pre></code>
+<code><pre>&lt;ste:foreach array="foo" key="k" value="v" counter="i"&gt;<br />	Number: $i&lt;br /&gt;<br />	Key: $k&lt;br /&gt;<br />	Value: $v&lt;br /&gt;<br />	&lt;br /&gt;<br />&lt;/ste:foreach&gt;</pre></code>
 				This code will loop through the array <code>foo</code> and return the counter <code>$i</code>, the key <code>$k</code> and the value <code>$v</code> of the current iteration.
 			</p>
 		
@@ -402,13 +383,7 @@
 			<p>Create an infinitive loop. You can get out of the loop using the <a href="#builtin_break">ste:break</a> tag. Can be used to emulate other loop constructs like while loops.</p>
 			<p>
 				Example:<br />
-<code><pre><![CDATA[<ste:infloop>
-	<ste:if>
-		<ste:foo />
-		<ste:then><ste:break /></ste:then>
-	</ste:if>
-	...
-<ste:infloop>]]></pre></code>
+<code><pre>&lt;ste:infloop&gt;<br />	&lt;ste:if&gt;<br />		&lt;ste:foo /&gt;<br />		&lt;ste:then&gt;&lt;ste:break /&gt;&lt;/ste:then&gt;<br />	&lt;/ste:if&gt;<br />	...<br />&lt;ste:infloop&gt;</pre></code>
 				This code will return <code>...</code> while <code>&lt;ste:foo /&gt;</code> returns an empty text (i.e. false).
 			</p>
 		
@@ -423,20 +398,16 @@
 			<p>Because each template must be parseable and transcompilable by itself, this is not a inclusion of another template. So you can not do this:</p>
 			<p>
 				slave.tpl:<br />
-<code><pre><![CDATA[<ste:foo>
-	bla]]></pre></code>
+<code><pre>&lt;ste:foo&gt;<br />	bla</pre></code>
 				master.tpl<br />
-<code><pre><![CDATA[<ste:load name="slave.tpl" />
-</ste:foo>]]></pre></code>
+<code><pre>&lt;ste:load name="slave.tpl" /&gt;<br />&lt;/ste:foo&gt;</pre></code>
 			</p>
 			<p>But you can do this:</p>
 			<p>
 				slave.tpl:<br />
-<code><pre><![CDATA[<ste:foo>$bar</ste:foo>]]></pre></code>
+<code><pre>&lt;ste:foo&gt;$bar&lt;/ste:foo&gt;</pre></code>
 				master.tpl<br />
-<code><pre><![CDATA[<ste:baz>
-	<ste:load name="slave.tpl" />
-</ste:baz>]]></pre></code>
+<code><pre>&lt;ste:baz&gt;<br />	&lt;ste:load name="slave.tpl" /&gt;<br />&lt;/ste:baz&gt;</pre></code>
 			</p>
 		
 		<h3 id="builtin_block">ste:block</h3>
@@ -445,20 +416,9 @@
 			<p>
 				Example:<br />
 				master.tpl
-<code><pre><![CDATA[<h1>Content:</h1>
-<ste:block name="content">
-	Default content
-</ste:block>
-<div class="sidebar">
-	<ste:block name="sidebar">
-		Default sidebar
-	</ste:block>
-</div>]]></pre></code>
+<code><pre>&lt;h1&gt;Content:&lt;/h1&gt;<br />&lt;ste:block name="content"&gt;<br />	Default content<br />&lt;/ste:block&gt;<br />&lt;div class="sidebar"&gt;<br />	&lt;ste:block name="sidebar"&gt;<br />		Default sidebar<br />	&lt;/ste:block&gt;<br />&lt;/div&gt;</pre></code>
 				slave.tpl:<br />
-<code><pre><![CDATA[<ste:load name="master.tpl" />
-<ste:block name="content">
-	Much cooler content :-)
-</ste:block>]]></pre></code>
+<code><pre>&lt;ste:load name="master.tpl" /&gt;<br />&lt;ste:block name="content"&gt;<br />	Much cooler content :-)<br />&lt;/ste:block&gt;</pre></code>
 				When executing slave.tpl, master.tpl will be loaded and its <code>content</code> block will be replaced with the new one (<code>Much cooler content :-)</code>) but leave the original <code>sidebar</code> block.
 			</p>
 			<p>Blocks can not be nested.</p>
@@ -467,13 +427,12 @@
 			<p>ste:set will set a variable. The parameter <code>var</code> takes the name of the variable to set. The content of the <a href="#basic_elems_tag">Tag</a> will be the new content of the variable.</p>
 			<p>
 				Example:<br />
-<code><pre><![CDATA[<ste:set var="foo">bar</ste:set>]]></pre></code>
+<code><pre>&lt;ste:set var="foo"&gt;bar&lt;/ste:set&gt;</pre></code>
 				This will set the variable <code>foo</code> to <code>bar</code>.
 			</p>
 			<p>
 				<a href="#basic_elems_tag">Tag</a> parameter values can not contain Tags. ste:set can be used to bypass this:<br />
-<code><pre><![CDATA[<ste:set var="temp"><ste:foo /></ste:set>
-<ste:bar baz="$temp" />]]></pre></code>
+<code><pre>&lt;ste:set var="temp"&gt;&lt;ste:foo /&gt;&lt;/ste:set&gt;<br />&lt;ste:bar baz="$temp" /&gt;</pre></code>
 			</p>
 		
 		<h3 id="builtin_calc">ste:calc</h3>
@@ -482,7 +441,7 @@
 			<p>Formulas are evaluated at runtime, not during transcompilation.</p>
 			<p>
 				Example:<br />
-				<code><![CDATA[<ste:calc>(2+3+4) * (1.5 - (-0.5))</ste:calc>]]></code> will return <code>18</code>.
+				<code>&lt;ste:calc&gt;(2+3+4) * (1.5 - (-0.5))&lt;/ste:calc&gt;</code> will return <code>18</code>.
 			</p>
 			<p>This Tag is pretty slow, because the formula is not transcompiled and only evaluated at runtime. For some simple increment and decrement operations it is better to use the <a href="#stdlib_inc">ste:inc</a> and <a href="#stdlib_dec">ste:dec</a> Tags from the <a href="#stdlib">standard library</a>.</p>
 		
@@ -494,24 +453,9 @@
 			<p>ste:mktag will be transcompiled like any other code. So your custom tag will be almost as fast as a plugin coded in PHP.</p>
 			<p>
 				Example:
-<code><pre><![CDATA[<ste:mktag name="countdown" mandatory="from|counter">
-	<ste:for start="$_tag_parameters[from]" stop="0" step="-1" counter="$_tag_parameters[counter]">
-		<ste:tagcontent />
-	</ste:for>
-</ste:mktag>
-<ste:mktag name="double">
-	<ste:calc><ste:tagcontent /> * 2</ste:calc>
-</ste:mktag>
-<ste:countdown from="5" counter="i">
-	<ste:double>$i</ste:double><br />
-</ste:countdown>]]></pre></code>
+<code><pre>&lt;ste:mktag name="countdown" mandatory="from|counter"&gt;<br />	&lt;ste:for start="$_tag_parameters[from]" stop="0" step="-1" counter="$_tag_parameters[counter]"&gt;<br />		&lt;ste:tagcontent /&gt;<br />	&lt;/ste:for&gt;<br />&lt;/ste:mktag&gt;<br />&lt;ste:mktag name="double"&gt;<br />	&lt;ste:calc&gt;&lt;ste:tagcontent /&gt; * 2&lt;/ste:calc&gt;<br />&lt;/ste:mktag&gt;<br />&lt;ste:countdown from="5" counter="i"&gt;<br />	&lt;ste:double&gt;$i&lt;/ste:double&gt;&lt;br /&gt;<br />&lt;/ste:countdown&gt;</pre></code>
 				Will output:<br />
-<code><pre><![CDATA[10<br/>
-8<br />
-6<br />
-4<br />
-2<br />
-0<br />]]></pre></code>
+<code><pre>10&lt;br/&gt;<br />8&lt;br /&gt;<br />6&lt;br /&gt;<br />4&lt;br /&gt;<br />2&lt;br /&gt;<br />0&lt;br /&gt;</pre></code>
 			</p>
 		
 	<h2 id="stdlib">Standard Library</h2>
@@ -520,9 +464,9 @@
 			<p>Escapes characters that are reserved for HTML (e.g. <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, <code>&amp;</code>). The text to escape is the tag's content.
 			<p>
 				Example:<br />
-				<code><pre><![CDATA[<ste:escape>Foo & bar...</ste:escape>]]></pre></code>
+				<code><pre>&lt;ste:escape&gt;Foo &amp; bar...&lt;/ste:escape&gt;</pre></code>
 				Result:<br />
-				<code><pre><![CDATA[Foo &amp; bar...]]></pre></code>
+				<code><pre>Foo &amp;amp; bar...</pre></code>
 			</p>
 		
 		<h3 id="stdlib_strlen">ste:strlen</h3>
@@ -541,9 +485,9 @@
 			<p>Formats a time using PHPs <a href="http://php.net/manual/en/function.strftime.php">strftime format [ext. Link]</a>. The format is given in the tag's content. You can specify a time (unix timestamp) using the <code>timestamp</code> parameter (defaults to the current time).</p>
 			<p>
 				Example:<br />
-				<code><pre><![CDATA[<ste:date timestamp="1316357360">%d. %h. %Y, %H:%M:%S</ste:date>]]></pre></code>
+				<code><pre>&lt;ste:date timestamp="1316357360"&gt;%d. %h. %Y, %H:%M:%S&lt;/ste:date&gt;</pre></code>
 				Result:<br />
-				<code><pre><![CDATA[18. Sep. 2011, 16:49:20]]></pre></code>
+				<code><pre>18. Sep. 2011, 16:49:20</pre></code>
 			</p>
 </body>
 </html>
