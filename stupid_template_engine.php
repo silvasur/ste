@@ -136,7 +136,7 @@ function tokenize_text($text, $tpl, $off)
 	if(preg_match("/(?:(?<!\\\\)\\$)/s", $text, $match, PREG_OFFSET_CAPTURE) == 0)
 	{
 		$node = new TextNode($tpl, $off);
-		$node->text = preg_replace("/^\\n\\s*/s", "", unescape_text($text));
+		$node->text = preg_replace("/^(?:\\n|\\r\\n|\\r)\\s*/s", "", unescape_text($text));
 		return (strlen($node->text) == 0) ? array() : array($node);
 	}
 	
