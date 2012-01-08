@@ -244,6 +244,30 @@ function mk_ast($code, $tpl, $err_off)
 	
 	if($matches[1][0] != "/")
 	{
+		/* Handling ste:comment pseudotag */
+		if($tag->name == "comment")
+		{
+			if(preg_match("/\\<\\s*\\/\\s*ste:comment\\s*\\>/s", $code, $matches, PREG_OFFSET_CAPTURE) == 0)
+				return array(); /* Treat the whole code as comment */
+			$comment_end = $matches[0][1] + strlen($matches[0][0]);
+			return mk_ast(substr($code, $comment_end), $tpl, $err_off + $comment_end);
+		}
+		
+		/* Handling ste:rawtext pseudotag */
+		if($tag->name == "rawtext")
+		{
+			$tag = new TextNode($tpl, $tag->offset);
+			if(preg_match("/\\<\\s*\\/\\s*ste:rawtext\\s*\\>/s", $code, $matches, PREG_OFFSET_CAPTURE) == 0)
+			{
+				/* Treat the rest of the code as rawtext */
+				$tag->text = $code;
+				return array($tag);
+			}
+			$tag->text = strpos($code, 0, $matches[0][1]);
+			$rawtext_end = $matches[0][1] + strlen($matches[0][0]);
+			return array_merge(array($tag), mk_ast(substr($code, $rawtext_end), $tpl, $err_off + $rawtext_end));
+		}
+		
 		$off = 0;
 		$last_tag_start = 0;
 		$tagstack = array(array($tag->name, $tag->offset));
@@ -270,15 +294,7 @@ function mk_ast($code, $tpl, $err_off)
 		if((!empty($tagstack)) or ($tag->name != $matches[2][0]))
 			throw new ParseCompileError("Parse Error: Missing closing \"ste:" . $tag->name . "\"-Tag.", $tpl, $tag->offset);
 		
-		if($tag->name == "rawtext")
-		{
-			$tag = new TextNode($tpl, $err_off);
-			$tag->text = substr($code, 0, $last_tag_start);
-		}
-		else if($tag->name == "comment")
-			$tag = NULL; /* All this work to remove a comment ... */
-		else
-			$tag->sub = mk_ast(substr($code, 0, $last_tag_start), $tpl, $err_off);
+		$tag->sub = mk_ast(substr($code, 0, $last_tag_start), $tpl, $err_off);
 		$code = substr($code, $off);
 		$err_off += $off;
 	}
