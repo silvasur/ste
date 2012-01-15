@@ -52,6 +52,10 @@ $ste->vars["articles"] = array(
 	array("author" => "baz", "title" => "whatever...",  "timestamp" => 1316550000, "excerpt" => "...", "full" => "..........")
 );
 
+$ste->vars["foo"] = "baz";
+$ste->vars["bar"] = "lol";
+$ste->vars["baz"] = array("lol" => "cool");
+
 # Execute the template and output the result
 echo $ste->exectemplate("articles.html");
 

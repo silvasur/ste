@@ -44,7 +44,7 @@ class VariableNode extends ASTNode
 	public $arrayfields;
 	public function transcompile()
 	{
-		$varaccess = '@$ste->vars[' . (is_numeric($this->name) ? $this->name : '\'' . escape_text($this->name) . '\''). ']';
+		$varaccess = '@$ste->vars[' . (is_numeric($this->name) ? $this->name : '"' . escape_text($this->name) . '"'). ']';
 		foreach($this->arrayfields as $af)
 		{
 			if((count($af) == 1) and ($af[0] instanceof TextNode) and is_numeric($af->text))
@@ -778,6 +778,13 @@ $ste_builtins = array(
 		
 		return $code;
 	},
+	"get" => function($ast)
+	{
+		if(empty($ast->params["var"]))
+			throw new ParseCompileError("Transcompile Error: var missing in <ste:get>.", $ast->tpl, $ast->offset);
+		
+		return "\$outputstack[\$outputstack_i] .= \$ste->get_var_by_name(" . _transcompile($ast->params["var"],  True) . ");";
+	},
 	"calc" => function($ast)
 	{
 		$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
@@ -790,7 +797,7 @@ $ste_builtins = array(
 
 function escape_text($text)
 {
-	return addcslashes($text, "\r\n\t\$\0..\x1f\\'\"\x7f..\xff");
+	return addcslashes($text, "\r\n\t\$\0..\x1f\\\"\x7f..\xff");
 }
 
 function _transcompile($ast, $no_outputstack = False) /* The real transcompile function, does not add boilerplate code. */

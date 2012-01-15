@@ -63,6 +63,7 @@
 					<li><a href="#builtin_load">ste:load</a></li>
 					<li><a href="#builtin_block">ste:block</a></li>
 					<li><a href="#builtin_set">ste:set</a></li>
+					<li><a href="#builtin_get">ste:get</a></li>
 					<li><a href="#builtin_calc">ste:calc</a></li>
 					<li><a href="#builtin_mktag">ste:mktag</a></li>
 				</ol>
@@ -433,6 +434,14 @@
 			<p>
 				<a href="#basic_elems_tag">Tag</a> parameter values can not contain Tags. ste:set can be used to bypass this:<br />
 <code><pre>&lt;ste:set var="temp"&gt;&lt;ste:foo /&gt;&lt;/ste:set&gt;<br />&lt;ste:bar baz="$temp" /&gt;</pre></code>
+			</p>
+		
+		<h3 id="builtin_get">ste:get</h3>
+			<p>ste:get will return the content of a variable. The parameter <code>var</code> takes the name of the variable to get. Usefult, if you want to get a variable which name is stored in a variable.</p>
+			<p>
+				Example:<br />
+<code><pre>&lt;ste:get var="$foo" /&gt;</pre></code>
+				This will get the variable with the name that is stored in the variable <code>foo</code>.
 			</p>
 		
 		<h3 id="builtin_calc">ste:calc</h3>
