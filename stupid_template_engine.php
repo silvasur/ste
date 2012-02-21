@@ -82,7 +82,7 @@ class ParseCompileError extends \Exception
 	
 	public function rewrite($code)
 	{
-		$line = substr_count(str_replace("\r\n", "\n", $code), "\n", 0, $this->off + 1) + 1;
+		$line = substr_count(str_replace("\r\n", "\n", substr($code, 0, $this->off)), "\n") + 1;
 		$this->message = "{$this->msg} (Template {$this->tpl}, Line $line)";
 		$this->is_rewritten = True;
 	}
@@ -270,7 +270,7 @@ function mk_ast($code, $tpl, $err_off)
 		
 		$off = 0;
 		$last_tag_start = 0;
-		$tagstack = array(array($tag->name, $tag->offset));
+		$tagstack = array(array($tag->name, $tag->offset - $err_off));
 		while(preg_match("/\\<((?:\\s*)|(?:\\s*\\/\\s*))ste:([a-zA-Z0-9_]*)(?:\\s+(?:[a-zA-Z0-9_]+)=(?:(?:\"(?:.*?)(?<!\\\\)\")|(?:'(?:.*?)(?<!\\\\)')))*((?:\\s*)|(?:\\s*\\/\\s*))\\>/s", $code, $matches, PREG_OFFSET_CAPTURE, $off) > 0) /* RegEx from hell! Matches all  <ste:> Tags. Opening, closing and self-closing ones. */
 		{
 			if(trim($matches[3][0]) != "/")
