@@ -88,6 +88,20 @@ class ParseCompileError extends \Exception
 	}
 }
 
+/*
+ * Class: RuntimeError
+ * An Exception that a tag can throw, if a non-fatal runtime error occurred.
+ * By default this will return in no output at all. But if <STECore::$mute_runtime_errors> is false, this will generate a error message instead of the tag's output.
+ */
+class RuntimeError      extends \Exception {}
+
+/*
+ * Class: FatalRuntimeError
+ * An Exception a tag can throw, if a fatal (irreparable) runtime error occurred.
+ * This Exception will always "bubble up" so you probably want to catch them. Remember that this exception is also in the namespace ste!
+ */
+class FatalRuntimeError extends \Exception {}
+
 /* $text must start after the first opening bracket */
 function find_closing_bracket($text, $opening, $closing)
 {
@@ -248,9 +262,9 @@ function mk_ast($code, $tpl, $err_off)
 		if($tag->name == "comment")
 		{
 			if(preg_match("/\\<\\s*\\/\\s*ste:comment\\s*\\>/s", $code, $matches, PREG_OFFSET_CAPTURE) == 0)
-				return array(); /* Treat the whole code as comment */
+				return $ast; /* Treat the whole code as comment */
 			$comment_end = $matches[0][1] + strlen($matches[0][0]);
-			return mk_ast(substr($code, $comment_end), $tpl, $err_off + $comment_end);
+			return array_merge($ast, mk_ast(substr($code, $comment_end), $tpl, $err_off + $comment_end));
 		}
 		
 		/* Handling ste:rawtext pseudotag */
@@ -261,11 +275,13 @@ function mk_ast($code, $tpl, $err_off)
 			{
 				/* Treat the rest of the code as rawtext */
 				$tag->text = $code;
-				return array($tag);
+				$ast[] = $tag;
+				return $ast;
 			}
 			$tag->text = strpos($code, 0, $matches[0][1]);
+			$ast[] = $tag;
 			$rawtext_end = $matches[0][1] + strlen($matches[0][0]);
-			return array_merge(array($tag), mk_ast(substr($code, $rawtext_end), $tpl, $err_off + $rawtext_end));
+			return array_merge($ast, mk_ast(substr($code, $rawtext_end), $tpl, $err_off + $rawtext_end));
 		}
 		
 		$off = 0;
@@ -421,10 +437,10 @@ function shunting_yard($infix_math)
 				$output_queue[] = $op;
 			}
 			if(!$lbr_found)
-				throw new \Exception("Bracket mismatch.");
+				throw new RuntimeError("Bracket mismatch.");
 		}
 		else if(!isset($operators[$token]))
-			throw new \Exception("Invalid token ($token): Not a number, bracket or operator. Stop.");
+			throw new RuntimeError("Invalid token ($token): Not a number, bracket or operator. Stop.");
 		else
 		{
 			$priority = $operators[$token][1];
@@ -442,7 +458,7 @@ function shunting_yard($infix_math)
 	{
 		$op = array_pop($op_stack);
 		if($op == "(")
-			throw new \Exception("Bracket mismatch...");
+			throw new RuntimeError("Bracket mismatch...");
 		$output_queue[] = $op;
 	}
 	
@@ -453,7 +469,7 @@ function pop2(&$array)
 {
 	$rv = array(array_pop($array), array_pop($array));
 	if(array_search(NULL, $rv, True) !== False)
-		throw new \Exception("Not enough numbers on stack. Invalid formula.");
+		throw new RuntimeError("Not enough numbers on stack. Invalid formula.");
 	return $rv;
 }
 
@@ -487,7 +503,7 @@ function calc_rpn($rpn)
 			case "_":
 				$a = array_pop($stack);
 				if($a === NULL)
-					throw new \Exception("Not enough numbers on stack. Invalid formula.");
+					throw new RuntimeError("Not enough numbers on stack. Invalid formula.");
 				$stack[] = -$a;
 				break;
 			default:
@@ -593,7 +609,7 @@ $ste_builtins = array(
 						return "case '$op_stetpl':\n\t\$outputstack[\$outputstack_i] .= (($a) $op_php ($b)) ? 'yes' : '';\n\tbreak;\n\t";
 					}, $operators
 				));
-			$code .= "default: throw new \Exception('Runtime Error: Unknown operator in <ste:cmp>.');\n}\n";
+			$code .= "default: throw new \\ste\\RuntimeError('Unknown operator in <ste:cmp>.');\n}\n";
 		}
 		return $code;
 	},
@@ -640,7 +656,7 @@ $ste_builtins = array(
 		
 		if($step === NULL)
 		{
-			$code .= "if(\$${loopname}_step == 0)\n\tthrow new \Exception('Runtime Error: step can not be 0 in <ste:for>.');\n";
+			$code .= "if(\$${loopname}_step == 0)\n\tthrow new \\ste\\RuntimeError('step can not be 0 in <ste:for>.');\n";
 			$code .= "if(\$${loopname}_step > 0)\n{\n";
 			$code .= "\tfor(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_counter <= \$${loopname}_stop; \$${loopname}_counter += \$${loopname}_step)\n";
 			$code .= $loopbody;
@@ -750,7 +766,7 @@ $ste_builtins = array(
 			$code .= _transcompile($ast->params["mandatory"]);
 			$code .= "\$outputstack_i--;\n\$mandatory_params = explode('|', array_pop(\$outputstack));\n";
 			
-			$fxbody .= "foreach(\$mandatory_params as \$mp)\n{\n\tif(!isset(\$params[\$mp]))\n\t\tthrow new \Exception(\"Runtime Error: \$mp missing in <ste:\" . $tagname . \">. Stop.\");\n}";
+			$fxbody .= "foreach(\$mandatory_params as \$mp)\n{\n\tif(!isset(\$params[\$mp]))\n\t\tthrow new \\ste\\RuntimeError(\"\$mp missing in <ste:\" . $tagname . \">.\");\n}";
 		}
 		
 		$fxbody .= _transcompile($ast->sub);
@@ -870,7 +886,7 @@ $ste_transc_boilerplate = "\$outputstack = array('');\n\$outputstack_i = 0;\n";
 function transcompile($ast) /* Transcompile and add some boilerplate code. */
 {
 	global $ste_transc_boilerplate;
-	return "function(\$ste)\n{\n" . indent_code($ste_transc_boilerplate . _transcompile($ast) . "return array_pop(\$outputstack);") . "\n}";
+	return "function(\$ste)\n{/*" . print_r($ast, True) . "*/\n" . indent_code($ste_transc_boilerplate . _transcompile($ast) . "return array_pop(\$outputstack);") . "\n}";
 }
 
 /*
@@ -881,6 +897,20 @@ function transcompile($ast) /* Transcompile and add some boilerplate code. */
  */
 const MODE_SOURCE        = 0;
 const MODE_TRANSCOMPILED = 1;
+
+abstract class StorageAccessFailure extends \Exception { }
+
+/*
+ * Class: CantLoadTemplate
+ * An exception that a <StorageAccess> implementation can throw, if it is unable to load a template.
+ */
+class CantLoadTemplate extends StorageAccessFailure { }
+
+/*
+ * Class: CantSaveTemplate
+ * An exception that a <StorageAccess> implementation can throw, if it is unable to save a template.
+ */
+class CantSaveTemplate extends StorageAccessFailure { }
 
 /*
  * Class: StorageAccess
@@ -900,6 +930,9 @@ interface StorageAccess
 	 * 	         If <MODE_SOURCE>, the raw sourcecode is expected, if <MODE_TRANSCOMPILED> the transcompiled template *as a callable function* (expecting an <STECore> instance as first parameter) is expected.
 	 * 	         If the transcompiled version is not available or older than the source, you can set this parameter to <MODE_SOURCE> and return the source.
 	 * 
+	 * Throws:
+	 * 	A <CantLoadTemplate> exception if the template could not be loaded.
+	 * 
 	 * Returns:
 	 * 	Either the sourcecode or a callable function (first, and only parameter: an <STECore> instance).
 	 */
@@ -908,6 +941,9 @@ interface StorageAccess
 	/*
 	 * Function: save
 	 * Saves a template.
+	 * 
+	 * Throws:
+	 * 	A <CantSaveTemplate> exception if the template could not be saved.
 	 * 
 	 * Parameters:
 	 * 	$tpl -The name of the template.
@@ -948,7 +984,7 @@ class FilesystemStorageAccess implements StorageAccess
 		{
 			$content = @file_get_contents($src_fn);
 			if($content === False)
-				throw new \Exception("Template not found.");
+				throw new CantLoadTemplate("Template not found.");
 			return $content;
 		}
 		
@@ -956,7 +992,7 @@ class FilesystemStorageAccess implements StorageAccess
 		$transc_stat = @stat($transc_fn);
 		
 		if(($src_stat === False) and ($transc_stat === False))
-			throw new \Exception("Template not found.");
+			throw new CantLoadTemplate("Template not found.");
 		else if($transc_stat === False)
 		{
 			$mode = MODE_SOURCE;
@@ -986,7 +1022,9 @@ class FilesystemStorageAccess implements StorageAccess
 	{
 		$fn = (($mode == MODE_SOURCE) ? $this->sourcedir : $this->transcompileddir) . "/" . $tpl . (($mode == MODE_TRANSCOMPILED) ? ".php" : "");
 		@mkdir(dirname($fn), 0777, True);
-		file_put_contents($fn, "<?php \$transcompile_fx = $data; ?>");
+		if(file_put_contents($fn, "<?php \$transcompile_fx = $data; ?>") === False)
+			throw new CantSaveTemplate("Unable to save template.");
+			
 	}
 }
 
@@ -1009,10 +1047,14 @@ class STECore
 	 * $blocks - Associative array of blocks (see the language definition).
 	 * $blockorder - The order of the blocks (an array)
 	 * $vars - Associative array of all template variables. Use this to pass data to your templates.
+	 * $mute_runtime_errors - If True (default) a <RuntimeError> exception will result in no output from the tag, if False a error message will be written to output.
+	 * $fatal_error_on_missing_tag - If True, STE will throw a <FatalRuntimeError> if a tag was called that was not registered, otherwise (default) a regular <RuntimeError> will be thrown and automatically handled by STE (see <$mute_runtime_errors>).
 	 */
 	public $blocks;
 	public $blockorder;
 	public $vars;
+	public $mute_runtime_errors = True;
+	public $fatal_error_on_missing_tag = False;
 	
 	/*
 	 * Constructor: __construct
@@ -1037,6 +1079,9 @@ class STECore
 	 * Parameters:
 	 * 	$name - The name of the tag.
 	 * 	$callback - A callable function (This must tage three parameters: The <STECore> instance, an associative array of parameters, and a function representing the tags content(This expects the <STECore> instance as its only parameter and returns its text result, i.e to get the text, you neeed to call this function with the <STECore> instance as a parameter)).
+	 * 
+	 * Throws:
+	 * 	An Exception if the tag could not be registered (if $callback is not callable or if $name is empty)
 	 */
 	public function register_tag($name, $callback)
 	{
@@ -1056,14 +1101,29 @@ class STECore
 	 * 	$params - Associative array of parameters
 	 * 	$sub - A callable function (expecting an <STECore> instance as it's parameter) that represents the tag's content.
 	 * 
+	 * Throws:
+	 * 	Might throw a <FatalRuntimeError> (see <$fatal_error_on_missing_tag>.
+	 * 
 	 * Returns:
-	 * 	The output of the tag.
+	 * 	The output of the tag or, if a <RuntimeError> was thrown, the appropiate result (see <$mute_runtime_errors>).
 	 */
 	public function call_tag($name, $params, $sub)
 	{
-		if(!isset($this->tags[$name]))
-			throw new \Exception("Can not call tag \"$name\": Does not exist.");
-		return call_user_func($this->tags[$name], $this, $params, $sub);
+		try
+		{
+			if(!isset($this->tags[$name]))
+			{
+				if($this->fatal_error_on_missing_tag)
+					throw new FatalRuntimeError("Can not call tag \"$name\": Does not exist.");
+				else
+					throw new RuntimeError("Can not call tag \"$name\": Does not exist.");
+			}
+			return call_user_func($this->tags[$name], $this, $params, $sub);
+		}
+		catch(RuntimeError $e)
+		{
+			return "RuntimeError occurred on tag '$name': " . $e->getMessage();
+		}
 	}
 	
 	public function calc($expression)
@@ -1077,6 +1137,12 @@ class STECore
 	 * 
 	 * Parameters:
 	 * 	$tpl - The name of the template to execute.
+	 * 
+	 * Throws:
+	 * 	* A <CantLoadTemplate> exception if the template could not be loaded.
+	 * 	* A <ParseCompileError> if the template could not be parsed or transcompiled.
+	 * 	* A <FatalRuntimeError> if a tag threw it or if a tag was not found and <$fatal_error_on_missing_tag> is true.
+	 * 	* Might also throw different exceptions, if a external tag threw it (but they should use <RuntimeError> or <FatalRuntimeError> to make it possible for STE to handle them correctly).
 	 * 
 	 * Returns:
 	 * 	The output of the template.
@@ -1100,6 +1166,9 @@ class STECore
 	 * Parameters:
 	 * 	$name - The variables name.
 	 * 	$create_if_not_exist - Should the variable be created, if it does not exist? Otherwise NULL will be returned, if the variable does not exist.
+	 * 
+	 * Throws:
+	 * 	<RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
 	 * 
 	 * Returns:
 	 * 	A Reference to the variable.
@@ -1129,7 +1198,7 @@ class STECore
 			$old_varname = $varname;
 			$bracket_close = strpos($name, "]", $bracket_open);
 			if($bracket_close === FALSE)
-				throw new Excpeption("Runtime Error: Invalid varname \"$varname\". Missing closing \"]\".");
+				throw new RuntimeError("Invalid varname \"$varname\". Missing closing \"]\".");
 			$varname = substr($name, 0, $bracket_open);
 			$name    = substr($name, $bracket_open + 1, $bracket_close - $bracket_open - 1) . substr($name, $bracket_close + 1);
 			if(!is_array($from[$varname]))
@@ -1146,7 +1215,7 @@ class STECore
 			}
 			catch(Exception $e)
 			{
-				throw new Excpeption("Runtime Error: Invalid varname \"$old_varname\". Missing closing \"]\".");
+				throw new RuntimeError("Invalid varname \"$old_varname\". Missing closing \"]\".");
 			}
 		}
 	}
@@ -1159,6 +1228,9 @@ class STECore
 	 * Parameters:
 	 * 	$name - The variables name.
 	 * 	$val - The new value.
+	 * 
+	 * Throws:
+	 * 	<RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
 	 */
 	public function set_var_by_name($name, $val)
 	{
@@ -1173,6 +1245,9 @@ class STECore
 	 * 
 	 * Parameters:
 	 * 	$name - The variables name.
+	 * 
+	 * Throws:
+	 * 	<RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
 	 * 
 	 * Returns:
 	 * 	The variables value.
@@ -1190,6 +1265,12 @@ class STECore
 	 * Parameters:
 	 * 	$tpl - The name of the template to be loaded.
 	 * 	$quiet - If true, do not output anything and do notmodify the blocks. This can be useful to load custom tags that are programmed in STE T/PL. Default: false.
+	 * 
+	 * Throws:
+	 * 	* A <CantLoadTemplate> exception if the template could not be loaded.
+	 * 	* A <ParseCompileError> if the template could not be parsed or transcompiled.
+	 * 	* A <FatalRuntimeError> if a tag threw it or if a tag was not found and <$fatal_error_on_missing_tag> is true.
+	 * 	* Might also throw different exceptions, if a external tag threw it (but they should use <RuntimeError> or <FatalRuntimeError> to make it possible for STE to handle them correctly).
 	 * 
 	 * Returns:
 	 * 	The result of the template (if $quiet == false).
@@ -1290,7 +1371,7 @@ class STEStandardLibrary
 	static public function arraylen($ste, $params, $sub)
 	{
 		if(empty($params["array"]))
-			throw new \Exception("Runtime Error: missing array parameter in <ste:arraylen>.");
+			throw new RuntimeError("Missing array parameter in <ste:arraylen>.");
 		$a = $ste->get_var_by_name($params["array"]);
 		return (is_array($a)) ? count($a) : "";
 	}
@@ -1298,7 +1379,7 @@ class STEStandardLibrary
 	static public function inc($ste, $params, $sub)
 	{
 		if(empty($params["var"]))
-			throw new \Exception("Runtime Error: missing var parameter in <ste:inc>.");
+			throw new RuntimeError("Missing var parameter in <ste:inc>.");
 		$ref = $ste->_get_var_reference($ste->vars, $params["var"]);
 		$ref++;
 	}
@@ -1306,7 +1387,7 @@ class STEStandardLibrary
 	static public function dec($ste, $params, $sub)
 	{
 		if(empty($params["var"]))
-			throw new \Exception("Runtime Error: missing var parameter in <ste:dec>.");
+			throw new RuntimeError("Missing var parameter in <ste:dec>.");
 		$ref = $ste->_get_var_reference($ste->vars, $params["var"]);
 		$ref--;
 	}

@@ -12,6 +12,9 @@ $ste = new \ste\STECore(
 	)
 );
 
+# Set STE to a more verbose behavior:
+$ste->mute_runtime_errors = False;
+
 # First, lets define some custom tags.
 
 # <ste:uppercase> will exchange all letters with their uppercase complement
@@ -29,7 +32,7 @@ $ste->register_tag("repeat",
 	{
 		$output = "";
 		if(!is_numeric($params["n"]))
-			throw new Exception("Sorry, but parameter n must be a number...");
+			throw new \ste\RuntimeError("Sorry, but parameter n must be a number...");
 		
 		for($i = 0; $i < $params["n"]; ++$i)
 			$output .= $sub($ste);
