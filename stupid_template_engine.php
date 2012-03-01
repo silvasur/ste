@@ -886,7 +886,7 @@ $ste_transc_boilerplate = "\$outputstack = array('');\n\$outputstack_i = 0;\n";
 function transcompile($ast) /* Transcompile and add some boilerplate code. */
 {
 	global $ste_transc_boilerplate;
-	return "function(\$ste)\n{/*" . print_r($ast, True) . "*/\n" . indent_code($ste_transc_boilerplate . _transcompile($ast) . "return array_pop(\$outputstack);") . "\n}";
+	return "function(\$ste)\n{\n" . indent_code($ste_transc_boilerplate . _transcompile($ast) . "return array_pop(\$outputstack);") . "\n}";
 }
 
 /*
