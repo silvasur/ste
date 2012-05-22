@@ -715,7 +715,7 @@ $ste_builtins = array(
 	},
 	"infloop" => function($ast)
 	{
-		return "while(True)\n{\n" . loopbody(indent_code(_transcompile($ast->sub)) . "\n}") . "\n";
+		return "while(True)\n{\n" . indent_code(loopbody(indent_code(_transcompile($ast->sub)))) . "\n}\n";
 	},
 	"break" => function($ast)
 	{
@@ -1308,7 +1308,7 @@ class STECore
 			$content = precompile($content);
 			try
 			{
-				$ast     = parse($content, $tpl, 0);
+				$ast     = parse($content, $tpl);
 				$transc  = transcompile($ast);
 			}
 			catch(ParseCompileError $e)
