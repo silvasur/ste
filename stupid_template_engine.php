@@ -1345,7 +1345,7 @@ class STECore
 	 */
 	public function evalbool($txt)
 	{
-		return trim($txt) != "";
+		return trim($txt . "") != "";
 	}
 }
 
