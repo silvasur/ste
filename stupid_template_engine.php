@@ -1176,7 +1176,7 @@ class STECore
 	
 	public function &get_var_reference($name, $create_if_not_exist)
 	{
-		$ref = $this->_get_var_reference($this->vars, $name, $create_if_not_exist);
+		$ref = &$this->_get_var_reference($this->vars, $name, $create_if_not_exist);
 		return $ref;
 	}
 	
@@ -1372,7 +1372,7 @@ class STEStandardLibrary
 	{
 		if(empty($params["array"]))
 			throw new RuntimeError("Missing array parameter in <ste:arraylen>.");
-		$a = $ste->get_var_by_name($params["array"]);
+		$a = $ste->get_var_by_name($params["array"], False);
 		return (is_array($a)) ? count($a) : "";
 	}
 	
@@ -1380,7 +1380,7 @@ class STEStandardLibrary
 	{
 		if(empty($params["var"]))
 			throw new RuntimeError("Missing var parameter in <ste:inc>.");
-		$ref = $ste->_get_var_reference($ste->vars, $params["var"]);
+		$ref = &$ste->get_var_reference($params["var"], True);
 		$ref++;
 	}
 	
@@ -1388,7 +1388,7 @@ class STEStandardLibrary
 	{
 		if(empty($params["var"]))
 			throw new RuntimeError("Missing var parameter in <ste:dec>.");
-		$ref = $ste->_get_var_reference($ste->vars, $params["var"]);
+		$ref = &$ste->get_var_reference($params["var"], True);
 		$ref--;
 	}
 	
