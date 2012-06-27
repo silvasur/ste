@@ -77,6 +77,10 @@
 					<li><a href="#stdlib_inc">ste:inc</a></li>
 					<li><a href="#stdlib_dec">ste:dec</a></li>
 					<li><a href="#stdlib_date">ste:date</a></li>
+					<li><a href="#stdlib_in_array">ste:in_array</a></li>
+					<li><a href="#stdlib_join">ste:join</a></li>
+					<li><a href="#stdlib_split">ste:split</a></li>
+					<li><a href="#stdlib_array_add">ste:array_add</a></li>
 				</ol>
 			</li>
 		</ol>
@@ -498,5 +502,20 @@
 				Result:<br />
 				<code><pre>18. Sep. 2011, 16:49:20</pre></code>
 			</p>
+		
+		<h3 id="stdlib_in_array">ste:in_array</h3>
+			<p>Check, if a value is in an array. The tag takes the variable name of the array by parameter <code>array</code>.The value to test with will be taken from the tags content.</p>
+			<p>Returns empty text, if the value is not in the array, otherwise a non-empty text.</p>
+		
+		<h3 id="stdlib_join">ste:join</h3>
+			<p>Join parts of an array together. The array's variable name goes to the <code>array</code> parameter. The tag's content will be used as the glue, i.e. this will be between two elements.</p>
+			<p>Returns the joined array</p>
+		
+		<h3 id="stdlib_split">ste:split</h3>
+			<p>Split a text and write the parts to an array. The <code>array</code> parameter takes the variable name of the resulting array, the <code>delim</code> parameter the text to split by. The tag's content will be the text to split.</p>
+		
+		<h3 id="stdlib_array_add">ste:array_add</h3>
+			<p>Adding an element to an array. The <code>array</code> parameter takes the variable name of the array. The <code>key</code> parameter takes the array key to map the value to, if omitted, the value will be appended to the end of the array. The value is the tag's content.</p>
+		
 </body>
 </html>

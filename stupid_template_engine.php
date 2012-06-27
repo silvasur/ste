@@ -1396,6 +1396,44 @@ class STEStandardLibrary
 	{
 		return @strftime($sub($ste), empty($params["timestamp"]) ? @time() : (int) $params["timestamp"]);
 	}
+	
+	static public function in_array($ste, $params, $sub)
+	{
+		if(empty($params["array"]))
+			throw new RuntimeError("Missing array parameter in <ste:in_array>.");
+		$ar = &$ste->get_var_reference($params["array"], False);
+		if(!is_array($ar))
+			return "";
+		return in_array($sub($ste), $ar) ? "y" : "";
+	}
+	
+	static public function join($ste, $params, $sub)
+	{
+		if(empty($params["array"]))
+			throw new RuntimeError("Missing array parameter in <ste:join>.");
+		return implode($sub($ste), $ste->get_var_by_name($params["array"]));
+	}
+	
+	static public function split($ste, $params, $sub)
+	{
+		if(empty($params["array"]))
+			throw new RuntimeError("Missing array parameter in <ste:split>.");
+		if(empty($params["delim"]))
+			throw new RuntimeError("Missing delim parameter in <ste:split>.");
+		$ste->set_var_by_name($params["array"], explode($params["delim"], $sub($ste)));
+	}
+	
+	static public function array_add($ste, $params, $sub)
+	{
+		if(empty($params["array"]))
+			throw new RuntimeError("Missing array parameter in <ste:array_add>.");
+		
+		$ar = &$ste->get_var_reference($params["array"], True);
+		if(empty($params["key"]))
+			$ar[] = $sub($ste);
+		else
+			$ar[$params["key"]] = $sub($ste);
+	}
 }
 
 ?>
