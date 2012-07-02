@@ -1434,6 +1434,57 @@ class STEStandardLibrary
 		else
 			$ar[$params["key"]] = $sub($ste);
 	}
+	
+	static public function array_filter($ste, $params, $sub)
+	{
+		if(empty($params["array"]))
+			throw new RuntimeError("Missing array parameter in <ste:array_filter>.");
+		
+		$ar = $ste->get_var_by_name($params["array"]);
+		if(!is_array($ar))
+			throw new RuntimeError("Variable at 'array' is not an array.");
+		
+		$keys = array_keys($ar);
+		
+		if(!empty($params["keep_by_keys"]))
+		{
+			$keep_by_keys = &$ste->get_var_reference($params["keep_by_keys"], False);
+			if(!is_array($keep_by_keys))
+				throw new RuntimeError("Variable at 'keep_by_keys' is not an array.");
+			$delkeys = array_filter($keys, function($k) use ($keep_by_keys) { return !in_array($k, $keep_by_keys); });
+			foreach($delkeys as $dk)
+				unset($ar[$dk]);
+			$keys = array_keys($ar);
+		}
+		if(!empty($params["keep_by_values"]))
+		{
+			$keep_by_values = &$ste->get_var_reference($params["keep_by_values"], False);
+			if(!is_array($keep_by_values))
+				throw new RuntimeError("Variable at 'keep_by_values' is not an array.");
+			$ar = array_filter($ar, function($v) use ($keep_by_values) { return in_array($v, $keep_by_values); });
+			$keys = array_keys($ar);
+		}
+		if(!empty($params["delete_by_keys"]))
+		{
+			$delete_by_keys = &$ste->get_var_reference($params["delete_by_keys"], False);
+			if(!is_array($delete_by_keys))
+				throw new RuntimeError("Variable at 'delete_by_keys' is not an array.");
+			$delkeys = array_filter($keys, function($k) use ($delete_by_keys) { return in_array($k, $delete_by_keys); });
+			foreach($delkeys as $dk)
+				unset($ar[$dk]);
+			$keys = array_keys($ar);
+		}
+		if(!empty($params["delete_by_values"]))
+		{
+			$delete_by_values = &$ste->get_var_reference($params["delete_by_values"], False);
+			if(!is_array($delete_by_values))
+				throw new RuntimeError("Variable at 'delete_by_values' is not an array.");
+			$ar = array_filter($ar, function($v) use ($delete_by_values) { return !in_array($v, $delete_by_values); });
+			$keys = array_keys($ar);
+		}
+		
+		$ste->set_var_by_name($params["array"], $ar);
+	}
 }
 
 ?>
