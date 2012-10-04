@@ -1360,7 +1360,10 @@ class STEStandardLibrary
 	
 	static public function escape($ste, $params, $sub)
 	{
-		return htmlentities($sub($ste), ENT_QUOTES, "UTF-8");
+		if($ste->evalbool($params["lines"]))
+			return nl2br(htmlspecialchars(str_replace("\r\n", "\n", $sub($ste))));
+		else
+			return htmlspecialchars($sub($ste));
 	}
 	
 	static public function strlen($ste, $params, $sub)

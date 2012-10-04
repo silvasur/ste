@@ -113,7 +113,7 @@
 				Just like their XML counterparts, they can wrap other elements (<code>&lt;ste:foo&gt;bar&lt;ste:baz&gt;herpdederp&lt;/ste:baz&gt;&lt;/ste:foo&gt;</code>) or can be self-closing (<code>&lt;ste:foo /&gt;</code>).
 				And they can have additional parameters (or "attributes", using the XML terminology): <code>&lt;ste:foo bar="baz" /&gt;</code>
 			</p>
-			<p>A Tag is wrapped in <code>&lt;</code> and <code>&gt;</code>. The tag's name always start with <code>ste:</code> and can then consist of letters, numbers and underscores (Regex: <code>[a-zA-Z0-9_]+</code>).<p>
+			<p>A Tag is wrapped in <code>&lt;</code> and <code>&gt;</code>. The tag's name always start with <code>ste:</code> and can then consist of letters, numbers and underscores (Regex: <code>[a-zA-Z0-9_]+</code>).</p>
 			<p>If the tag is self-closing, the last char is a <code>/</code> (e.g.: <code>&lt;ste:foo /&gt;</code>).</p>
 			<p>If the tag is a closing one, the first char is a <code>/</code>. An opening Tag does not have a <code>/</code>.An example of an opening-closing Tag pair wrapping the text <code>bar</code>: <code>&lt;ste:foo&gt;bar&lt;/ste:foo&gt;</code></p>
 			<p>
@@ -474,12 +474,15 @@
 	<h2 id="stdlib">Standard Library</h2>
 		<p>The Standard Library contains some useful tags, which are not <a href="#builtin">builtin</a> but still always available.</p>
 		<h3 id="stdlib_escape">ste:escape</h3>
-			<p>Escapes characters that are reserved for HTML (e.g. <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, <code>&amp;</code>). The text to escape is the tag's content.
+			<p>Escapes characters that are reserved for HTML (e.g. <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, <code>&amp;</code>). The text to escape is the tag's content.</p>
 			<p>
 				Example:<br />
 				<code><pre>&lt;ste:escape&gt;Foo &amp; bar...&lt;/ste:escape&gt;</pre></code>
 				Result:<br />
 				<code><pre>Foo &amp;amp; bar...</pre></code>
+			</p>
+			<p>
+				If the optional parameter <code>lines</code> is true (i.e. not empty), then additionally line breaks are converted to <code>&lt;br /&gt;</code>.
 			</p>
 		
 		<h3 id="stdlib_strlen">ste:strlen</h3>
