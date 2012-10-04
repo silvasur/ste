@@ -1122,7 +1122,8 @@ class STECore
 		}
 		catch(RuntimeError $e)
 		{
-			return "RuntimeError occurred on tag '$name': " . $e->getMessage();
+			if(!$this->mute_runtime_errors)
+				return "RuntimeError occurred on tag '$name': " . $e->getMessage();
 		}
 	}
 	
