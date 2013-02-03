@@ -217,7 +217,7 @@
 				If <code>$foo</code> is not empty, then <code>Bar</code> will be executed, otherwise <code>Baz</code>.
 			</p>
 			<h4 id="builtin_if_short">Short syntax for if-clause</h4>
-				<p>Because if-clauses are used often, there is an short syntax:</p>
+				<p>Because if-clauses are used often, there is a short syntax:</p>
 				<p><code>?{condition|then|else}</code></p>
 				<p>This is equivalent to:</p>
 				<p><code>&lt;ste:if&gt;condition&lt;ste:then&gt;then&lt;/ste:then&gt;&lt;ste:else&gt;else&lt;/ste:else&gt;&lt;/ste:if&gt;</code></p>
@@ -358,7 +358,7 @@
 					<tr>
 						<td><code>array</code></td>
 						<td>Yes</td>
-						<td>The array to be looped through.</td>
+						<td>The array to be looped through (expects variable name).</td>
 					</tr>
 					<tr>
 						<td><code>key</code></td>
@@ -385,7 +385,7 @@
 			</p>
 		
 		<h3 id="builtin_infloop">ste:infloop</h3>
-			<p>Create an infinitive loop. You can get out of the loop using the <a href="#builtin_break">ste:break</a> tag. Can be used to emulate other loop constructs like while loops.</p>
+			<p>Creates an infinitive loop. You can get out of the loop using the <a href="#builtin_break">ste:break</a> tag. Can be used to emulate other loop constructs like while loops.</p>
 			<p>
 				Example:<br />
 <code><pre>&lt;ste:infloop&gt;<br />	&lt;ste:if&gt;<br />		&lt;ste:foo /&gt;<br />		&lt;ste:then&gt;&lt;ste:break /&gt;&lt;/ste:then&gt;<br />	&lt;/ste:if&gt;<br />	...<br />&lt;ste:infloop&gt;</pre></code>
@@ -416,7 +416,7 @@
 			</p>
 		
 		<h3 id="builtin_block">ste:block</h3>
-			<p>ste:block provides an easy way for writing master templates. Every block has a name. When a block is defined twice, the second will overwrite the first one.</p>
+			<p>ste:block provides an easy way for writing master templates. Every block has a name. When a block is defined twice, the second one will overwrite the first one.</p>
 			<p>The name can be set with the <code>name</code> parameter.</p>
 			<p>
 				Example:<br />
@@ -441,7 +441,7 @@
 			</p>
 		
 		<h3 id="builtin_get">ste:get</h3>
-			<p>ste:get will return the content of a variable. The parameter <code>var</code> takes the name of the variable to get. Usefult, if you want to get a variable which name is stored in a variable.</p>
+			<p>ste:get will return the content of a variable. The parameter <code>var</code> takes the name of the variable to get. Useful, if you want to get a variable which name is stored in a variable.</p>
 			<p>
 				Example:<br />
 <code><pre>&lt;ste:get var="$foo" /&gt;</pre></code>

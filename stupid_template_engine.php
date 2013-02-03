@@ -1078,7 +1078,7 @@ class STECore
 	 * 
 	 * Parameters:
 	 * 	$name - The name of the tag.
-	 * 	$callback - A callable function (This must tage three parameters: The <STECore> instance, an associative array of parameters, and a function representing the tags content(This expects the <STECore> instance as its only parameter and returns its text result, i.e to get the text, you neeed to call this function with the <STECore> instance as a parameter)).
+	 * 	$callback - A callable function (This must take three parameters: The <STECore> instance, an associative array of parameters, and a function representing the tags content(This expects the <STECore> instance as its only parameter and returns its text result, i.e to get the text, you neeed to call this function with the <STECore> instance as a parameter)).
 	 * 
 	 * Throws:
 	 * 	An Exception if the tag could not be registered (if $callback is not callable or if $name is empty)
