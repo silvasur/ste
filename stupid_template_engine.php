@@ -218,37 +218,40 @@ class Parser {
 		$out = array();
 		
 		$prevtext = NULL;
-		$first = true;
+		$wastag = true;
 		foreach($ast as $node) {
-			if($node instanceof TagNode) {
-				$node->sub = self::tidyup_ast($node->sub);
-			}
-			
-			if(!($node instanceof TextNode)) {
-				if($prevtext !== NULL) {
-					if($prevtext->text != "") {
-						$out[] = $prevtext;
-					}
-					$prevtext = NULL;
+			if($node instanceof TextNode) {
+				if($wastag) {
+					$node->text = ltrim($node->text);
 				}
 				
-				$out[] = $node;
-				
-				$first = false;
-				continue;
-			}
-			
-			if($first) {
-				$node->text = ltrim($node->text);
-			}
-			
-			if($prevtext !== NULL) {
-				$prevtext->text .= $node->text;
+				if($prevtext === NULL) {
+					$prevtext = $node;
+				} else {
+					$prevtext->text .= $node->text;
+				}
 			} else {
-				$prevtext = $node;
+				if(($prevtext !== NULL) && ($prevtext->text != "")) {
+					$out[] = $prevtext;
+				}
+				$prevtext = NULL;
+				
+				if($node instanceof TagNode) {
+					$node->sub = self::tidyup_ast($node->sub);
+					foreach($node->params as $k => &$v) {
+						$v = self::tidyup_ast($v);
+					}
+					unset($v);
+				} else { /* VariableNode */
+					foreach($node->arrayfields as &$v) {
+						$v = self::tidyup_ast($v);
+					}
+					unset($v);
+				}
+				$out[] = $node;
 			}
 			
-			$first = false;
+			$wastag = $node instanceof TagNode;
 		}
 		
 		if(($prevtext !== NULL) && ($prevtext->text != "")) {
