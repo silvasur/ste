@@ -466,7 +466,7 @@ class Parser {
 				}
 				
 				$off = $this->off - 1;
-				$tag->params[$name] = $this->parse_text(
+				$tag->params[$param] = $this->parse_text(
 					self::ESCAPES_DEFAULT . $quot, /* Escapes */
 					0, /* Flags */
 					$quot, /* Break on */
@@ -1435,7 +1435,6 @@ class STECore
 		$content = $this->storage_access->load($tpl, $mode);
 		if($mode == MODE_SOURCE)
 		{
-			$content = precompile($content);
 			try
 			{
 				$ast     = Parser::parse($content, $tpl);
