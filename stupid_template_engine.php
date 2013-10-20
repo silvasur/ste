@@ -211,7 +211,50 @@ class Parser {
 			self::ESCAPES_DEFAULT, /* Escapes */
 			self::PARSE_SHORT | self::PARSE_TAG /* Flags */
 		);
-		return $res[0];
+		return self::tidyup_ast($res[0]);
+	}
+	
+	private static function tidyup_ast($ast) {
+		$out = array();
+		
+		$prevtext = NULL;
+		$first = true;
+		foreach($ast as $node) {
+			if($node instanceof TagNode) {
+				$node->sub = self::tidyup_ast($node->sub);
+			}
+			
+			if(!($node instanceof TextNode)) {
+				if($prevtext !== NULL) {
+					if($prevtext->text != "") {
+						$out[] = $prevtext;
+					}
+					$prevtext = NULL;
+				}
+				
+				$out[] = $node;
+				
+				$first = false;
+				continue;
+			}
+			
+			if($first) {
+				$node->text = ltrim($node->text);
+			}
+			
+			if($prevtext !== NULL) {
+				$prevtext->text .= $node->text;
+			} else {
+				$prevtext = $node;
+			}
+			
+			$first = false;
+		}
+		
+		if(($prevtext !== NULL) && ($prevtext->text != "")) {
+			$out[] = $prevtext;
+		}
+		return $out;
 	}
 	
 	private function parse_text($escapes, $flags, $breakon = NULL, $separator = NULL, $nullaction = NULL, $opentag = NULL, $openedat = -1) {
