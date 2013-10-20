@@ -423,14 +423,9 @@ class Parser {
 		$varnode->name = $this->get_name();
 		$varnode->arrayfields = $this->parse_array();
 		
-		if(!$curly) {
-			return $varnode;
-		}
-		
-		if($this->next() != "}") {
+		if(($curly) && ($this->next() != "}")) {
 			throw new ParseCompileError("Unclosed '\${'", $this->name, $openedat);
 		}
-		$varnode->arrayfields = array_merge($varnode->arrayfields, $this->parse_array());
 		return $varnode;
 	}
 	
@@ -480,7 +475,7 @@ class Parser {
 				
 				return $tag;
 			case '>':
-				$tag->sub = $this->parse_text(
+				$sub = $this->parse_text(
 					self::ESCAPES_DEFAULT, /* Escapes */
 					self::PARSE_SHORT | self::PARSE_TAG, /* Flags */
 					NULL, /* Break on */
@@ -491,6 +486,7 @@ class Parser {
 					$tag->name, /* Open tag */
 					$openedat /* Opened at */
 				);
+				$tag->sub = $sub[0];
 				return $tag;
 			default:
 				$this->back();
@@ -509,7 +505,7 @@ class Parser {
 				}
 				
 				$off = $this->off - 1;
-				$tag->params[$param] = $this->parse_text(
+				$paramval = $this->parse_text(
 					self::ESCAPES_DEFAULT . $quot, /* Escapes */
 					0, /* Flags */
 					$quot, /* Break on */
@@ -520,6 +516,7 @@ class Parser {
 					NULL, /* Open tag */
 					$off /* Opened at */
 				);
+				$tag->params[$param] = $paramval[0];
 			}
 		}
 	}
