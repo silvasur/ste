@@ -29,6 +29,10 @@ abstract class ASTNode
 class TextNode extends ASTNode
 {
 	public $text;
+	public function __construct($tpl, $off, $text = "") {
+		parent::__construct($tpl, $off);
+		$this->text = $text;
+	}
 }
 
 class TagNode extends ASTNode
@@ -102,255 +106,380 @@ class RuntimeError      extends \Exception {}
  */
 class FatalRuntimeError extends \Exception {}
 
-/* $text must start after the first opening bracket */
-function find_closing_bracket($text, $opening, $closing)
-{
-	$counter = 1;
-	$len = strlen($text);
-	for($i = 0; $i < $len; ++$i)
-	{
-		switch($text[$i])
-		{
-			case $opening:
-				++$counter;
+class Parser {
+	private $text;
+	private $name;
+	private $off;
+	private $len;
+	
+	const PARSE_SHORT = 1;
+	const PARSE_TAG   = 2;
+	
+	const ESCAPES_DEFAULT = '$?~{}|\\';
+	
+	private function __construct($text, $name) {
+		$this->text = $text;
+		$this->name = $name;
+		$this->off  = 0;
+		$this->len  = mb_strlen($text);
+	}
+	
+	private function next($n = 1) {
+		if($n <= 0) {
+			throw new \InvalidArgumentException("\$n must be > 0");
+		}
+		$c = mb_substr($this->text, $this->off, $n);
+		$this->off = max($this->off + $n, $this->len);
+		return $c;
+	}
+	
+	
+	private function back($n = 1) {
+		if($n <= 0) {
+			throw new \InvalidArgumentException("\$n must be > 0");
+		}
+		$this->off = max($this->off - $n, 0);
+	}
+	
+	private function search_off($needle) {
+		return mb_strpos($this->text, $needle, $this->off);
+	}
+	
+	private function search_multi($needles) {
+		$oldoff = $this->off;
+		
+		$minoff = $this->len;
+		$which = NULL;
+		
+		foreach($needle as $key => $needle) {
+			if(($off = $this->search_off($needle)) === false) {
+				continue;
+			}
+
+			if($off < $minoff) {
+				$minoff = $off;
+				$which = $key;
+			}
+		}
+		
+		$this->off = $minoff + (($which === NULL) ? 0 : mb_strlen($which));
+		
+		return array($which, $minoff, mb_substr($this->text, $oldoff, $minoff - $oldoff), $oldoff);
+	}
+	
+	private function search($needle) {
+		$oldoff = $this->off;
+		
+		$off = $this->search_off($needle);
+		if($off === false) {
+			$this->off = $this->len;
+			return array(false, mb_substr($this->text, $oldoff), $oldoff);
+		}
+		
+		$this->off = $off + mb_strlen($needle);
+		return array($off, mb_substr($this->text, $oldoff, $off - $oldoff), $oldoff);
+	}
+	
+	private function take_while($cb) {
+		$s = "";
+		while($c = $this->next()) {
+			if(!call_user_func($cb, $c)) {
+				$this->back();
+				return $s;
+			}
+			$s .= $c;
+		}
+		return $s;
+	}
+	
+	private function skip_ws() {
+		$this->take_while("ctype_space");
+	}
+	
+	private function get_name() {
+		$off = $this->off;
+		$name = $this->take_while(function($c) { return ctype_alnum($c) || ($c == "_"); });
+		if(mb_strlen($name) == 0) {
+			throw new ParseCompileError("Expected a name (alphanumeric chars + '_', at least one char)");
+		}
+		return $name;
+	}
+	
+	public static function parse($text, $name) {
+		$obj = new self($text, $name);
+		$res = $obj->parse_text(
+			self::ESCAPES_DEFAULT, /* Escapes */
+			self::PARSE_SHORT | self::PARSE_TAG /* Flags */
+		);
+		return $res[0];
+	}
+	
+	private function parse_text($escapes, $flags, $breakon = NULL, $separator = NULL, $nullaction = NULL, $opentag = NULL, $openedat = -1) {
+		$elems = array();
+		$astlist = array();
+		
+		$needles = array(
+			"commentopen" => "<ste:comment>",
+			"rawopen" => "<ste:rawtext>",
+			"escape" => '\\',
+			"varcurlyopen" => '${',
+			"var" => '$',
+		);
+		
+		if($flags & self::PARSE_TAG) {
+			$needles["tagopen"] = '<ste:';
+			$needles["closetagopen"] = '</ste:';
+		}
+		if($flags & self::PARSE_SHORT) {
+			$needles["shortifopen"] = '?{';
+			$needles["shortcompopen"] = '~{';
+		}
+		
+		if($separator !== NULL) {
+			$needles["sep"] = $separator;
+		}
+		if($breakon !== NULL) {
+			$needles["break"] = $breakon;
+		}
+		
+		for(;;) {
+			list($which, $off, $before, $offbefore) = $this->search_multi($needles);
+			
+			$astlist[] = new TextNode($this->name, $offbefore, $before);
+			
+			switch($which) {
+			case NULL:
+				if($nullaction === NULL) {
+					$elems[] = $astlist;
+					return $elems;
+				} else {
+					call_user_func($nullaction);
+				}
 				break;
-			case $closing:
-				--$counter;
+			case "commentopen":
+				list($off, $before, $offbefore) = $this->search("</ste:comment>");
+				if($off === false) {
+					throw new ParseCompileError("ste:comment was not closed", $this->name, $offbefore);
+				}
 				break;
+			case "rawopen":
+				$off_start = $off;
+				list($off, $before, $offbefore) = $this->search("</ste:rawtext>");
+				if($off === false) {
+					throw new ParseCompileError("ste:rawtext was not closed", $this->name, $off_start);
+				}
+				$astlist[] = new TextNode($this->name, $off_start, $before);
+				break;
+			case "tagopen":
+				$astlist[] = $this->parse_tag($off);
+				break;
+			case "closetagopen":
+				$off_start = $off;
+				$name = $this->get_name();
+				$this->skip_ws();
+				$off = $this->off;
+				if($this->next() != ">") {
+					throw new ParseCompileError("Expected '>' in closing ste-Tag", $this->name, $off);
+				}
+				
+				if($opentag === NULL) {
+					throw new ParseCompileError("Found closing ste:$name tag, but no tag was opened", $this->name, $off_start);
+				}
+				if($opentag != $name) {
+					throw new ParseCompileError("Open ste:$opentag was not closed", $this->name, $openedat);
+				}
+				
+				$elems[] = $astlist;
+				return $elems;
+			case "escape":
+				$c = $this->next();
+				if(mb_strpos($escapes, $c) !== false) {
+					$astlist[] = new TextNode($this->name, $off, $c);
+				} else {
+					$astlist[] = new TextNode($this->name, $off, '\\');
+					$this->back();
+				}
+				break;
+			case "shortifopen":
+				$elems = $this->parse_short("?{", $off);
+				if(count($elems) != 3) {
+					throw new ParseCompileError("A short if tag must have the form ?{..|..|..}", $this->name, $off);
+				}
+				
+				list($cond, $then, $else) = $elems;
+				$thentag = new TagNode($this->name, $off);
+				$thentag->name = "then";
+				$thentag->sub = $then;
+				
+				$elsetag = new TagNode($this->name, $off);
+				$elsetag->name = "else";
+				$elsetag->sub = $else;
+				
+				$iftag = new TagNode($this->name, $off);
+				$iftag->name = "if";
+				$iftag->sub = $cond;
+				$iftag->sub[] = $thentag;
+				$iftag->sub[] = $elsetag;
+				
+				$astlist[] = $iftag;
+				break;
+			case "shortcompopen":
+				$elems = $this->parse_short("~{", $off);
+				if(count($elems) != 3) {
+					throw new ParseCompileError("A short comparasion tag must have the form ~{..|..|..}", $this->name, $off);
+				}
+				
+				// TODO: What will happen, if a tag was in one of the elements?
+				list($a, $op, $b) = $elems;
+				$cmptag = new TagNode($this->name, $off);
+				$cmptag->name = "cmp";
+				$cmptag->params["text_a"] = $a;
+				$cmptag->params["op"] = $op;
+				$cmptag->params["text_b"] = $b;
+				
+				$astlist[] = $cmptag;
+				break;
+			case "sep":
+				$elems[] = $astlist;
+				$astlist = array();
+				break;
+			case "varcurlyopen":
+				$astlist[] = $this->parse_var($off, true);
+				break;
+			case "var":
+				$astlist[] = $this->parse_var($off, false);
+				break;
+			case "break":
+				$elems[] = $astlist;
+				return $elems;
+			}
 		}
-		if($counter == 0)
-			break;
+		
+		$elems[] = $astlist;
+		return $elems;
 	}
 	
-	if($counter > 0)
-		throw new \Exception("Missing closing \"$closing\". Stop.");
-	
-	return $i;
-}
-
-function instance_in_array($classname, $a)
-{
-	foreach($a as $v)
-	{
-		if($v instanceof $classname)
-			return True;
-	}
-	return False;
-}
-
-function unescape_text($text)
-{
-	return stripcslashes($text);
-}
-
-function tokenize_text($text, $tpl, $off)
-{
-	$tokens = array();
-	/* Find next non-escaped $-char */
-	if(preg_match("/(?:(?<!\\\\)\\$)/s", $text, $match, PREG_OFFSET_CAPTURE) == 0)
-	{
-		$node = new TextNode($tpl, $off);
-		$node->text = preg_replace("/^(?:\\n|\\r\\n|\\r)\\s*/s", "", unescape_text($text));
-		return (strlen($node->text) == 0) ? array() : array($node);
-	}
-	
-	if($match[0][1] > 0)
-	{
-		$node = new TextNode($tpl, $off);
-		$node->text = unescape_text(substr($text, 0, $match[0][1]));
-		$tokens[] = $node;
-	}
-	
-	if($text[$match[0][1] + 1] == "{")
-	{
-		try
-		{
-			$varend = find_closing_bracket(substr($text, $match[0][1] + 2), "{", "}") + $match[0][1] + 2;
-		}
-		catch(\Exception $e)
-		{
-			throw new ParseCompileError("Parse Error: Missing closing '}'", $tpl, $off + $match[0][1] + 1);
-		}
-		return array_merge(
-			$tokens,
-			tokenize_text("\$" . substr($text, $match[0][1] + 2, ($varend - 1) - ($match[0][1] + 1)), $tpl, $off + $match[0][1] + 2),
-			tokenize_text(substr($text, $varend + 1), $tpl, $off + $varend + 1)
+	private function parse_short($shortname, $openedat) {
+		$tplname = $this->name;
+		
+		return $this->parse_text(
+			self::ESCAPES_DEFAULT, /* Escapes */
+			self::PARSE_SHORT | self::PARSE_TAG, /* Flags */
+			'}', /* Break on */
+			'|', /* Separator */
+			function() use ($shortname, $tplname, $openedat) { /* NULL action */
+				throw new ParseCompileError("Unclosed $shortname", $tplname, $openedat);
+			},
+			NULL, /* Open tag */
+			$openedat /* Opened at */
 		);
 	}
 	
-	$text = substr($text, $match[0][1] + 1);
-	$off += $match[0][1] + 1;
-	if(preg_match("/^[a-zA-Z0-9_]+/s", $text, $match, PREG_OFFSET_CAPTURE) == 0)
-	{
-		$nexttokens = tokenize_text($text, $tpl, $off);
-		if($nexttokens[0] instanceof TextNode)
-			$nexttokens[0]->text = "\$" . $nexttokens[0]->text;
-		else
-		{
-			$node = new TextNode($tpl, $off);
-			$node->text = "\$";
-			$tokens[] = $node;
-		}
-		return array_merge($tokens, $nexttokens);
-	}
-	
-	$node = new VariableNode($tpl, $off + $match[0][1]);
-	$node->name = $match[0][0];
-	$node->arrayfields = array();
-	
-	$text = substr($text, $match[0][1] + strlen($match[0][0]));
-	$off += $match[0][1] + strlen($match[0][0]);
-	while(@$text[0] == "[")
-	{
-		$text = substr($text, 1);
-		$off += 1;
-		try
-		{
-			$fieldend = find_closing_bracket($text, "[", "]");
-		}
-		catch(\Exception $e)
-		{
-			throw new ParseCompileError("Parse Error: Missing closing ']'", $tpl, $off - 1);
-		}
-		$node->arrayfields[] = tokenize_text(substr($text, 0, $fieldend), $tpl, $off);
-		$text = substr($text, $fieldend + 1);
-		$off += $fieldend + 1;
-	}
-	
-	$tokens[] = $node;
-	
-	return strlen($text) > 0 ? array_merge($tokens, tokenize_text($text, $tpl, $off)) : $tokens;
-}
-
-function mk_ast($code, $tpl, $err_off)
-{
-	$ast = array();
-	
-	if(preg_match("/\\<\\s*ste:([a-zA-Z0-9_]*)/s", $code, $matches, PREG_OFFSET_CAPTURE) == 0)
-		return tokenize_text($code, $tpl, $err_off);
-	
-	$ast = tokenize_text(substr($code, 0, $matches[0][1]), $tpl, $err_off);
-	$tag = new TagNode($tpl, $err_off + $matches[0][1]);
-	$tag->name = $matches[1][0];
-	
-	$code = substr($code, $matches[0][1] + strlen($matches[0][0]));
-	$err_off += $matches[0][1] + strlen($matches[0][0]);
-	
-	$tag->params = array();
-	
-	while(preg_match("/^\\s+([a-zA-Z0-9_]+)=((?:\"(?:.*?)(?<!\\\\)\")|(?:'(?:.*?)(?<!\\\\)'))/s", $code, $matches, PREG_OFFSET_CAPTURE) > 0)
-	{
-		$paramval = substr($code, $matches[2][1] + 1, strlen($matches[2][0]) - 2);
-		$paramval = str_replace("\\\"", "\"", $paramval);
-		$paramval = str_replace("\\'", "'", $paramval);
-		$tag->params[$matches[1][0]] = tokenize_text($paramval, $tpl, $err_off + $matches[2][1] + 1);
-		$code = substr($code, strlen($matches[0][0]));
-		$err_off += strlen($matches[0][0]);
-	}
-	
-	if(preg_match("/^\\s*([\\/]?)\\s*\\>/s", $code, $matches) == 0)
-		throw new ParseCompileError("Parse Error: Missing closing '>' in \"" . $tag->name . "\"-Tag.", $tpl, $tag->offset);
-	
-	$code = substr($code, strlen($matches[0]));
-	$err_off += strlen($matches[0]);
-	
-	$tag->sub = array();
-	
-	if($matches[1][0] != "/")
-	{
-		/* Handling ste:comment pseudotag */
-		if($tag->name == "comment")
-		{
-			if(preg_match("/\\<\\s*\\/\\s*ste:comment\\s*\\>/s", $code, $matches, PREG_OFFSET_CAPTURE) == 0)
-				return $ast; /* Treat the whole code as comment */
-			$comment_end = $matches[0][1] + strlen($matches[0][0]);
-			return array_merge($ast, mk_ast(substr($code, $comment_end), $tpl, $err_off + $comment_end));
+	private function parse_var($openedat, $curly) {
+		$varnode = new VariableNode($this->name, $openedat);
+		$varnode->name = $this->get_name();
+		$varnode->arrayfields = $this->parse_array();
+		
+		if(!$curly) {
+			return $varnode;
 		}
 		
-		/* Handling ste:rawtext pseudotag */
-		if($tag->name == "rawtext")
-		{
-			$tag = new TextNode($tpl, $tag->offset);
-			if(preg_match("/\\<\\s*\\/\\s*ste:rawtext\\s*\\>/s", $code, $matches, PREG_OFFSET_CAPTURE) == 0)
-			{
-				/* Treat the rest of the code as rawtext */
-				$tag->text = $code;
-				$ast[] = $tag;
-				return $ast;
-			}
-			$tag->text = strpos($code, 0, $matches[0][1]);
-			$ast[] = $tag;
-			$rawtext_end = $matches[0][1] + strlen($matches[0][0]);
-			return array_merge($ast, mk_ast(substr($code, $rawtext_end), $tpl, $err_off + $rawtext_end));
+		if($this->next() != "}") {
+			throw new ParseCompileError("Unclosed '\${'", $this->name, $openedat);
+		}
+		$varnode->arrayfields = array_merge($varnode->arrayfields, $this->parse_array());
+		return $varnode;
+	}
+	
+	private function parse_array() {
+		$tplname = $this->name;
+		
+		$arrayfields = array();
+		
+		while($this->next() == "[") {
+			$openedat = $this->off - 1;
+			$res = $this->parse_text(
+				self::ESCAPES_DEFAULT, /* Escapes */
+				0, /* Flags */
+				']', /* Break on */
+				NULL, /* Separator */
+				function() use ($tplname, $openedat) { /* NULL action */
+					throw new ParseCompileError("Unclosed array access '[...]'", $tplname, $openedat);
+				},
+				NULL, /* Open tag */
+				$openedat /* Opened at */
+			);
+			$arrayfields[] = $res[0];
 		}
 		
-		$off = 0;
-		$last_tag_start = 0;
-		$tagstack = array(array($tag->name, $tag->offset - $err_off));
-		while(preg_match("/\\<((?:\\s*)|(?:\\s*\\/\\s*))ste:([a-zA-Z0-9_]*)(?:\\s+(?:[a-zA-Z0-9_]+)=(?:(?:\"(?:.*?)(?<!\\\\)\")|(?:'(?:.*?)(?<!\\\\)')))*((?:\\s*)|(?:\\s*\\/\\s*))\\>/s", $code, $matches, PREG_OFFSET_CAPTURE, $off) > 0) /* RegEx from hell! Matches all  <ste:> Tags. Opening, closing and self-closing ones. */
-		{
-			if(trim($matches[3][0]) != "/")
-			{
-				$closingtag = trim($matches[1][0]);
-				if($closingtag[0] == "/")
-				{
-					list($matching_opentag, $mo_off) = array_pop($tagstack);
-					if($matching_opentag != $matches[2][0])
-						throw new ParseCompileError("Parse Error: Missing closing \"ste:$matching_opentag\"-Tag.", $tpl, $mo_off + $err_off);
+		$this->back();
+		return $arrayfields;
+	}
+	
+	private function parse_tag($openedat) {
+		$tplname = $this->name;
+		
+		$this->skip_ws();
+		$tag = new TagNode($this->name, $openedat);
+		$name = $tag->name = $this->get_name();
+		$tag->params = array();
+		$tag->sub = array();
+		
+		for(;;) {
+			$this->skip_ws();
+			
+			switch($this->next()) {
+			case '/': /* Self-closing tag */
+				$this->skip_ws();
+				if($this->next() != '>') {
+					throw new ParseCompileError("Unclosed opening <ste: tag (expected >)", $this->name, $openedat);
 				}
-				else
-					$tagstack[] = array($matches[2][0], $matches[0][1]);
+				
+				return $tag;
+			case '>':
+				$tag->sub = $this->parse_text(
+					self::ESCAPES_DEFAULT, /* Escapes */
+					self::PARSE_SHORT | self::PARSE_TAG, /* Flags */
+					NULL, /* Break on */
+					NULL, /* Separator */
+					function() use ($name, $tplname, $openedat) { /* NULL action */
+						throw new ParseCompileError("Open ste:$name tag was not closed", $tplname, $openedat);
+					},
+					$tag->name, /* Open tag */
+					$openedat /* Opened at */
+				);
+				return $tag;
+			default:
+				$this->back();
+				
+				$param = $this->get_name();
+				
+				$this->skip_ws();
+				if($this->next() != '=') {
+					throw new ParseCompileError("Expected '=' after tag parameter name", $this->name, $this->off - 1);
+				}
+				$this->skip_ws();
+				
+				$quot = $this->next();
+				if(($quot != '"') && ($quot != "'")) {
+					throw new ParseCompileError("Expected ' or \" after '=' of tag parameter", $this->name, $this->off - 1);
+				}
+				
+				$off = $this->off - 1;
+				$tag->params[$name] = $this->parse_text(
+					self::ESCAPES_DEFAULT . $quot, /* Escapes */
+					0, /* Flags */
+					$quot, /* Break on */
+					NULL, /* Separator */
+					function() use ($quot, $tplname, $off) { /* NULL action */
+						throw new ParseCompileError("Open tag parameter value ($quot) was not closed", $tplname, $off);
+					},
+					NULL, /* Open tag */
+					$off /* Opened at */
+				);
 			}
-			$last_tag_start = $matches[0][1];
-			$off = $last_tag_start + strlen($matches[0][0]);
-			if(empty($tagstack))
-				break;
 		}
-		
-		if((!empty($tagstack)) or ($tag->name != $matches[2][0]))
-			throw new ParseCompileError("Parse Error: Missing closing \"ste:" . $tag->name . "\"-Tag.", $tpl, $tag->offset);
-		
-		$tag->sub = mk_ast(substr($code, 0, $last_tag_start), $tpl, $err_off);
-		$code = substr($code, $off);
-		$err_off += $off;
 	}
-	
-	if($tag !== NULL)
-		$ast[] = $tag;
-	return array_merge($ast, strlen($code) > 0 ? mk_ast($code, $tpl, $err_off) : array());
-}
-
-/*
- * Function: precompile
- * Precompiling STE T/PL templates.
- * You only need this function, if you want to manually transcompile a template.
- * 
- * Parameters:
- * 	$code - The input code
- * 
- * Returns:
- * 	The precompiled code.
- */
-function precompile($code)
-{
-	$code = preg_replace( /* Transform short form of comparison (~{a|op|b}) to long form */
-		"/(?:(?<!\\\\)~)(?:(?<!\\\\)\\{)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\})/s",
-		"<ste:cmp text_a=\"\$1\" op=\"\$2\" text_b=\"\$3\" />",
-		$code
-	);
-	$code = preg_replace( /* Transform short form of if-clause (?{cond|then|else}) to long form */
-		"/(?:(?<!\\\\)\\?)(?:(?<!\\\\)\\{)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\|)(.*?)(?:(?<!\\\\)\\})/s",
-		"<ste:if>\$1<ste:then>\$2</ste:then><ste:else>\$3</ste:else></ste:if>",
-		$code
-	);
-	/* Unescape \? \~ \{ \} \| */
-	$code = preg_replace("/(?:(?<!\\\\)\\\\\\?)/s", "?", $code);
-	$code = preg_replace("/(?:(?<!\\\\)\\\\~)/s",   "~", $code);
-	$code = preg_replace("/(?:(?<!\\\\)\\\\\\{)/s", "{", $code);
-	$code = preg_replace("/(?:(?<!\\\\)\\\\\\})/s", "}", $code);
-	$code = preg_replace("/(?:(?<!\\\\)\\\\\\|)/s", "|", $code);
-	
-	return $code;
 }
 
 /*
@@ -1309,7 +1438,7 @@ class STECore
 			$content = precompile($content);
 			try
 			{
-				$ast     = parse($content, $tpl);
+				$ast     = Parser::parse($content, $tpl);
 				$transc  = transcompile($ast);
 			}
 			catch(ParseCompileError $e)
