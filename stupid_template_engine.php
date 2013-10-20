@@ -129,7 +129,7 @@ class Parser {
 			throw new \InvalidArgumentException("\$n must be > 0");
 		}
 		$c = mb_substr($this->text, $this->off, $n);
-		$this->off = max($this->off + $n, $this->len);
+		$this->off = min($this->off + $n, $this->len);
 		return $c;
 	}
 	
@@ -151,7 +151,7 @@ class Parser {
 		$minoff = $this->len;
 		$which = NULL;
 		
-		foreach($needle as $key => $needle) {
+		foreach($needles as $key => $needle) {
 			if(($off = $this->search_off($needle)) === false) {
 				continue;
 			}
@@ -162,7 +162,7 @@ class Parser {
 			}
 		}
 		
-		$this->off = $minoff + (($which === NULL) ? 0 : mb_strlen($which));
+		$this->off = $minoff + (($which === NULL) ? 0 : mb_strlen((string) $needles[$which]));
 		
 		return array($which, $minoff, mb_substr($this->text, $oldoff, $minoff - $oldoff), $oldoff);
 	}
@@ -301,12 +301,12 @@ class Parser {
 				}
 				break;
 			case "shortifopen":
-				$elems = $this->parse_short("?{", $off);
-				if(count($elems) != 3) {
+				$shortelems = $this->parse_short("?{", $off);
+				if(count($shortelems) != 3) {
 					throw new ParseCompileError("A short if tag must have the form ?{..|..|..}", $this->name, $off);
 				}
 				
-				list($cond, $then, $else) = $elems;
+				list($cond, $then, $else) = $shortelems;
 				$thentag = new TagNode($this->name, $off);
 				$thentag->name = "then";
 				$thentag->sub = $then;
@@ -324,13 +324,13 @@ class Parser {
 				$astlist[] = $iftag;
 				break;
 			case "shortcompopen":
-				$elems = $this->parse_short("~{", $off);
-				if(count($elems) != 3) {
+				$shortelems = $this->parse_short("~{", $off);
+				if(count($shortelems) != 3) {
 					throw new ParseCompileError("A short comparasion tag must have the form ~{..|..|..}", $this->name, $off);
 				}
 				
 				// TODO: What will happen, if a tag was in one of the elements?
-				list($a, $op, $b) = $elems;
+				list($a, $op, $b) = $shortelems;
 				$cmptag = new TagNode($this->name, $off);
 				$cmptag->name = "cmp";
 				$cmptag->params["text_a"] = $a;
