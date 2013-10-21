@@ -106,6 +106,11 @@ class RuntimeError      extends \Exception {}
  */
 class FatalRuntimeError extends \Exception {}
 
+/*
+ * Class: Parser
+ * The class, where the parser lives in. Can not be constructed manually.
+ * Use the static method parse.
+ */
 class Parser {
 	private $text;
 	private $name;
@@ -205,6 +210,22 @@ class Parser {
 		return $name;
 	}
 	
+	/*
+	 * Function: parse
+	 * Parses the input into an AST.
+	 *
+	 * You only need this function, if you want to manually trnascompile a template.
+	 *
+	 * Parameters:
+	 *	$text - The input code.
+	 *	$name - The name of the template.
+	 *
+	 * Returns:
+	 *	An array of <ASTNode> objects.
+	 *
+	 * Throws:
+	 *	<ParseCompileError>
+	 */
 	public static function parse($text, $name) {
 		$obj = new self($text, $name);
 		$res = $obj->parse_text(
@@ -523,23 +544,6 @@ class Parser {
 			}
 		}
 	}
-}
-
-/*
- * Function: parse
- * Parsing a STE T/PL template.
- * You only need this function, if you want to manually transcompile a template.
- * 
- * Parameters:
- * 	$code - The STE T/PL code.
- * 	$tpl  - The name of the template.
- * 
- * Returns:
- * 	An abstract syntax tree, which can be used with <transcompile>.
- */
-function parse($code, $tpl)
-{
-	return mk_ast($code, $tpl, 0);
 }
 
 function indent_code($code)
