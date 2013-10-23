@@ -38,14 +38,18 @@ class TextNode extends ASTNode
 class TagNode extends ASTNode
 {
 	public $name;
-	public $params;
-	public $sub;
+	public $params = array();
+	public $sub = array();
+	public function __construct($tpl, $off, $name = "") {
+		parent::__construct($tpl, $off);
+		$this->name = $name;
+	}
 }
 
 class VariableNode extends ASTNode
 {
 	public $name;
-	public $arrayfields;
+	public $arrayfields = array();
 	public function transcompile()
 	{
 		$varaccess = '@$ste->vars[' . (is_numeric($this->name) ? $this->name : '"' . escape_text($this->name) . '"'). ']';
