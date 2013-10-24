@@ -5,7 +5,7 @@ for t in test_*; do
 	cd $t
 	php ../test.php > have
 	echo -ne "\e[1m$t\e[0m: "
-	if cmp -s want have; then
+	if sed 's/\s*//' < have | grep -v '^$' | cmp -s want; then
 		echo "OK"
 		rm *.transc.php
 	else
