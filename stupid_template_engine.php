@@ -941,15 +941,19 @@ $ste_builtins = array(
 	},
 	"mktag" => function($ast)
 	{
+		$code = "";
+		
 		if(empty($ast->params["name"]))
 			throw new ParseCompileError("Transcompile Error: name missing in <ste:mktag>.", $ast->tpl, $ast->offset);
 		
 		$tagname = _transcompile($ast->params["name"], True);
 		
-		$fxbody = "\$outputstack = array(); \$outputstack_i = 0;\$ste->vars['_tag_parameters'] = \$params;\n";
+		$fxbody = "\$outputstack = array(''); \$outputstack_i = 0;\$ste->vars['_tag_parameters'] = \$params;\n";
 		
+		$usemandatory = "";
 		if(!empty($ast->params["mandatory"]))
 		{
+			$usemandatory = " use (\$mandatory_params)";
 			$code .= "\$outputstack[] = '';\n\$outputstack_i++;\n";
 			$code .= _transcompile($ast->params["mandatory"]);
 			$code .= "\$outputstack_i--;\n\$mandatory_params = explode('|', array_pop(\$outputstack));\n";
@@ -960,7 +964,7 @@ $ste_builtins = array(
 		$fxbody .= _transcompile($ast->sub);
 		$fxbody .= "return array_pop(\$outputstack);";
 		
-		$code .= "\$tag_fx = function(\$ste, \$params, \$sub) use (\$mandatory_params)\n{\n" . indent_code($fxbody) . "\n};\n";
+		$code .= "\$tag_fx = function(\$ste, \$params, \$sub)" . $usemandatory . "\n{\n" . indent_code($fxbody) . "\n};\n";
 		$code .= "\$ste->register_tag($tagname, \$tag_fx);\n";
 		
 		return $code;
