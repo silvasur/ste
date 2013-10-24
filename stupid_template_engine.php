@@ -243,23 +243,26 @@ class Parser {
 		$out = array();
 		
 		$prevtext = NULL;
-		$wastag = true;
+		$first = true;
+		
 		foreach($ast as $node) {
 			if($node instanceof TextNode) {
-				if($wastag) {
-					$node->text = ltrim($node->text);
-				}
-				
 				if($prevtext === NULL) {
 					$prevtext = $node;
 				} else {
 					$prevtext->text .= $node->text;
 				}
 			} else {
-				if(($prevtext !== NULL) && ($prevtext->text != "")) {
-					$out[] = $prevtext;
+				if($prevtext !== NULL) {
+					if($first) {
+						$prevtext->text = ltrim($prevtext->text);
+					}
+					if($prevtext->text != "") {
+						$out[] = $prevtext;
+					}
 				}
 				$prevtext = NULL;
+				$first = false;
 				
 				if($node instanceof TagNode) {
 					$node->sub = self::tidyup_ast($node->sub);
@@ -273,15 +276,20 @@ class Parser {
 					}
 					unset($v);
 				}
+				
 				$out[] = $node;
 			}
-			
-			$wastag = $node instanceof TagNode;
 		}
 		
-		if(($prevtext !== NULL) && ($prevtext->text != "")) {
-			$out[] = $prevtext;
+		if($prevtext !== NULL) {
+			if($first) {
+				$prevtext->text = ltrim($prevtext->text);
+			}
+			if($prevtext->text != "") {
+				$out[] = $prevtext;
+			}
 		}
+		
 		return $out;
 	}
 	
