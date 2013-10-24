@@ -55,7 +55,7 @@ class VariableNode extends ASTNode
 		$varaccess = '@$ste->vars[' . (is_numeric($this->name) ? $this->name : '"' . escape_text($this->name) . '"'). ']';
 		foreach($this->arrayfields as $af)
 		{
-			if((count($af) == 1) and ($af[0] instanceof TextNode) and is_numeric($af->text))
+			if((count($af) == 1) and ($af[0] instanceof TextNode) and is_numeric($af[0]->text))
 				$varaccess .= '[' . $af->text . ']';
 			else
 				$varaccess .= '[' . implode(".",
