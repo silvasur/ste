@@ -196,7 +196,7 @@ class Parser {
 		$off = $this->off;
 		$name = $this->take_while(function($c) { return ctype_alnum($c) || ($c == "_"); });
 		if(mb_strlen($name) == 0) {
-			throw new ParseCompileError("Expected a name (alphanumeric chars + '_', at least one char)");
+			throw new ParseCompileError("Expected a name (alphanumeric chars + '_', at least one char)", $this->name, $off);
 		}
 		return $name;
 	}
