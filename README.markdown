@@ -21,13 +21,11 @@ Why should you use it?
 * It can transcompile templates into PHP.
 * You can use anonymous functions to define custom tags.
 
-Annoying things.
-----------------
+Documentation
+-------------
 
-* No caching. Could be slow on websites with many hits.
+The `docu` directory contains the documentation of the template language.
+If you need the documentation of the php code / the API, you can create it with the `mkdocu.sh` script.
+You will need [NaturalDocs](http://www.naturaldocs.org/) for that.
 
-WARNING
--------
-
-Early development, that means that it might be pretty buggy at the moment...
-
+There is also a mirror of the documentation [here](http://r7r.kch42.net/ste_docu/).
