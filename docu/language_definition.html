@@ -223,7 +223,6 @@
 				<p><code>&lt;ste:if&gt;condition&lt;ste:then&gt;then&lt;/ste:then&gt;&lt;ste:else&gt;else&lt;/ste:else&gt;&lt;/ste:if&gt;</code></p>
 				<p><code>?</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
 				<p>In this variant, the else part <strong>is not optional</strong>!</p>
-				<p><strong>WARNING:</strong> short if-clauses can not be nested!</p>
 		
 		<h3 id="builtin_cmp">ste:cmp</h3>
 			<p>With the ste:cmp tag you can compare two values.</p>
@@ -285,9 +284,7 @@
 				<p><code>~{a|operator|b}</code></p>
 				<p>This is equivalent to:</p>
 				<p><code>&lt;ste:cmp text_a="a" op="operator" text_b="b" /&gt;</code></p>
-				<p><code>~</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
-				<p>Because this is implemented as a simple substitution, you can only use <a href="#basic_elems_text">Text</a> and <a href="#basic_elems_variable">Variables</a>. And <code>"</code> must be escaped.</p>
-				<p><strong>WARNING:</strong> short comparisons can not be nested! They can be inside <a href="#builtin_if_short">short if-clauses</a>, but not the other way around!</p>
+				<p><code>~</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a>.</p>
 		
 		<h3 id="builtin_not">ste:not</h3>
 			<p>The ste:not Tag will logically invert its content. If it is an empty text (i.e. false), it will return a non-empty text (i.e. true) and vice versa.</p>
