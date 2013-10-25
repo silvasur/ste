@@ -1,0 +1,4 @@
+Run ../mkdoku.sh to generate the documentation of the PHP source.
+You will need NaturalDocs[1] for that.
+
+[1]: http://www.naturaldocs.org/
