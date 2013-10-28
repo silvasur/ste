@@ -380,6 +380,14 @@
 <code><pre>&lt;ste:foreach array="foo" key="k" value="v" counter="i"&gt;<br />	Number: $i&lt;br /&gt;<br />	Key: $k&lt;br /&gt;<br />	Value: $v&lt;br /&gt;<br />	&lt;br /&gt;<br />&lt;/ste:foreach&gt;</pre></code>
 				This code will loop through the array <code>foo</code> and return the counter <code>$i</code>, the key <code>$k</code> and the value <code>$v</code> of the current iteration.
 			</p>
+			<p>
+				There can also be an optional <code>&lt;ste:else&gt;</code> clause, that will be executed, if the input array was empty.
+			</p>
+			<p>
+				Example:<br />
+				<code><pre>&lt;ste:foreach array="foo" value="v"&gt;<br />    &lt;p&gt;$v&lt;/p&gt;<br />    &lt;ste:else&gt;<br />        Array \$foo is empty.<br />    &lt;/ste:else&gt;<br />&lt;/ste:foreach&gt;</pre></code>
+				This code will list all array elements or will display <code>Array $foo is empty</code> if the array <code>$foo</code> is empty.
+			</p>
 		
 		<h3 id="builtin_infloop">ste:infloop</h3>
 			<p>Creates an infinitive loop. You can get out of the loop using the <a href="#builtin_break">ste:break</a> tag. Can be used to emulate other loop constructs like while loops.</p>

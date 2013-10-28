@@ -887,14 +887,29 @@ $ste_builtins = array(
 			$loopbody .= "\$${loopname}_counter++;\n\$ste->set_var_by_name(\$${loopname}_countervar, \$${loopname}_counter);\n";
 		}
 		
+		$loop = array();
+		$else = array();
+		foreach($ast->sub as $node) {
+			if(($node instanceof TagNode) && ($node->name == "else")) {
+				$else = array_merge($else, $node->sub);
+			} else {
+				$loop[] = $node;
+			}
+		}
+		
 		$loopbody .= "\$ste->set_var_by_name(\$${loopname}_valuevar, \$${loopname}_value);\n";
 		if(!empty($ast->params["key"])) {
 			$loopbody .= "\$ste->set_var_by_name(\$${loopname}_keyvar, \$${loopname}_key);\n";
 		}
 		$loopbody .= "\n";
-		$loopbody .= _transcompile($ast->sub);
+		$loopbody .= _transcompile($loop);
 		$loopbody = "{\n" . loopbody(indent_code($loopbody)) . "\n}\n";
 		
+		if(!empty($else)) {
+			$code .= "if(empty(\$${loopname}_array))\n{\n";
+			$code .= indent_code(_transcompile($else));
+			$code .= "\n}\nelse ";
+		}
 		$code .= "foreach(\$${loopname}_array as \$${loopname}_key => \$${loopname}_value)\n$loopbody\n";
 		
 		return $code;
@@ -1351,13 +1366,15 @@ class STECore {
 	}
 	
 	private function &_get_var_reference(&$from, $name, $create_if_not_exist) {
+		$nullref = NULL;
+		
 		$bracket_open = strpos($name, "[");
 		if($bracket_open === false) {
 			if(isset($from[$name]) or $create_if_not_exist) {
 				$ref = &$from[$name];
 				return $ref;
 			} else {
-				return NULL;
+				return $nullref;
 			}
 		} else {
 			$old_varname = $varname;
@@ -1371,7 +1388,7 @@ class STECore {
 				if($create_if_not_exist) {
 					$from[$varname] = array();
 				} else {
-					return NULL;
+					return $nullref;
 				}
 			}
 			try {
