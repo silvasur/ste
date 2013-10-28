@@ -1,7 +1,7 @@
-Stupid Template Engine
-======================
+STE Template Engine
+===================
 
-The Stupid Template Engine (STE) is a template engine for the PHP programming
+The STE Template Engine (STE) is a template engine for the PHP programming
 language.
 
 Requirements

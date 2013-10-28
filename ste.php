@@ -1,8 +1,8 @@
 <?php
 
 /*
- * File: stupid_template_engine.php
- * The implementation of the Stupid Template Engine.
+ * File: ste.php
+ * The implementation of the STE Template Engine.
  * 
  * About: License
  * This file is licensed under the MIT/X11 License.
@@ -1425,7 +1425,7 @@ class STECore {
 	 * 
 	 * Parameters:
 	 * 	$tpl - The name of the template to be loaded.
-	 * 	$quiet - If true, do not output anything and do notmodify the blocks. This can be useful to load custom tags that are programmed in STE T/PL. Default: false.
+	 * 	$quiet - If true, do not output anything and do not modify the blocks. This can be useful to load custom tags that are programmed in the STE Template Language. Default: false.
 	 * 
 	 * Throws:
 	 * 	* A <CantLoadTemplate> exception if the template could not be loaded.

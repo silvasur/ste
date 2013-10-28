@@ -2,7 +2,7 @@
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en">
 <head>
-	<title>Language definition - Stupid Template Engine</title>
+	<title>Language definition - STE Template Engine</title>
 	<style type="text/css" media="screen">
 		code, code pre {
 			font-family: monospace;
@@ -27,8 +27,8 @@
 	
 </head>
 <body>
-	<h1>The <acronym>STE</acronym> Template/Programming Language</h1>
-	<p>This is the documentation of the Template/Programming Language of the <strong>S</strong>tupid <strong>T</strong>emplate <strong>E</strong>ngine, or <acronym>STE T/PL</acronym></p>
+	<h1>The <acronym>STE</acronym> Template Language</h1>
+	<p>This is the documentation of the Template Language of the <strong>S</strong>TE <strong>T</strong>emplate <strong>E</strong>ngine.</p>
 	
 	<h2 id="toc">TOC</h2>
 		<ol>
@@ -86,7 +86,7 @@
 		</ol>
 	
 	<h2 id="basic_elems">Basic Elements</h2>
-		<p>The <acronym>STE T/PL</acronym> consists of four basic elements:</p>
+		<p>The STE Template Language consists of four basic elements:</p>
 	
 		<h3 id="basic_elems_text">Text</h3>
 			<p>Everything that is not a <a href="#basic_elems_variable">Variable</a>, a <a href="#basic_elems_tag">Tag</a> or a <a href="#basic_elems_pseudotag">Pseudotag</a> is Text.</p>
@@ -104,7 +104,7 @@
 			<p>Variable have names, these names can consist of letters (english alphabet; upper and lower case), numbers and underscores (<code>_</code>). As a regex: <code>[a-zA-Z0-9_]+</code></p>
 			<p>A variable can also be an array. To access an array, wrap the desired fieldname within <code>[</code> and <code>]</code>. A fieldname can be constructed of <a href="#basic_elems_text">Text</a> and other Variables. So you can dynamically access fields: <code>$foo[$bar]</code>. These fieldnames can also be nested or concatenated: <code>$foo[$bar[baz]][herp][$de[derp]]</code></p>
 			<p>If you want a literal <code>$</code> char, you can escape it: <code>\$</code></p>
-			<p>Variables in <acronym>STE T/PL</acronym> are typeless, everything is text. In a boolean context, empty text usually represents false, else true.</p>
+			<p>Variables in STE are typeless, everything is text. In a boolean context, empty text usually represents false, else true.</p>
 	
 		<h3 id="basic_elems_tag">Tag</h3>
 			<p>A Tag can be compared to a function. A Tag can have parameters and children <a href="#basic_elems">elements</a>.</p>
@@ -133,7 +133,7 @@
 			<p>The ste:rawtext pseudotag will output a <a href="#basic_elems_text">Text</a> element with its wrapped content. It will prevent parsing of the content. Useful if you are embedding another script language, which uses the <code>$</code> char or also has a XML-Like syntax. No <a href="#escaping">escape sequences</a> will be translated! Can not be used in <a href="#basic_elems_tag">Tag</a> parameter values!</p>
 	
 	<h2 id="escaping">Escaping special chars</h2>
-		<p>To get a literal <code>$</code>, <code>"</code> or other special chars, <acronym>STE T/PL</acronym> gives you the following escape sequences:</p>
+		<p>To get a literal <code>$</code>, <code>"</code> or other special chars, STE gives you the following escape sequences:</p>
 		<table>
 		<thead>
 			<tr>
@@ -203,12 +203,12 @@
 		<p>Escape sequences are not translated in <a href="#basic_elems_pseudotag">Pseudotags</a></p>
 	
 	<h2 id="builtin">Builtin Tags</h2>
-		<p><acronym>STE</acronym> has some builtin <a href="#basic_elems_tag">Tags</a>, that makes programming in <acronym>STE T/PL</acronym> possible.</p>
+		<p><acronym>STE</acronym> has some builtin <a href="#basic_elems_tag">Tags</a>, that makes programming in STE possible.</p>
 	
 		<h3 id="builtin_if">ste:if</h3>
-			<p>The ste:if Tag provides an if-clause to <acronym>STE T/PL</acronym>.</p>
+			<p>The ste:if Tag provides an if-clause to STE.</p>
 			<p>ste:if can have the subtags ste:then and ste:else. Everything between <code>&lt;ste:if&gt;</code> and <code>&lt;/ste:if&gt;</code>, that is <strong>not</strong> an ste:then or ste:else tag, will be used as the condition.</p>
-			<p>Because <acronym>STE T/PL</acronym> is typeless, every empty string (trailing whitespaces will be ignored) is considered as false, everything else is true.</p>
+			<p>Every empty string (trailing whitespaces will be ignored) is considered as false, everything else is true.</p>
 			<p>If the condition is true (i.e. not empty), the content of the ste:then block will be executed. Otherwise the ste:else tag (if present) will be executed.</p>
 			<p>The ste:then Tag is mandatory, the ste:else tag is optional.</p>
 			<p>
@@ -456,7 +456,7 @@
 			<p>This Tag is pretty slow, because the formula is not transcompiled and only evaluated at runtime. For some simple increment and decrement operations it is better to use the <a href="#stdlib_inc">ste:inc</a> and <a href="#stdlib_dec">ste:dec</a> Tags from the <a href="#stdlib">standard library</a>.</p>
 		
 		<h3 id="builtin_mktag">ste:mktag</h3>
-			<p>ste:mktag allows you to define own <a href="#basic_elems_tag">Tags</a> using <acronym>STE T/PL</acronym>.</p>
+			<p>ste:mktag allows you to define own <a href="#basic_elems_tag">Tags</a> using the STE Template Language.</p>
 			<p>The parameter <code>name</code> (mandatory) expects the name of the new tag. If your tag requires some parameters, you can specify them using the optional <code>mandatory</code> parameter. Names of the mandatory parameters are separated by <code>|</code>.</p>
 			<p>The <a href="#basic_elems_variable">Variable</a> <code>_tag_parameters</code> (associative array) will hold all given parameters and their values.</p>
 			<p>With the ste:tagcontent tag you can execute the tags content.</p>
