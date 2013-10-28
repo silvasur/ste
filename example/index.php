@@ -2,7 +2,7 @@
 
 # Example program to demonstrate the STE...
 
-require_once(dirname(__FILE__) . "/../stupid_template_engine.php");
+require_once(dirname(__FILE__) . "/../ste.php");
 
 # Initialize an STECore instance
 $ste = new \ste\STECore(

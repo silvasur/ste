@@ -1,6 +1,6 @@
 <?php
 
-require(dirname(__FILE__) . "/../stupid_template_engine.php");
+require(dirname(__FILE__) . "/../ste.php");
 require("code.php");
 
 class TestStorage implements \ste\StorageAccess {
