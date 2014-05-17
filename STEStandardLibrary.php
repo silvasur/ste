@@ -12,7 +12,7 @@ class STEStandardLibrary {
 	}
 	
 	static public function escape($ste, $params, $sub) {
-		if($ste->evalbool($params["lines"])) {
+		if($ste->evalbool(@$params["lines"])) {
 			return nl2br(htmlspecialchars(str_replace("\r\n", "\n", $sub($ste))));
 		} else {
 			return htmlspecialchars($sub($ste));

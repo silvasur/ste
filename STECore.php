@@ -158,10 +158,9 @@ class STECore {
 				return $nullref;
 			}
 		} else {
-			$old_varname = $varname;
 			$bracket_close = strpos($name, "]", $bracket_open);
 			if($bracket_close === false) {
-				throw new RuntimeError("Invalid varname \"$varname\". Missing closing \"]\".");
+				throw new RuntimeError("Invalid varname \"$name\". Missing closing \"]\".");
 			}
 			$varname = substr($name, 0, $bracket_open);
 			$name    = substr($name, $bracket_open + 1, $bracket_close - $bracket_open - 1) . substr($name, $bracket_close + 1);
@@ -176,7 +175,7 @@ class STECore {
 				$ref = &$this->_get_var_reference($from[$varname], $name, $create_if_not_exist);
 				return $ref;
 			} catch(Exception $e) {
-				throw new RuntimeError("Invalid varname \"$old_varname\". Missing closing \"]\".");
+				throw new RuntimeError("Invalid varname \"$name\". Missing closing \"]\".");
 			}
 		}
 	}
