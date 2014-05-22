@@ -9,6 +9,10 @@ namespace kch42\ste;
 class Transcompiler {
 	private static $builtins = NULL;
 	
+	public static function tempvar($typ) {
+		return $typ . '_' . str_replace('.', '_', uniqid('', true));
+	}
+
 	public static function init_builtins() {
 		if(self::$builtins !== NULL) {
 			return;
@@ -126,7 +130,7 @@ class Transcompiler {
 			},
 			"for" => function($ast) {
 				$code = "";
-				$loopname = "forloop_" . str_replace(".", "_", uniqid("",true));
+				$loopname = self::tempvar("forloop");
 				if(empty($ast->params["start"])) {
 					throw new ParseCompileError("self::Transcompile error: Missing 'start' parameter in <ste:for>.", $ast->tpl, $ast->offset);
 				}
@@ -182,7 +186,7 @@ class Transcompiler {
 				return $code;
 			},
 			"foreach" => function($ast) {
-				$loopname = "foreachloop_" . str_replace(".", "_", uniqid("",true));
+				$loopname = self::tempvar("foreachloop");
 				$code = "";
 				
 				if(empty($ast->params["array"])) {
@@ -260,7 +264,7 @@ class Transcompiler {
 					throw new ParseCompileError("self::Transcompile Error: name missing in <ste:block>.", $ast->tpl, $ast->offset);
 				}
 				
-				$blknamevar = "blockname_" . str_replace(".", "_", uniqid("", true));
+				$blknamevar = self::tempvar("blockname");
 				
 				list($val, $code) = self::_transcompile($ast->params["name"], true);
 				$code .= "\$${blknamevar} = " . $val . ";\n";
@@ -382,7 +386,7 @@ class Transcompiler {
 					$func = self::$builtins[$node->name];
 					$code .= $func($node);
 				} else {
-					$paramarray = "parameters_" . str_replace(".", "_", uniqid("", true));
+					$paramarray = self::tempvar("parameters");
 					$code .= "\$$paramarray = array();\n";
 					
 					foreach($node->params as $pname => $pcontent) {
@@ -406,7 +410,7 @@ class Transcompiler {
 		}
 		
 		if($avoid_outputstack) {
-			$tmpvar = "tmp_" . str_replace(".", "_", uniqid("",true));
+			$tmpvar = self::tempvar("tmp");
 			$code = "\$outputstack[] = '';\n\$outputstack_i++;" . $code;
 			$code .= "\$$tmpvar = array_pop(\$outputstack);\n\$outputstack_i--;\n";
 			return array("\$$tmpvar", $code);
