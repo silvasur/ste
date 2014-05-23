@@ -30,6 +30,9 @@ require_once(__DIR__ . "/Calc.php");
 require_once(__DIR__ . "/Parser.php");
 require_once(__DIR__ . "/Transcompiler.php");
 
+require_once(__DIR__ . "/VarNotInScope.php");
+require_once(__DIR__ . "/Scope.php");
+
 require_once(__DIR__ . "/STEStandardLibrary.php");
 require_once(__DIR__ . "/STECore.php");
 

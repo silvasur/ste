@@ -295,7 +295,7 @@ class Transcompiler {
 					throw new ParseCompileError("self::Transcompile Error: name missing in <ste:mktag>.", $ast->tpl, $ast->offset);
 				}
 				
-				$fxbody = "\$outputstack = array(''); \$outputstack_i = 0;\$ste->vars['_tag_parameters'] = \$params;\n";
+				$fxbody = "\$outputstack = array(''); \$outputstack_i = 0;\$ste->set_local_var('_tag_parameters', \$params);\n";
 				
 				list($tagname, $tagname_pre) = self::_transcompile($ast->params["name"], true);
 				
@@ -312,7 +312,7 @@ class Transcompiler {
 				$fxbody .= self::_transcompile($ast->sub);
 				$fxbody .= "return array_pop(\$outputstack);";
 				
-				$code .= "\$tag_fx = function(\$ste, \$params, \$sub)" . $usemandatory . "\n{\n" . self::indent_code($fxbody) . "\n};\n";
+				$code .= "\$tag_fx = \$ste->make_closure(function(\$ste, \$params, \$sub)" . $usemandatory . "\n{\n" . self::indent_code($fxbody) . "\n});\n";
 				$code .= $tagname_pre;
 				$code .= "\$ste->register_tag($tagname, \$tag_fx);\n";
 				
@@ -394,7 +394,7 @@ class Transcompiler {
 					}
 					
 					$code .= "\$outputstack[\$outputstack_i] .= \$ste->call_tag('" . Misc::escape_text($node->name) . "', \$${paramarray}, ";
-					$code .= empty($node->sub) ? "function(\$ste) { return ''; }" : self::transcompile($node->sub);
+					$code .= empty($node->sub) ? "function(\$ste) { return ''; }" : ("\$ste->make_closure(" . self::transcompile($node->sub) . ")");
 					$code .= ");\n";
 				}
 			}

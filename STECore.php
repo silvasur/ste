@@ -10,19 +10,18 @@ class STECore {
 	private $tags;
 	private $storage_access;
 	private $cur_tpl_dir;
+	private $scope;
 	
 	/*
 	 * Variables: Public variables
 	 * 
 	 * $blocks - Associative array of blocks (see the language definition).
 	 * $blockorder - The order of the blocks (an array)
-	 * $vars - Associative array of all template variables. Use this to pass data to your templates.
 	 * $mute_runtime_errors - If true (default) a <RuntimeError> exception will result in no output from the tag, if false a error message will be written to output.
 	 * $fatal_error_on_missing_tag - If true, STE will throw a <FatalRuntimeError> if a tag was called that was not registered, otherwise (default) a regular <RuntimeError> will be thrown and automatically handled by STE (see <$mute_runtime_errors>).
 	 */
 	public $blocks;
 	public $blockorder;
-	public $vars;
 	public $mute_runtime_errors = true;
 	public $fatal_error_on_missing_tag = false;
 	
@@ -36,9 +35,10 @@ class STECore {
 		$this->storage_access = $storage_access;
 		$this->cur_tpl_dir = "/";
 		STEStandardLibrary::_register_lib($this);
-		$this->vars = array();
 		$this->blockorder = array();
 		$this->blocks = array();
+		
+		$this->set_scope(new Scope(array()));
 	}
 	
 	/*
@@ -140,44 +140,9 @@ class STECore {
 	 * Returns:
 	 * 	A Reference to the variable.
 	 */
-	
 	public function &get_var_reference($name, $create_if_not_exist) {
-		$ref = &$this->_get_var_reference($this->vars, $name, $create_if_not_exist);
+		$ref = &$this->scope->get_var_reference($name, $create_if_not_exist);
 		return $ref;
-	}
-	
-	private function &_get_var_reference(&$from, $name, $create_if_not_exist) {
-		$nullref = NULL;
-		
-		$bracket_open = strpos($name, "[");
-		if($bracket_open === false) {
-			if(isset($from[$name]) or $create_if_not_exist) {
-				$ref = &$from[$name];
-				return $ref;
-			} else {
-				return $nullref;
-			}
-		} else {
-			$bracket_close = strpos($name, "]", $bracket_open);
-			if($bracket_close === false) {
-				throw new RuntimeError("Invalid varname \"$name\". Missing closing \"]\".");
-			}
-			$varname = substr($name, 0, $bracket_open);
-			$name    = substr($name, $bracket_open + 1, $bracket_close - $bracket_open - 1) . substr($name, $bracket_close + 1);
-			if(!is_array($from[$varname])) {
-				if($create_if_not_exist) {
-					$from[$varname] = array();
-				} else {
-					return $nullref;
-				}
-			}
-			try {
-				$ref = &$this->_get_var_reference($from[$varname], $name, $create_if_not_exist);
-				return $ref;
-			} catch(Exception $e) {
-				throw new RuntimeError("Invalid varname \"$name\". Missing closing \"]\".");
-			}
-		}
 	}
 	
 	/*
@@ -193,8 +158,11 @@ class STECore {
 	 * 	<RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
 	 */
 	public function set_var_by_name($name, $val) {
-		$ref = &$this->_get_var_reference($this->vars, $name, true);
-		$ref = $val;
+		$this->scope->set_var_by_name($name, $val);
+	}
+	
+	public function set_local_var($name, $val) {
+		$this->scope->set_local_var($name, $val);
 	}
 	
 	/*
@@ -212,8 +180,7 @@ class STECore {
 	 * 	The variables value.
 	 */
 	public function get_var_by_name($name) {
-		$ref = $this->_get_var_reference($this->vars, $name, false);
-		return $ref === NULL ? "" : $ref;
+		return $this->scope->get_var_by_name($name);
 	}
 	
 	/*
@@ -296,5 +263,66 @@ class STECore {
 	 */
 	public function evalbool($txt) {
 		return trim($txt . "") != "";
+	}
+	
+	public function get_scope() {
+		return $this->scope;
+	}
+	
+	public function set_scope($scope) {
+		$this->scope = $scope;
+	}
+	
+	public function make_closure($fx) {
+		$bound_scope = $this->scope;
+		return function() use($bound_scope, $fx) {
+			$args = func_get_args();
+			$ste = $args[0];
+			
+			$prev = $ste->get_scope();
+			$scope = $bound_scope->new_subscope();
+			$ste->set_scope($scope);
+			
+			try {
+				$result = call_user_func_array($fx, $args);
+				$ste->set_scope($prev);
+				return $result;
+			} catch(\Exception $e) {
+				$ste->set_scope($prev);
+				throw $e;
+			}
+		};
+	}
+	
+	public function __get($name) {
+		if($name === "vars") {
+			return $this->scope;
+		}
+		
+		$trace = debug_backtrace();
+		trigger_error(
+			'Undefined property via __get(): ' . $name .
+			' in ' . $trace[0]['file'] .
+			' on line ' . $trace[0]['line'],
+			E_USER_NOTICE);
+		return NULL;
+	}
+	
+	public function __set($name, $val) {
+		if($name !== "vars") {
+			$trace = debug_backtrace();
+			trigger_error(
+				'Undefined property via __set(): ' . $name .
+				' in ' . $trace[0]['file'] .
+				' on line ' . $trace[0]['line'],
+				E_USER_NOTICE);
+			return;
+		}
+		
+		if(is_array($val)) {
+			foreach($val as $k => $v) {
+				$this->scope[$k] = $v;
+			}
+		}
 	}
 }
