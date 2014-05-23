@@ -34,6 +34,9 @@ class Parser {
 		return $c;
 	}
 	
+	private function eof() {
+		return ($this->off == $this->len);
+	}
 	
 	private function back($n = 1) {
 		if($n <= 0) {
@@ -349,7 +352,9 @@ class Parser {
 	private function parse_var($openedat, $curly) {
 		$varnode = new VariableNode($this->name, $openedat);
 		$varnode->name = $this->get_name();
-		$varnode->arrayfields = $this->parse_array();
+		if(!$this->eof()) {
+			$varnode->arrayfields = $this->parse_array();
+		}
 		
 		if(($curly) && ($this->next() != "}")) {
 			throw new ParseCompileError("Unclosed '\${'", $this->name, $openedat);
