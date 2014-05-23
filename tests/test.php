@@ -1,16 +1,18 @@
 <?php
 
-require(dirname(__FILE__) . "/../ste.php");
+require(dirname(__FILE__) . "/../steloader.php");
 require("code.php");
 
-class TestStorage implements \ste\StorageAccess {
+use \kch42\ste;
+
+class TestStorage implements ste\StorageAccess {
 	public function load($tpl, &$mode) {
-		$mode = \ste\MODE_SOURCE;
+		$mode = ste\StorageAccess::MODE_SOURCE;
 		return file_get_contents($tpl);
 	}
 	
 	public function save($tpl, $data, $mode) {
-		if($mode != \ste\MODE_TRANSCOMPILED) {
+		if($mode != ste\StorageAccess::MODE_TRANSCOMPILED) {
 			return;
 		}
 		
@@ -18,7 +20,7 @@ class TestStorage implements \ste\StorageAccess {
 	}
 }
 
-$ste = new \ste\STECore(new TestStorage());
+$ste = new ste\STECore(new TestStorage());
 $ste->mute_runtime_errors = false;
 test_func($ste);
 echo $ste->exectemplate("test.tpl");

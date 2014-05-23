@@ -2,11 +2,12 @@
 
 # Example program to demonstrate the STE...
 
-require_once(dirname(__FILE__) . "/../ste.php");
+require_once(dirname(__FILE__) . "/../steloader.php");
+use \kch42\ste;
 
 # Initialize an STECore instance
-$ste = new \ste\STECore(
-	new \ste\FilesystemStorageAccess(                # The STECore needs a StorageAccess implementation, we are using the FilesystemStorageAccess, which comes with STE.
+$ste = new ste\STECore(
+	new ste\FilesystemStorageAccess(                # The STECore needs a StorageAccess implementation, we are using the FilesystemStorageAccess, which comes with STE.
 		dirname(__FILE__) . "/templates/src",    # FilesystemStorageAccess needs a directory, where the Templates are...
 		dirname(__FILE__) . "/templates/transc"  # ...and a directory for the transcompiled templates (write permissions needed).
 	)
@@ -32,7 +33,7 @@ $ste->register_tag("repeat",
 	{
 		$output = "";
 		if(!is_numeric($params["n"]))
-			throw new \ste\RuntimeError("Sorry, but parameter n must be a number...");
+			throw new ste\RuntimeError("Sorry, but parameter n must be a number...");
 		
 		for($i = 0; $i < $params["n"]; ++$i)
 			$output .= $sub($ste);
