@@ -342,8 +342,7 @@ class Transcompiler {
 				}
 				
 				list($val, $pre) = self::_transcompile($ast->params["var"],  true);
-				$code .= $pre;
-				return "\$outputstack[\$outputstack_i] .= \$ste->get_var_by_name(" . $val . ");";
+				return "$pre\$outputstack[\$outputstack_i] .= \$ste->get_var_by_name(" . $val . ");";
 			},
 			"calc" => function($ast) {
 				$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";

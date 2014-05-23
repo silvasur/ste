@@ -19,5 +19,6 @@ class TestStorage implements \ste\StorageAccess {
 }
 
 $ste = new \ste\STECore(new TestStorage());
+$ste->mute_runtime_errors = false;
 test_func($ste);
 echo $ste->exectemplate("test.tpl");
