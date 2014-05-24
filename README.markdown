@@ -4,6 +4,14 @@ STE Template Engine
 The STE Template Engine (STE) is a template engine for the PHP programming
 language.
 
+Get it via composer / packagist
+-------------------------------
+
+[Composer](https://getcomposer.org) is a dependency manager and package manager for PHP. Using composer is the recommended way of installing STE.
+
+Just put `kch42/ste` in your requirements (I suggest using the version `1.*`) and execute `composer install`. Then include composer's autoloader and you can simply use all stuff in the `\kch42\ste` namespace without further `require`s or `include`s. Awesome!
+
+
 Requirements
 ------------
 
