@@ -336,6 +336,21 @@ class Transcompiler {
 				
 				return $code;
 			},
+			"setlocal" => function($ast) {
+				if(empty($ast->params["var"])) {
+					throw new ParseCompileError("self::Transcompile Error: var missing in <ste:set>.", $ast->tpl, $ast->offset);
+				}
+				
+				$code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
+				$code .= self::_transcompile($ast->sub);
+				$code .= "\$outputstack_i--;\n";
+				
+				list($val, $pre) = self::_transcompile($ast->params["var"], true);
+				$code .= $pre;
+				$code .= "\$ste->set_local_var(" . $val . ", array_pop(\$outputstack));\n";
+				
+				return $code;
+			},
 			"get" => function($ast) {
 				if(empty($ast->params["var"])) {
 					throw new ParseCompileError("self::Transcompile Error: var missing in <ste:get>.", $ast->tpl, $ast->offset);

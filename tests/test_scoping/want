@@ -1,0 +1,9 @@
+in foo: $a = A
+in foo: $b = B
+in foo: $c = 
+in foo (after set): $a = X
+in foo (after set): $b = Y
+in foo (after set): $c = Z
+$a = X
+$b = B
+$c = 

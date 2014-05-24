@@ -445,6 +445,9 @@
 <code><pre>&lt;ste:set var="temp"&gt;&lt;ste:foo /&gt;&lt;/ste:set&gt;<br />&lt;ste:bar baz="$temp" /&gt;</pre></code>
 			</p>
 		
+		<h3 id="builtin_setlocal">ste:set</h3>
+			<p>ste:setlocal is used like <a href="#builtin_set">ste:set</a>, but only a local variable will be set (ste:set would overwrite a variable, if it was declared in a parent scope).
+		
 		<h3 id="builtin_get">ste:get</h3>
 			<p>ste:get will return the content of a variable. The parameter <code>var</code> takes the name of the variable to get. Useful, if you want to get a variable which name is stored in a variable.</p>
 			<p>
