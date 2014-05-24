@@ -5,7 +5,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"kch42\\ste": "src/"
+			"kch42\\ste\\": "src/ste"
 		}
 	},
 	"license": "MIT",
