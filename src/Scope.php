@@ -56,21 +56,6 @@ class Scope implements \ArrayAccess {
 		throw new VarNotInScope();
 	}
 	
-	/*
-	 * Function: get_var_reference
-	 * Get a reference to a template variable using a variable name.
-	 * This can be used, if your custom tag takes a variable name as a parameter.
-	 * 
-	 * Parameters:
-	 * 	$name - The variables name.
-	 * 	$create_if_not_exist - Should the variable be created, if it does not exist? Otherwise NULL will be returned, if the variable does not exist.
-	 * 
-	 * Throws:
-	 * 	<RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
-	 * 
-	 * Returns:
-	 * 	A Reference to the variable.
-	 */
 	public function &get_var_reference($name, $create_if_not_exist, $localonly=false) {
 		$nullref = NULL;
 		
@@ -118,18 +103,6 @@ class Scope implements \ArrayAccess {
 		return $ref;
 	}
 	
-	/*
-	 * Function: set_var_by_name
-	 * Set a template variable by its name.
-	 * This can be used, if your custom tag takes a variable name as a parameter.
-	 * 
-	 * Parameters:
-	 * 	$name - The variables name.
-	 * 	$val - The new value.
-	 * 
-	 * Throws:
-	 * 	<RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
-	 */
 	public function set_var_by_name($name, $val) {
 		$ref = &$this->get_var_reference($name, true);
 		$ref = $val;
@@ -140,20 +113,6 @@ class Scope implements \ArrayAccess {
 		$ref = $val;
 	}
 	
-	/*
-	 * Function: get_var_by_name
-	 * Get a template variable by its name.
-	 * This can be used, if your custom tag takes a variable name as a parameter.
-	 * 
-	 * Parameters:
-	 * 	$name - The variables name.
-	 * 
-	 * Throws:
-	 * 	<RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
-	 * 
-	 * Returns:
-	 * 	The variables value.
-	 */
 	public function get_var_by_name($name) {
 		$ref = $this->get_var_reference($name, false);
 		return $ref === NULL ? "" : $ref;

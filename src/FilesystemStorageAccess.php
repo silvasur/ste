@@ -1,5 +1,8 @@
 <?php
 
+// File: FilesystemStorageAccess.php
+
+// Namespace: kch42\ste
 namespace kch42\ste;
 
 /*
@@ -59,7 +62,9 @@ class FilesystemStorageAccess implements StorageAccess {
 	public function save($tpl, $data, $mode) {
 		$fn = (($mode == StorageAccess::MODE_SOURCE) ? $this->sourcedir : $this->transcompileddir) . "/" . $tpl . (($mode == StorageAccess::MODE_TRANSCOMPILED) ? ".php" : "");
 		@mkdir(dirname($fn), 0777, true);
-		if(file_put_contents($fn, "<?php \$transcompile_fx = $data; ?>") === false) {
+		if(file_put_contents($fn, "<?php
+
+// File: FilesystemStorageAccess.php \$transcompile_fx = $data; ?>") === false) {
 			throw new CantSaveTemplate("Unable to save template.");
 		}
 	}

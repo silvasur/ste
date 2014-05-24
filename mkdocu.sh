@@ -9,4 +9,4 @@ fi; fi
 
 test -d docu/nd || mkdir docu/nd
 test -d docu/nd_project_dir || mkdir docu/nd_project_dir
-$ndpath -i . -o html docu/nd -p docu/nd_project_dir
+$ndpath -i src -o html docu/nd -p docu/nd_project_dir

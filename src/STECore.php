@@ -1,5 +1,8 @@
 <?php
 
+// File: STECore.php
+
+// Namespace: kch42\ste
 namespace kch42\ste;
 
 /*
@@ -161,6 +164,17 @@ class STECore {
 		$this->scope->set_var_by_name($name, $val);
 	}
 	
+	/*
+	 * Function: set_local_var
+	 * Like <set_var_by_name>, but only sets the variable in the global scope (<set_var_by_name> will overwrite the variable in the parent scope, if it's defined there) .
+	 * 
+	 * Parameters:
+	 * 	$name - The variables name.
+	 * 	$val - The new value.
+	 * 
+	 * Throws:
+	 * 	<RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
+	 */
 	public function set_local_var($name, $val) {
 		$this->scope->set_local_var($name, $val);
 	}

@@ -9,7 +9,7 @@
 function autoload_ste($cl) {
 	$path = explode("\\", $cl);
 	if(($path[0] == "kch42") && ($path[1] == "ste")) {
-		require_once(__DIR__ . "/" . $path[2] . ".php");
+		require_once(__DIR__ . "/src/" . $path[2] . ".php");
 	}
 }
 

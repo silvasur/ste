@@ -4,37 +4,37 @@ namespace ste;
 
 /* This file is for backwards compatibility only. Use an autoloader and the \kch42\ste namespace in new applications instead! */
 
-require_once(__DIR__ . "/Misc.php");
+require_once(__DIR__ . "/src/Misc.php");
 
-require_once(__DIR__ . "/ASTNode.php");
-require_once(__DIR__ . "/TagNode.php");
-require_once(__DIR__ . "/TextNode.php");
-require_once(__DIR__ . "/VariableNode.php");
+require_once(__DIR__ . "/src/ASTNode.php");
+require_once(__DIR__ . "/src/TagNode.php");
+require_once(__DIR__ . "/src/TextNode.php");
+require_once(__DIR__ . "/src/VariableNode.php");
 
-require_once(__DIR__ . "/ParseCompileError.php");
-require_once(__DIR__ . "/RuntimeError.php");
-require_once(__DIR__ . "/FatalRuntimeError.php");
+require_once(__DIR__ . "/src/ParseCompileError.php");
+require_once(__DIR__ . "/src/RuntimeError.php");
+require_once(__DIR__ . "/src/FatalRuntimeError.php");
 
-require_once(__DIR__ . "/BreakException.php");
-require_once(__DIR__ . "/ContinueException.php");
+require_once(__DIR__ . "/src/BreakException.php");
+require_once(__DIR__ . "/src/ContinueException.php");
 
-require_once(__DIR__ . "/StorageAccessFailure.php");
-require_once(__DIR__ . "/CantLoadTemplate.php");
-require_once(__DIR__ . "/CantSaveTemplate.php");
+require_once(__DIR__ . "/src/StorageAccessFailure.php");
+require_once(__DIR__ . "/src/CantLoadTemplate.php");
+require_once(__DIR__ . "/src/CantSaveTemplate.php");
 
-require_once(__DIR__ . "/StorageAccess.php");
-require_once(__DIR__ . "/FilesystemStorageAccess.php");
+require_once(__DIR__ . "/src/StorageAccess.php");
+require_once(__DIR__ . "/src/FilesystemStorageAccess.php");
 
-require_once(__DIR__ . "/Calc.php");
+require_once(__DIR__ . "/src/Calc.php");
 
-require_once(__DIR__ . "/Parser.php");
-require_once(__DIR__ . "/Transcompiler.php");
+require_once(__DIR__ . "/src/Parser.php");
+require_once(__DIR__ . "/src/Transcompiler.php");
 
-require_once(__DIR__ . "/VarNotInScope.php");
-require_once(__DIR__ . "/Scope.php");
+require_once(__DIR__ . "/src/VarNotInScope.php");
+require_once(__DIR__ . "/src/Scope.php");
 
-require_once(__DIR__ . "/STEStandardLibrary.php");
-require_once(__DIR__ . "/STECore.php");
+require_once(__DIR__ . "/src/STEStandardLibrary.php");
+require_once(__DIR__ . "/src/STECore.php");
 
 /* Providing "proxy classes", so old applications can continue using the ste namespace */
 

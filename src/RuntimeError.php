@@ -1,5 +1,8 @@
 <?php
 
+// File: RuntimeError.php
+
+// Namespace: kch42\ste
 namespace kch42\ste;
 
 /*
