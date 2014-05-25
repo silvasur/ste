@@ -280,7 +280,7 @@ class STECore {
 	 * 	true/false.
 	 */
 	public function evalbool($txt) {
-		return trim($txt . "") != "";
+		return trim(@(string)$txt) != "";
 	}
 	
 	public function make_closure($fx) {
