@@ -4,7 +4,7 @@ namespace kch42\ste;
 
 class Scope implements \ArrayAccess {
 	private $parent = NULL;
-	private $vars = array();
+	public $vars = array();
 	
 	private static function parse_name($name) {
 		$remain = $name;

@@ -13,7 +13,7 @@ class STECore {
 	private $tags;
 	private $storage_access;
 	private $cur_tpl_dir;
-	private $scope;
+	public $scope;
 	
 	/*
 	 * Variables: Public variables
@@ -22,11 +22,13 @@ class STECore {
 	 * $blockorder - The order of the blocks (an array)
 	 * $mute_runtime_errors - If true (default) a <RuntimeError> exception will result in no output from the tag, if false a error message will be written to output.
 	 * $fatal_error_on_missing_tag - If true, STE will throw a <FatalRuntimeError> if a tag was called that was not registered, otherwise (default) a regular <RuntimeError> will be thrown and automatically handled by STE (see <$mute_runtime_errors>).
+	 * $vars - Variables in the top scope of the template.
 	 */
 	public $blocks;
 	public $blockorder;
 	public $mute_runtime_errors = true;
 	public $fatal_error_on_missing_tag = false;
+	public $vars;
 	
 	/*
 	 * Constructor: __construct
@@ -41,7 +43,9 @@ class STECore {
 		$this->blockorder = array();
 		$this->blocks = array();
 		
-		$this->set_scope(new Scope(array()));
+		$this->vars = array();
+		$this->scope = new Scope();
+		$this->scope->vars =& $this->vars;
 	}
 	
 	/*
@@ -276,15 +280,7 @@ class STECore {
 	 * 	true/false.
 	 */
 	public function evalbool($txt) {
-		return trim($txt . "") != "";
-	}
-	
-	public function get_scope() {
-		return $this->scope;
-	}
-	
-	public function set_scope($scope) {
-		$this->scope = $scope;
+		return trim(@(string)$txt) != "";
 	}
 	
 	public function make_closure($fx) {
@@ -293,50 +289,18 @@ class STECore {
 			$args = func_get_args();
 			$ste = $args[0];
 			
-			$prev = $ste->get_scope();
+			$prev = $ste->scope;
 			$scope = $bound_scope->new_subscope();
-			$ste->set_scope($scope);
+			$ste->scope = $scope;
 			
 			try {
 				$result = call_user_func_array($fx, $args);
-				$ste->set_scope($prev);
+				$ste->scope = $prev;
 				return $result;
 			} catch(\Exception $e) {
-				$ste->set_scope($prev);
+				$ste->scope = $prev;
 				throw $e;
 			}
 		};
-	}
-	
-	public function __get($name) {
-		if($name === "vars") {
-			return $this->scope;
-		}
-		
-		$trace = debug_backtrace();
-		trigger_error(
-			'Undefined property via __get(): ' . $name .
-			' in ' . $trace[0]['file'] .
-			' on line ' . $trace[0]['line'],
-			E_USER_NOTICE);
-		return NULL;
-	}
-	
-	public function __set($name, $val) {
-		if($name !== "vars") {
-			$trace = debug_backtrace();
-			trigger_error(
-				'Undefined property via __set(): ' . $name .
-				' in ' . $trace[0]['file'] .
-				' on line ' . $trace[0]['line'],
-				E_USER_NOTICE);
-			return;
-		}
-		
-		if(is_array($val)) {
-			foreach($val as $k => $v) {
-				$this->scope[$k] = $v;
-			}
-		}
 	}
 }
