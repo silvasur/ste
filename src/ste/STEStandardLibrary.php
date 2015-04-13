@@ -12,11 +12,25 @@ class STEStandardLibrary {
 	}
 	
 	static public function escape($ste, $params, $sub) {
+		$content = $ste->eval_sub_with_escaping($sub, STECore::ESCAPE_NONE);
+		
 		if($ste->evalbool(@$params["lines"])) {
-			return nl2br(htmlspecialchars(str_replace("\r\n", "\n", $sub($ste))));
+			return nl2br(htmlspecialchars(str_replace("\r\n", "\n", $content)));
 		} else {
-			return htmlspecialchars($sub($ste));
+			return htmlspecialchars($content);
 		}
+	}
+	
+	static public function raw($ste, $params, $sub) {
+		return $ste->eval_sub_with_escaping($sub, STECore::ESCAPE_NONE);
+	}
+	
+	static public function autoescape($ste, $params, $sub) {
+		if(empty($params["mode"])) {
+			throw new RuntimeError("Missing mode parameter in <ste:arraylen>.");
+		}
+		
+		return $content = $ste->eval_sub_with_escaping($sub, $params['mode']);
 	}
 	
 	static public function strlen($ste, $params, $sub) {

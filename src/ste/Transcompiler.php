@@ -401,7 +401,7 @@ class Transcompiler {
 		return "try\n{\n" . self::indent_code($code) . "\n}\ncatch(\\kch42\\ste\\BreakException \$e) { break; }\ncatch(\\kch42\\ste\\ContinueException \$e) { continue; }\n";
 	}
 
-	private static function _transcompile($ast, $avoid_outputstack = false) { /* The real self::transcompile function, does not add boilerplate code. */
+	private static function _transcompile($ast, $avoid_outputstack = false, $in_args = false) { /* The real self::transcompile function, does not add boilerplate code. */
 		$code = "";
 		
 		$text_and_var_buffer = array();
@@ -410,7 +410,11 @@ class Transcompiler {
 			if($node instanceof TextNode) {
 				$text_and_var_buffer[] = '"' . Misc::escape_text($node->text) . '"';
 			} else if($node instanceof VariableNode) {
-				$text_and_var_buffer[] = $node->transcompile();
+				if ($in_args) {
+					$text_and_var_buffer[] = $node->transcompile();
+				} else {
+					$text_and_var_buffer[] = "\$ste->autoescape(".$node->transcompile().")";
+				}
 			} else if($node instanceof TagNode) {
 				if(!empty($text_and_var_buffer)) {
 					$code .= "\$outputstack[\$outputstack_i] .= " . implode (" . ", $text_and_var_buffer) . ";\n";
@@ -423,7 +427,7 @@ class Transcompiler {
 					$code .= "\$$paramarray = array();\n";
 					
 					foreach($node->params as $pname => $pcontent) {
-						list($pval, $pre) = self::_transcompile($pcontent, true);
+						list($pval, $pre) = self::_transcompile($pcontent, true, true);
 						$code .= $pre . "\$${paramarray}['" . Misc::escape_text($pname) . "'] = " . $pval . ";\n";
 					}
 					

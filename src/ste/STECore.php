@@ -10,9 +10,13 @@ namespace kch42\ste;
  * The Core of STE
  */
 class STECore {
+	const ESCAPE_NONE = "none";
+	const ESCAPE_HTML = "html";
+	
 	private $tags;
 	private $storage_access;
 	private $cur_tpl_dir;
+	public $escape_method = self::ESCAPE_NONE;
 	public $scope;
 	
 	/*
@@ -99,6 +103,21 @@ class STECore {
 				return "RuntimeError occurred on tag '$name': " . $e->getMessage();
 			}
 		}
+	}
+	
+	public function autoescape($content) {
+		if ($this->escape_method == self::ESCAPE_HTML) {
+			return htmlspecialchars($content);
+		}
+		return $content;
+	}
+	
+	public function eval_sub_with_escaping($sub, $method) {
+		$old_method = $this->escape_method;
+		$this->escape_method = $method;
+		$retval = $sub($this);
+		$this->escape_method = $old_method;
+		return $retval;
 	}
 	
 	public function calc($expression) {

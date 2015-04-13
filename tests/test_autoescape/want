@@ -1,0 +1,25 @@
+outer 1: foo&quot;&amp;&lt;bar&gt;
+escaped outer 1: foo&quot;&amp;&lt;bar&gt;
+double escaped outer 1: foo&amp;quot;&amp;amp;&amp;lt;bar&amp;gt;
+raw outer 1: foo"&<bar>
+arg outer 1: foo"&<bar>
+nested 1: foo"&<bar>
+escaped nested 1: foo&quot;&amp;&lt;bar&gt;
+double escaped nested 1: foo&amp;quot;&amp;amp;&amp;lt;bar&amp;gt;
+raw nested 1: foo"&<bar>
+arg nested 1: foo"&<bar>
+innermost: foo&quot;&amp;&lt;bar&gt;
+escaped innermost: foo&quot;&amp;&lt;bar&gt;
+double escaped innermost: foo&amp;quot;&amp;amp;&amp;lt;bar&amp;gt;
+raw innermost: foo"&<bar>
+arg innermost: foo"&<bar>
+nested 2: foo"&<bar>
+escaped nested 2: foo&quot;&amp;&lt;bar&gt;
+double escaped nested 2: foo&amp;quot;&amp;amp;&amp;lt;bar&amp;gt;
+raw nested 2: foo"&<bar>
+arg nested 2: foo"&<bar>
+outer 2: foo&quot;&amp;&lt;bar&gt;
+escaped outer 2: foo&quot;&amp;&lt;bar&gt;
+double escaped outer 2: foo&amp;quot;&amp;amp;&amp;lt;bar&amp;gt;
+raw outer 2: foo"&<bar>
+arg outer 2: foo"&<bar>
