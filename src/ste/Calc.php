@@ -5,7 +5,7 @@ namespace kch42\ste;
 /* Class Calc contains static methods needed by <ste:calc /> */
 class Calc {
 	private function __construct() {}
-	
+
 	/* We could also just eval() the $infix_math code, but this is much cooler :-D (Parser inception) */
 	public static function shunting_yard($infix_math) {
 		$operators = array(
@@ -18,12 +18,12 @@ class Calc {
 			"(" => array("", 0), 
 			")" => array("", 0)
 		);
-		
+
 		preg_match_all("/\s*(?:(?:[+\\-\\*\\/\\^\\(\\)])|(\\d*[\\.]?\\d*))\\s*/s", $infix_math, $tokens, PREG_PATTERN_ORDER);
 		$tokens_raw   = array_filter(array_map('trim', $tokens[0]), function($x) { return ($x === "0") || (!empty($x)); });
 		$output_queue = array();
 		$op_stack     = array();
-		
+
 		$lastpriority = NULL;
 		/* Make - unary, if neccessary */
 		$tokens = array();
@@ -37,7 +37,7 @@ class Calc {
 			}
 			$lastpriority = $priority;
 		}
-		
+
 		while(!empty($tokens)) {
 			$token = array_shift($tokens);
 			if(is_numeric($token)) {
@@ -73,7 +73,7 @@ class Calc {
 				$op_stack[] = $token;
 			}
 		}
-		
+
 		while(!empty($op_stack)) {
 			$op = array_pop($op_stack);
 			if($op == "(") {
@@ -81,10 +81,10 @@ class Calc {
 			}
 			$output_queue[] = $op;
 		}
-		
+
 		return $output_queue;
 	}
-	
+
 	public static function pop2(&$array) {
 		$rv = array(array_pop($array), array_pop($array));
 		if(array_search(NULL, $rv, true) !== false) {
@@ -92,7 +92,7 @@ class Calc {
 		}
 		return $rv;
 	}
-	
+
 	public static function calc_rpn($rpn) {
 		$stack = array();
 		foreach($rpn as $token) {
@@ -131,7 +131,7 @@ class Calc {
 		}
 		return array_pop($stack);
 	}
-	
+
 	public static function calc($expr) {
 		return self::calc_rpn(self::shunting_yard($expr));
 	}

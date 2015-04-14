@@ -15,12 +15,12 @@ class TestStorage implements ste\StorageAccess {
 		$mode = ste\StorageAccess::MODE_SOURCE;
 		return file_get_contents($tpl);
 	}
-	
+
 	public function save($tpl, $data, $mode) {
 		if($mode != ste\StorageAccess::MODE_TRANSCOMPILED) {
 			return;
 		}
-		
+
 		file_put_contents("$tpl.transc.php", $data);
 	}
 }

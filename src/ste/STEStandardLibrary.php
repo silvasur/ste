@@ -10,33 +10,33 @@ class STEStandardLibrary {
 			}
 		}
 	}
-	
+
 	static public function escape($ste, $params, $sub) {
 		$content = $ste->eval_sub_with_escaping($sub, STECore::ESCAPE_NONE);
-		
+
 		if($ste->evalbool(@$params["lines"])) {
 			return nl2br(htmlspecialchars(str_replace("\r\n", "\n", $content)));
 		} else {
 			return htmlspecialchars($content);
 		}
 	}
-	
+
 	static public function raw($ste, $params, $sub) {
 		return $ste->eval_sub_with_escaping($sub, STECore::ESCAPE_NONE);
 	}
-	
+
 	static public function autoescape($ste, $params, $sub) {
 		if(empty($params["mode"])) {
 			throw new RuntimeError("Missing mode parameter in <ste:arraylen>.");
 		}
-		
+
 		return $content = $ste->eval_sub_with_escaping($sub, $params['mode']);
 	}
-	
+
 	static public function strlen($ste, $params, $sub) {
 		return strlen($sub($ste));
 	}
-	
+
 	static public function arraylen($ste, $params, $sub) {
 		if(empty($params["array"])) {
 			throw new RuntimeError("Missing array parameter in <ste:arraylen>.");
@@ -44,7 +44,7 @@ class STEStandardLibrary {
 		$a = $ste->get_var_by_name($params["array"], false);
 		return (is_array($a)) ? count($a) : "";
 	}
-	
+
 	static public function inc($ste, $params, $sub) {
 		if(empty($params["var"])) {
 			throw new RuntimeError("Missing var parameter in <ste:inc>.");
@@ -52,7 +52,7 @@ class STEStandardLibrary {
 		$ref = &$ste->get_var_reference($params["var"], true);
 		$ref++;
 	}
-	
+
 	static public function dec($ste, $params, $sub) {
 		if(empty($params["var"])) {
 			throw new RuntimeError("Missing var parameter in <ste:dec>.");
@@ -60,11 +60,11 @@ class STEStandardLibrary {
 		$ref = &$ste->get_var_reference($params["var"], true);
 		$ref--;
 	}
-	
+
 	static public function date($ste, $params, $sub) {
 		return @strftime($sub($ste), empty($params["timestamp"]) ? @time() : (int) $params["timestamp"]);
 	}
-	
+
 	static public function in_array($ste, $params, $sub) {
 		if(empty($params["array"])) {
 			throw new RuntimeError("Missing array parameter in <ste:in_array>.");
@@ -75,14 +75,14 @@ class STEStandardLibrary {
 		}
 		return in_array($sub($ste), $ar) ? "y" : "";
 	}
-	
+
 	static public function join($ste, $params, $sub) {
 		if(empty($params["array"])) {
 			throw new RuntimeError("Missing array parameter in <ste:join>.");
 		}
 		return implode($sub($ste), $ste->get_var_by_name($params["array"]));
 	}
-	
+
 	static public function split($ste, $params, $sub) {
 		if(empty($params["array"])) {
 			throw new RuntimeError("Missing array parameter in <ste:split>.");
@@ -92,12 +92,12 @@ class STEStandardLibrary {
 		}
 		$ste->set_var_by_name($params["array"], explode($params["delim"], $sub($ste)));
 	}
-	
+
 	static public function array_add($ste, $params, $sub) {
 		if(empty($params["array"])) {
 			throw new RuntimeError("Missing array parameter in <ste:array_add>.");
 		}
-		
+
 		$ar = &$ste->get_var_reference($params["array"], true);
 		if(empty($params["key"])) {
 			$ar[] = $sub($ste);
@@ -105,20 +105,20 @@ class STEStandardLibrary {
 			$ar[$params["key"]] = $sub($ste);
 		}
 	}
-	
+
 	static public function array_filter($ste, $params, $sub)
 	{
 		if(empty($params["array"])) {
 			throw new RuntimeError("Missing array parameter in <ste:array_filter>.");
 		}
-		
+
 		$ar = $ste->get_var_by_name($params["array"]);
 		if(!is_array($ar)) {
 			throw new RuntimeError("Variable at 'array' is not an array.");
 		}
-		
+
 		$keys = array_keys($ar);
-		
+
 		if(!empty($params["keep_by_keys"])) {
 			$keep_by_keys = &$ste->get_var_reference($params["keep_by_keys"], false);
 			if(!is_array($keep_by_keys)) {
@@ -157,7 +157,7 @@ class STEStandardLibrary {
 			$ar = array_filter($ar, function($v) use ($delete_by_values) { return !in_array($v, $delete_by_values); });
 			$keys = array_keys($ar);
 		}
-		
+
 		$ste->set_var_by_name($params["array"], $ar);
 	}
 }

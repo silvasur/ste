@@ -34,10 +34,10 @@ $ste->register_tag("repeat",
 		$output = "";
 		if(!is_numeric($params["n"]))
 			throw new ste\RuntimeError("Sorry, but parameter n must be a number...");
-		
+
 		for($i = 0; $i < $params["n"]; ++$i)
 			$output .= $sub($ste);
-		
+
 		return $output;
 	}
 );

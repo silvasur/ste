@@ -18,13 +18,13 @@ class STECore {
 	 */
 	const ESCAPE_NONE = "none";
 	const ESCAPE_HTML = "html";
-	
+
 	private $tags;
 	private $storage_access;
 	private $cur_tpl_dir;
 	private $escape_method = self::ESCAPE_NONE;
 	public $scope;
-	
+
 	/*
 	 * Variables: Public variables
 	 * 
@@ -39,7 +39,7 @@ class STECore {
 	public $mute_runtime_errors = true;
 	public $fatal_error_on_missing_tag = false;
 	public $vars;
-	
+
 	/*
 	 * Constructor: __construct
 	 * 
@@ -50,17 +50,17 @@ class STECore {
 	public function __construct($storage_access, $escape_method=self::ESCAPE_NONE) {
 		$this->storage_access = $storage_access;
 		$this->escape_method = $escape_method;
-		
+
 		$this->cur_tpl_dir = "/";
 		STEStandardLibrary::_register_lib($this);
 		$this->blockorder = array();
 		$this->blocks = array();
-		
+
 		$this->vars = array();
 		$this->scope = new Scope();
 		$this->scope->vars =& $this->vars;
 	}
-	
+
 	/*
 	 * Function: register_tag
 	 * Register a custom tag.
@@ -81,7 +81,7 @@ class STECore {
 		}
 		$this->tags[$name] = $callback;
 	}
-	
+
 	/*
 	 * Function: call_tag
 	 * Calling a custom tag (builtin ones can not be called)
@@ -113,14 +113,14 @@ class STECore {
 			}
 		}
 	}
-	
+
 	public function autoescape($content) {
 		if ($this->escape_method == self::ESCAPE_HTML) {
 			return htmlspecialchars($content);
 		}
 		return $content;
 	}
-	
+
 	/*
 	 * Evaluate a $sub function (representing the contents of a tag) with a different escaping method for autoescape.
 	 * 
@@ -138,11 +138,11 @@ class STECore {
 		$this->escape_method = $old_method;
 		return $retval;
 	}
-	
+
 	public function calc($expression) {
 		return Calc::calc($expression);
 	}
-	
+
 	/*
 	 * Function: exectemplate
 	 * Executes a template and returns the result. The huge difference to <load> is that this function will also output all blocks.
@@ -162,14 +162,14 @@ class STECore {
 	public function exectemplate($tpl) {
 		$output = "";
 		$lastblock = $this->load($tpl);
-		
+
 		foreach($this->blockorder as $blockname) {
 			$output .= $this->blocks[$blockname];
 		}
-		
+
 		return $output . $lastblock;
 	}
-	
+
 	/*
 	 * Function: get_var_reference
 	 * Get a reference to a template variable using a variable name.
@@ -189,7 +189,7 @@ class STECore {
 		$ref = &$this->scope->get_var_reference($name, $create_if_not_exist);
 		return $ref;
 	}
-	
+
 	/*
 	 * Function: set_var_by_name
 	 * Set a template variable by its name.
@@ -205,7 +205,7 @@ class STECore {
 	public function set_var_by_name($name, $val) {
 		$this->scope->set_var_by_name($name, $val);
 	}
-	
+
 	/*
 	 * Function: set_local_var
 	 * Like <set_var_by_name>, but only sets the variable in the global scope (<set_var_by_name> will overwrite the variable in the parent scope, if it's defined there) .
@@ -220,7 +220,7 @@ class STECore {
 	public function set_local_var($name, $val) {
 		$this->scope->set_local_var($name, $val);
 	}
-	
+
 	/*
 	 * Function: get_var_by_name
 	 * Get a template variable by its name.
@@ -238,7 +238,7 @@ class STECore {
 	public function get_var_by_name($name) {
 		return $this->scope->get_var_by_name($name);
 	}
-	
+
 	/*
 	 * Function: load
 	 * Load a template and return its result (blocks not included, use <exectemplate> for this).
@@ -258,7 +258,7 @@ class STECore {
 	 */
 	public function load($tpl, $quiet = false) {
 		$tpldir_b4 = $this->cur_tpl_dir;
-		
+
 		/* Resolve ".", ".." and protect from possible LFI */
 		$tpl = str_replace("\\", "/", $tpl);
 		if($tpl[0] != "/") {
@@ -275,12 +275,12 @@ class STECore {
 		}
 		$tpl = implode("/", $pathex);
 		$this->cur_tpl_dir = dirname($tpl);
-		
+
 		if($quiet) {
 			$blocks_back     = clone $this->blocks;
 			$blockorder_back = clone $this->blockorder;
 		}
-		
+
 		$mode = StorageAccess::MODE_TRANSCOMPILED;
 		$content = $this->storage_access->load($tpl, $mode);
 		if($mode == StorageAccess::MODE_SOURCE) {
@@ -294,11 +294,11 @@ class STECore {
 			$this->storage_access->save($tpl, $transc, StorageAccess::MODE_TRANSCOMPILED);
 			eval("\$content = $transc;");
 		}
-		
+
 		$output = $content($this);
-		
+
 		$this->cur_tpl_dir = $tpldir_b4;
-		
+
 		if($quiet) {
 			$this->blocks     = $blocks_back;
 			$this->blockorder = $blockorder_back;
@@ -306,7 +306,7 @@ class STECore {
 			return $output;
 		}
 	}
-	
+
 	/*
 	 * Function: evalbool
 	 * Test, if a text represents false (an empty / only whitespace text) or true (everything else).
@@ -320,17 +320,17 @@ class STECore {
 	public function evalbool($txt) {
 		return trim(@(string)$txt) != "";
 	}
-	
+
 	public function make_closure($fx) {
 		$bound_scope = $this->scope;
 		return function() use($bound_scope, $fx) {
 			$args = func_get_args();
 			$ste = $args[0];
-			
+
 			$prev = $ste->scope;
 			$scope = $bound_scope->new_subscope();
 			$ste->scope = $scope;
-			
+
 			try {
 				$result = call_user_func_array($fx, $args);
 				$ste->scope = $prev;

@@ -7,7 +7,7 @@
 				<ste:break />
 			</ste:then>
 		</ste:if>
-		
+
 		<ste:if>
 			$_tag_parameters[counter]
 			<ste:then>

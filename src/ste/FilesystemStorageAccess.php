@@ -12,7 +12,7 @@ namespace kch42\ste;
 class FilesystemStorageAccess implements StorageAccess {
 	protected $sourcedir;
 	protected $transcompileddir;
-	
+
 	/*
 	 * Constructor: __construct
 	 * 
@@ -24,11 +24,11 @@ class FilesystemStorageAccess implements StorageAccess {
 		$this->sourcedir        = $src;
 		$this->transcompileddir = $transc;
 	}
-	
+
 	public function load($tpl, &$mode) {
 		$src_fn    = $this->sourcedir        . "/" . $tpl;
 		$transc_fn = $this->transcompileddir . "/" . $tpl . ".php";
-		
+
 		if($mode == StorageAccess::MODE_SOURCE) {
 			$content = @file_get_contents($src_fn);
 			if($content === false) {
@@ -36,10 +36,10 @@ class FilesystemStorageAccess implements StorageAccess {
 			}
 			return $content;
 		}
-		
+
 		$src_stat    = @stat($src_fn);
 		$transc_stat = @stat($transc_fn);
-		
+
 		if(($src_stat === false) and ($transc_stat === false)) {
 			throw new CantLoadTemplate("Template not found.");
 		} else if($transc_stat === false) {
@@ -58,7 +58,7 @@ class FilesystemStorageAccess implements StorageAccess {
 			}
 		}
 	}
-	
+
 	public function save($tpl, $data, $mode) {
 		$fn = (($mode == StorageAccess::MODE_SOURCE) ? $this->sourcedir : $this->transcompileddir) . "/" . $tpl . (($mode == StorageAccess::MODE_TRANSCOMPILED) ? ".php" : "");
 		@mkdir(dirname($fn), 0777, true);

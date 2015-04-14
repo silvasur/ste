@@ -7,7 +7,7 @@ touch "$1/want"
 echo '<?php
 
 function test_func($ste) {
-	
+
 }' > "$1/code.php"
 
 echo 'have

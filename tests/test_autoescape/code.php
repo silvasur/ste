@@ -8,7 +8,7 @@ $ste_initializer = function($sa) {
 
 function test_func($ste) {
 	$ste->vars['test'] = 'foo"&<bar>';
-	
+
 	$ste->register_tag('echoarg', function ($ste, $params, $sub) {
 		return $params['echo'];
 	});

@@ -20,7 +20,7 @@ interface StorageAccess {
 	 */
 	const MODE_SOURCE        = 0;
 	const MODE_TRANSCOMPILED = 1;
-	
+
 	/*
 	 * Function: load
 	 * Loading a template.
@@ -38,7 +38,7 @@ interface StorageAccess {
 	 * 	Either the sourcecode or a callable function (first, and only parameter: an <STECore> instance).
 	 */
 	public function load($tpl, &$mode);
-	
+
 	/*
 	 * Function: save
 	 * Saves a template.

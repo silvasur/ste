@@ -24,12 +24,12 @@
 			background: #eee;
 		}
 	</style>
-	
+
 </head>
 <body>
 	<h1>The <acronym>STE</acronym> Template Language</h1>
 	<p>This is the documentation of the Template Language of the <strong>S</strong>TE <strong>T</strong>emplate <strong>E</strong>ngine.</p>
-	
+
 	<h2 id="toc">TOC</h2>
 		<ol>
 			<li>
@@ -86,10 +86,10 @@
 				</ol>
 			</li>
 		</ol>
-	
+
 	<h2 id="basic_elems">Basic Elements</h2>
 		<p>The STE Template Language consists of four basic elements:</p>
-	
+
 		<h3 id="basic_elems_text">Text</h3>
 			<p>Everything that is not a <a href="#basic_elems_variable">Variable</a>, a <a href="#basic_elems_tag">Tag</a> or a <a href="#basic_elems_pseudotag">Pseudotag</a> is Text.</p>
 			<p>Also everything that is wrapped in the <a href="#basic_elems_pseudotag_rawtext">ste:rawtext</a> <a href="#basic_elems_pseudotag">pseudotag</a> will be Text, whereby all <a href="#basic_elems_tag">Tags</a> and <a href="#basic_elems_variable">Variables</a> will not be parsed.</p>
@@ -100,14 +100,14 @@
 			<code><pre>Foo &lt;ste:bar&gt;$baz[herpdederp]&lt;/ste:baz&gt;</pre></code>
 			will result in one text-element and one tag-element containing one variable-element.
 			</p>
-	
+
 		<h3 id="basic_elems_variable">Variable</h3>
 			<p>Variables start with a <code>$</code> or can be wrapped within <code>${</code> and <code>}</code>, so you can write this: <code>${foo}ish</code></p>
 			<p>Variable have names, these names can consist of letters (english alphabet; upper and lower case), numbers and underscores (<code>_</code>). As a regex: <code>[a-zA-Z0-9_]+</code></p>
 			<p>A variable can also be an array. To access an array, wrap the desired fieldname within <code>[</code> and <code>]</code>. A fieldname can be constructed of <a href="#basic_elems_text">Text</a> and other Variables. So you can dynamically access fields: <code>$foo[$bar]</code>. These fieldnames can also be nested or concatenated: <code>$foo[$bar[baz]][herp][$de[derp]]</code></p>
 			<p>If you want a literal <code>$</code> char, you can escape it: <code>\$</code></p>
 			<p>Variables in STE are typeless, everything is text. In a boolean context, empty text usually represents false, else true.</p>
-	
+
 		<h3 id="basic_elems_tag">Tag</h3>
 			<p>A Tag can be compared to a function. A Tag can have parameters and children <a href="#basic_elems">elements</a>.</p>
 			<p>
@@ -126,14 +126,14 @@
 				When using variables in parameter values, they will be "replaced" by their value. Because many tags need the variable and not its content, they expect only the variable's name. If you then write <code>foo="$bar"</code>, the tag will not operate on the <code>bar</code> variable but on the Variable with the name stored in <code>$bar</code>! So read the instructions to the tag carefully!
 			</p>
 			<p>Example: <code>&lt;ste:foo bar="baz" herp="literal quote sign: \""&gt;de &lt;ste:derp hehe="hoho$wtf[xd]" /&gt;&lt;/ste:foo&gt;</code></p>
-	
+
 		<h3 id="basic_elems_pseudotag">Pseudotag</h3>
 			<p>Pseudotags look like normal tags, but they perform special tasks. There are currently two pseudotags:</p>
 			<h4 id="basic_elems_pseudotag_comment">ste:comment</h4>
 			<p>With the ste:comment pseudotag you can comment your template/code. Everything between <code>&lt;ste:comment&gt;</code> and <code>&lt;/ste:comment&gt;</code> will be ignored, before the real tokenization of the code starts.</p>
 			<h4 id="basic_elems_pseudotag_rawtext">ste:rawtext</h4>
 			<p>The ste:rawtext pseudotag will output a <a href="#basic_elems_text">Text</a> element with its wrapped content. It will prevent parsing of the content. Useful if you are embedding another script language, which uses the <code>$</code> char or also has a XML-Like syntax. No <a href="#escaping">escape sequences</a> will be translated! Can not be used in <a href="#basic_elems_tag">Tag</a> parameter values!</p>
-	
+
 	<h2 id="escaping">Escaping special chars</h2>
 		<p>To get a literal <code>$</code>, <code>"</code> or other special chars, STE gives you the following escape sequences:</p>
 		<table>
@@ -203,10 +203,10 @@
 		</tbody>
 		</table>
 		<p>Escape sequences are not translated in <a href="#basic_elems_pseudotag">Pseudotags</a></p>
-	
+
 	<h2 id="builtin">Builtin Tags</h2>
 		<p><acronym>STE</acronym> has some builtin <a href="#basic_elems_tag">Tags</a>, that makes programming in STE possible.</p>
-	
+
 		<h3 id="builtin_if">ste:if</h3>
 			<p>The ste:if Tag provides an if-clause to STE.</p>
 			<p>ste:if can have the subtags ste:then and ste:else. Everything between <code>&lt;ste:if&gt;</code> and <code>&lt;/ste:if&gt;</code>, that is <strong>not</strong> an ste:then or ste:else tag, will be used as the condition.</p>
@@ -225,7 +225,7 @@
 				<p><code>&lt;ste:if&gt;condition&lt;ste:then&gt;then&lt;/ste:then&gt;&lt;ste:else&gt;else&lt;/ste:else&gt;&lt;/ste:if&gt;</code></p>
 				<p><code>?</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a></p>
 				<p>In this variant, the else part <strong>is not optional</strong>!</p>
-		
+
 		<h3 id="builtin_cmp">ste:cmp</h3>
 			<p>With the ste:cmp tag you can compare two values.</p>
 			<p>ste:cmp is selfclosing, the compared values are passed by parameters.</p>
@@ -287,7 +287,7 @@
 				<p>This is equivalent to:</p>
 				<p><code>&lt;ste:cmp text_a="a" op="operator" text_b="b" /&gt;</code></p>
 				<p><code>~</code>, <code>{</code>, <code>|</code> and <code>}</code> can be <a href="#escaping">escaped</a>.</p>
-		
+
 		<h3 id="builtin_not">ste:not</h3>
 			<p>The ste:not Tag will logically invert its content. If it is an empty text (i.e. false), it will return a non-empty text (i.e. true) and vice versa.</p>
 			<p>
@@ -295,10 +295,10 @@
 <code><pre>&lt;ste:if&gt;<br />	&lt;ste:not&gt;$foo&lt;/ste:not&gt;<br />	&lt;ste:then&gt;:-)&lt;/ste:then&gt;<br />	&lt;ste:else&gt;:-(&lt;/ste:else&gt;<br />&lt;/ste:if&gt;</pre></code>
 				If the variable <code>foo</code> is empty (i.e. false), <code>:-)</code> will be returned, <code>:-(</code> otherwise.
 			</p>
-		
+
 		<h3 id="builtin_even">ste:even</h3>
 			<p>If the enclosed text is a number, and the number is even, this tag will return a non-empty text (i.e. true), an empty text (i.e. false) otherwise.</p>
-		
+
 		<h3 id="builtin_for">ste:for</h3>
 			<p>ste:for provides a counter loop.</p>
 			<p>
@@ -340,7 +340,7 @@
 <code><pre>&lt;ste:for start="10" stop="0" step="-1" counter="i"&gt;<br />	$i&lt;br /&gt;<br />&lt;/ste:for&gt;</pre></code>
 				Will count from 10 down to 0 and output the number followed by an HTML line break.
 			</p>
-		
+
 		<h3 id="builtin_foreach">ste:foreach</h3>
 			<p>ste:foreach will loop through an array.</p>
 			<p>
@@ -390,7 +390,7 @@
 				<code><pre>&lt;ste:foreach array="foo" value="v"&gt;<br />    &lt;p&gt;$v&lt;/p&gt;<br />    &lt;ste:else&gt;<br />        Array \$foo is empty.<br />    &lt;/ste:else&gt;<br />&lt;/ste:foreach&gt;</pre></code>
 				This code will list all array elements or will display <code>Array $foo is empty</code> if the array <code>$foo</code> is empty.
 			</p>
-		
+
 		<h3 id="builtin_infloop">ste:infloop</h3>
 			<p>Creates an infinitive loop. You can get out of the loop using the <a href="#builtin_break">ste:break</a> tag. Can be used to emulate other loop constructs like while loops.</p>
 			<p>
@@ -398,13 +398,13 @@
 <code><pre>&lt;ste:infloop&gt;<br />	&lt;ste:if&gt;<br />		&lt;ste:foo /&gt;<br />		&lt;ste:then&gt;&lt;ste:break /&gt;&lt;/ste:then&gt;<br />	&lt;/ste:if&gt;<br />	...<br />&lt;ste:infloop&gt;</pre></code>
 				This code will return <code>...</code> while <code>&lt;ste:foo /&gt;</code> returns an empty text (i.e. false).
 			</p>
-		
+
 		<h3 id="builtin_break">ste:break</h3>
 			<p>When this self-closing tag is called, the current loop (<a href="builtin_for">ste:for</a>, <a href="builtin_foreach">ste:foreach</a>, <a href="builtin_infloop">ste:infloop</a>) will be aborted.</p>
-		
+
 		<h3 id="builtin_continue">ste:continue</h3>
 			<p>When this self-closing tag is called, the current loop(<a href="builtin_for">ste:for</a>, <a href="builtin_foreach">ste:foreach</a>, <a href="builtin_infloop">ste:infloop</a>) will go to the next iteration, aborting the current iteration. </p>
-		
+
 		<h3 id="builtin_load">ste:load</h3>
 			<p>This self-closing tag loads and executes another template. The <code>name</code> parameter (mandatory) defines the template to load.</p>
 			<p>Because each template must be parseable and transcompilable by itself, this is not a inclusion of another template. So you can not do this:</p>
@@ -421,7 +421,7 @@
 				master.tpl<br />
 <code><pre>&lt;ste:baz&gt;<br />	&lt;ste:load name="slave.tpl" /&gt;<br />&lt;/ste:baz&gt;</pre></code>
 			</p>
-		
+
 		<h3 id="builtin_block">ste:block</h3>
 			<p>ste:block provides an easy way for writing master templates. Every block has a name. When a block is defined twice, the second one will overwrite the first one.</p>
 			<p>The name can be set with the <code>name</code> parameter.</p>
@@ -434,7 +434,7 @@
 				When executing slave.tpl, master.tpl will be loaded and its <code>content</code> block will be replaced with the new one (<code>Much cooler content :-)</code>) but leave the original <code>sidebar</code> block.
 			</p>
 			<p>Blocks can not be nested.</p>
-		
+
 		<h3 id="builtin_set">ste:set</h3>
 			<p>ste:set will set a variable. The parameter <code>var</code> takes the name of the variable to set. The content of the <a href="#basic_elems_tag">Tag</a> will be the new content of the variable.</p>
 			<p>
@@ -446,10 +446,10 @@
 				<a href="#basic_elems_tag">Tag</a> parameter values can not contain Tags. ste:set can be used to bypass this:<br />
 <code><pre>&lt;ste:set var="temp"&gt;&lt;ste:foo /&gt;&lt;/ste:set&gt;<br />&lt;ste:bar baz="$temp" /&gt;</pre></code>
 			</p>
-		
+
 		<h3 id="builtin_setlocal">ste:set</h3>
 			<p>ste:setlocal is used like <a href="#builtin_set">ste:set</a>, but only a local variable will be set (ste:set would overwrite a variable, if it was declared in a parent scope).
-		
+
 		<h3 id="builtin_get">ste:get</h3>
 			<p>ste:get will return the content of a variable. The parameter <code>var</code> takes the name of the variable to get. Useful, if you want to get a variable which name is stored in a variable.</p>
 			<p>
@@ -457,7 +457,7 @@
 <code><pre>&lt;ste:get var="$foo" /&gt;</pre></code>
 				This will get the variable with the name that is stored in the variable <code>foo</code>.
 			</p>
-		
+
 		<h3 id="builtin_calc">ste:calc</h3>
 			<p>To perform mathematical calculations, you can use ste:calc. ste:calc calculates the mathematical formula it is wrapped around and returns the result. The formula is in the usual <a href="http://en.wikipedia.org/wiki/Infix_notation">infix-notation [ext. Link]</a> and has these operators: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> and <code>^</code>. Numbers are always decimal, the decimal mark is <code>.</code> and numbers can be prefixed with an <code>-</code> to indicate a negative number. It is a good idea to wrap a negative number in brackets to prevent wrong evaluation (because <code>-</code> is also an operator). Calculations can be grouped with brackets: <code>(</code> and <code>)</code>.</p>
 			<p>Real numbers are supported, complex numbers not.</p>
@@ -467,7 +467,7 @@
 				<code>&lt;ste:calc&gt;(2+3+4) * (1.5 - (-0.5))&lt;/ste:calc&gt;</code> will return <code>18</code>.
 			</p>
 			<p>This Tag is pretty slow, because the formula is not transcompiled and only evaluated at runtime. For some simple increment and decrement operations it is better to use the <a href="#stdlib_inc">ste:inc</a> and <a href="#stdlib_dec">ste:dec</a> Tags from the <a href="#stdlib">standard library</a>.</p>
-		
+
 		<h3 id="builtin_mktag">ste:mktag</h3>
 			<p>ste:mktag allows you to define own <a href="#basic_elems_tag">Tags</a> using the STE Template Language.</p>
 			<p>The parameter <code>name</code> (mandatory) expects the name of the new tag. If your tag requires some parameters, you can specify them using the optional <code>mandatory</code> parameter. Names of the mandatory parameters are separated by <code>|</code>.</p>
@@ -480,7 +480,7 @@
 				Will output:<br />
 <code><pre>10&lt;br/&gt;<br />8&lt;br /&gt;<br />6&lt;br /&gt;<br />4&lt;br /&gt;<br />2&lt;br /&gt;<br />0&lt;br /&gt;</pre></code>
 			</p>
-		
+
 	<h2 id="stdlib">Standard Library</h2>
 		<p>The Standard Library contains some useful tags, which are not <a href="#builtin">builtin</a> but still always available.</p>
 		<h3 id="stdlib_escape">ste:escape</h3>
@@ -494,26 +494,26 @@
 			<p>
 				If the optional parameter <code>lines</code> is true (i.e. not empty), then additionally line breaks are converted to <code>&lt;br /&gt;</code>.
 			</p>
-		
+
 		<h3 id="stdlib_autoescape">ste:autoescape</h3>
 			<p>Sets the autoescaping method in its content. Autoescaping escapes all variables that are not part of an argument of an STE tag. By default, autoescaping is turned off (mode <code>none</code>) due to backwards compatibility with old versions of STE.</p>
 			<p>The parameter <code>mode</code> is mandatory and can be one of <code>none</code> (no escaping) or <code>html</code> (escape as HTML).</p>
-		
+
 		<h3 id="stdlib_raw">ste:raw</h3>
 			<p><code>&lt;ste:raw&gt;...&lt;/ste:raw&gt;</code> is an alias for <code>&lt;ste:<a href="#stdlib_autoescape">autoescape</a> mode=&quot;none&quot;&gt;...<&lt;ste:autoescape&gt;</code>
-		
+
 		<h3 id="stdlib_strlen">ste:strlen</h3>
 			<p>Returns the length of then content.</p>
-		
+
 		<h3 id="stdlib_arraylen">ste:arraylen</h3>
 			<p>Returns the number of elements in the array (variable name given by parameter <code>array</code>).</p>
-		
+
 		<h3 id="stdlib_inc">ste:inc</h3>
 			<p>Increments (i.e. add 1) a variable (variable name given by parameter <code>var</code>).</p>
-		
+
 		<h3 id="stdlib_dec">ste:dec</h3>
 			<p>Decrements (i.e. subtract 1) a variable (variable name given by parameter <code>var</code>).</p>
-		
+
 		<h3 id="stdlib_date">ste:date</h3>
 			<p>Formats a time using PHPs <a href="http://php.net/manual/en/function.strftime.php">strftime format [ext. Link]</a>. The format is given in the tag's content. You can specify a time (unix timestamp) using the <code>timestamp</code> parameter (defaults to the current time).</p>
 			<p>
@@ -522,21 +522,21 @@
 				Result:<br />
 				<code><pre>18. Sep. 2011, 16:49:20</pre></code>
 			</p>
-		
+
 		<h3 id="stdlib_in_array">ste:in_array</h3>
 			<p>Check, if a value is in an array. The tag takes the variable name of the array by parameter <code>array</code>.The value to test with will be taken from the tags content.</p>
 			<p>Returns empty text, if the value is not in the array, otherwise a non-empty text.</p>
-		
+
 		<h3 id="stdlib_join">ste:join</h3>
 			<p>Join parts of an array together. The array's variable name goes to the <code>array</code> parameter. The tag's content will be used as the glue, i.e. this will be between two elements.</p>
 			<p>Returns the joined array</p>
-		
+
 		<h3 id="stdlib_split">ste:split</h3>
 			<p>Split a text and write the parts to an array. The <code>array</code> parameter takes the variable name of the resulting array, the <code>delim</code> parameter the text to split by. The tag's content will be the text to split.</p>
-		
+
 		<h3 id="stdlib_array_add">ste:array_add</h3>
 			<p>Adding an element to an array. The <code>array</code> parameter takes the variable name of the array. The <code>key</code> parameter takes the array key to map the value to, if omitted, the value will be appended to the end of the array. The value is the tag's content.</p>
-		
+
 		<h3 id="stdlib_array_filter">ste:array_filter</h3>
 			<p>Filter out array elements by multiple criterias.</p>
 			<p>All the parameters are names of array variables.</p>
