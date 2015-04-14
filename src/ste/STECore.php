@@ -10,6 +10,12 @@ namespace kch42\ste;
  * The Core of STE
  */
 class STECore {
+	/*
+	 * Constants: Modes for autoescaping.
+	 * 
+	 * ESCAPE_NONE - Don't escape
+	 * MODE_TRANSCOMPILED - Escape as HTML
+	 */
 	const ESCAPE_NONE = "none";
 	const ESCAPE_HTML = "html";
 	
@@ -115,6 +121,16 @@ class STECore {
 		return $content;
 	}
 	
+	/*
+	 * Evaluate a $sub function (representing the contents of a tag) with a different escaping method for autoescape.
+	 * 
+	 * Parameters:
+	 * 	$sub - Callback representing the contents of a tag.
+	 * 	$method - One of the ESCAPE_* constants.
+	 * 
+	 * Returns:
+	 * 	The evaluated content.
+	 */ 
 	public function eval_sub_with_escaping($sub, $method) {
 		$old_method = $this->escape_method;
 		$this->escape_method = $method;
