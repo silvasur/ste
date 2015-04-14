@@ -16,7 +16,7 @@ class STECore {
 	private $tags;
 	private $storage_access;
 	private $cur_tpl_dir;
-	public $escape_method = self::ESCAPE_NONE;
+	private $escape_method = self::ESCAPE_NONE;
 	public $scope;
 	
 	/*
@@ -39,9 +39,12 @@ class STECore {
 	 * 
 	 * Parameters:
 	 * 	$storage_access - An Instance of a <StorageAccess> implementation.
+	 * 	$escape_method - One of the ESCAPE_* constants
 	 */
-	public function __construct($storage_access) {
+	public function __construct($storage_access, $escape_method=self::ESCAPE_NONE) {
 		$this->storage_access = $storage_access;
+		$this->escape_method = $escape_method;
+		
 		$this->cur_tpl_dir = "/";
 		STEStandardLibrary::_register_lib($this);
 		$this->blockorder = array();
