@@ -4,7 +4,7 @@
 <head>
 	<title>Language definition - STE Template Engine</title>
 	<style type="text/css" media="screen">
-		code, code pre {
+		code, code pre, code a {
 			font-family: monospace;
 			background: #eee;
 		}
@@ -72,6 +72,8 @@
 				<a href="#stdlib">Standard Library</a>
 				<ol>
 					<li><a href="#stdlib_escape">ste:escape</a></li>
+					<li><a href="#stdlib_autoescape">ste:autoescape</a></li>
+					<li><a href="#stdlib_raw">ste:raw</a></li>
 					<li><a href="#stdlib_strlen">ste:strlen</a></li>
 					<li><a href="#stdlib_arraylen">ste:arraylen</a></li>
 					<li><a href="#stdlib_inc">ste:inc</a></li>
@@ -492,6 +494,13 @@
 			<p>
 				If the optional parameter <code>lines</code> is true (i.e. not empty), then additionally line breaks are converted to <code>&lt;br /&gt;</code>.
 			</p>
+		
+		<h3 id="stdlib_autoescape">ste:autoescape</h3>
+			<p>Sets the autoescaping method in its content. Autoescaping escapes all variables that are not part of an argument of an STE tag. By default, autoescaping is turned off (mode <code>none</code>) due to backwards compatibility with old versions of STE.</p>
+			<p>The parameter <code>mode</code> is mandatory and can be one of <code>none</code> (no escaping) or <code>html</code> (escape as HTML).</p>
+		
+		<h3 id="stdlib_raw">ste:raw</h3>
+			<p><code>&lt;ste:raw&gt;...&lt;/ste:raw&gt;</code> is an alias for <code>&lt;ste:<a href="#stdlib_autoescape">autoescape</a> mode=&quot;none&quot;&gt;...<&lt;ste:autoescape&gt;</code>
 		
 		<h3 id="stdlib_strlen">ste:strlen</h3>
 			<p>Returns the length of then content.</p>
