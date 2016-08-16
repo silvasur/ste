@@ -11,14 +11,14 @@
 	"license": "MIT",
 	"authors": [
 		{
-			"name": "Kevin Chabowski",
-			"email": "kevin@kch42.de",
-			"homepage": "http://kch42.de",
+			"name": "Laria Carolin Chabowski",
+			"email": "laria@laria.me",
+			"homepage": "http://hi-im.laria.me",
 			"role": "Developer"
 		}
 	],
 	"description": "A compiling template engine with an XML-ish syntax",
 	"type": "library",
 	"keywords": ["templating"],
-	"homepage": "http://github.com/kch42/ste"
+	"homepage": "http://github.com/silvasur/ste"
 }
