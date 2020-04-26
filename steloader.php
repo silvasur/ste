@@ -7,10 +7,10 @@
  */
 
 function autoload_ste($cl) {
-	$path = explode("\\", $cl);
-	if(($path[0] == "kch42") && ($path[1] == "ste")) {
-		require_once(__DIR__ . "/src/ste/" . $path[2] . ".php");
-	}
+    $path = explode("\\", $cl);
+    if(($path[0] == "kch42") && ($path[1] == "ste")) {
+        require_once(__DIR__ . "/src/ste/" . $path[2] . ".php");
+    }
 }
 
 spl_autoload_register("autoload_ste");
