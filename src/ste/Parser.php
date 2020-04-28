@@ -89,7 +89,7 @@ class Parser {
 
     private function take_while($cb) {
         $s = "";
-        while($c = $this->next()) {
+        while(($c = $this->next()) !== "") {
             if(!call_user_func($cb, $c)) {
                 $this->back();
                 return $s;
