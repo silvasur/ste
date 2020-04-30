@@ -11,7 +11,8 @@ namespace kch42\ste;
  * A StorageAccess implementation is used to access the templates from any storage.
  * This means, that you are not limited to store the Templates inside directories, you can also use a database or something else.
  */
-interface StorageAccess {
+interface StorageAccess
+{
     /*
      * Constants: Template modes
      *

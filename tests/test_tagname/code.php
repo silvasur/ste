@@ -2,7 +2,8 @@
 
 use kch42\ste\STECore;
 
-function test_func(STECore $ste) {
+function test_func(STECore $ste)
+{
     $names = array(
         "foo",
         "ab_cd",
@@ -13,8 +14,9 @@ function test_func(STECore $ste) {
     foreach ($names as $name) {
         $ste->register_tag(
             $name,
-            function ($ste, $params, $sub) use ($name) { return $name; }
+            function ($ste, $params, $sub) use ($name) {
+                return $name;
+            }
         );
     }
-
 }

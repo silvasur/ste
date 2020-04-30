@@ -9,7 +9,8 @@ namespace kch42\ste;
  * Class: STECore
  * The Core of STE
  */
-class STECore {
+class STECore
+{
     private $tags;
     private $storage_access;
     private $cur_tpl_dir;
@@ -36,7 +37,8 @@ class STECore {
      * Parameters:
      *  $storage_access - An Instance of a <StorageAccess> implementation.
      */
-    public function __construct($storage_access) {
+    public function __construct($storage_access)
+    {
         $this->storage_access = $storage_access;
         $this->cur_tpl_dir = "/";
         STEStandardLibrary::_register_lib($this);
@@ -59,11 +61,12 @@ class STECore {
      * Throws:
      *  An Exception if the tag could not be registered (if $callback is not callable or if $name is empty)
      */
-    public function register_tag($name, $callback) {
-        if(!is_callable($callback)) {
+    public function register_tag($name, $callback)
+    {
+        if (!is_callable($callback)) {
             throw new \Exception("Can not register tag \"$name\", not callable.");
         }
-        if(empty($name)) {
+        if (empty($name)) {
             throw new \Exception("Can not register tag, empty name.");
         }
         $this->tags[$name] = $callback;
@@ -84,24 +87,26 @@ class STECore {
      * Returns:
      *  The output of the tag or, if a <RuntimeError> was thrown, the appropiate result (see <$mute_runtime_errors>).
      */
-    public function call_tag($name, $params, $sub) {
+    public function call_tag($name, $params, $sub)
+    {
         try {
-            if(!isset($this->tags[$name])) {
-                if($this->fatal_error_on_missing_tag) {
+            if (!isset($this->tags[$name])) {
+                if ($this->fatal_error_on_missing_tag) {
                     throw new FatalRuntimeError("Can not call tag \"$name\": Does not exist.");
                 } else {
                     throw new RuntimeError("Can not call tag \"$name\": Does not exist.");
                 }
             }
             return call_user_func($this->tags[$name], $this, $params, $sub);
-        } catch(RuntimeError $e) {
-            if(!$this->mute_runtime_errors) {
+        } catch (RuntimeError $e) {
+            if (!$this->mute_runtime_errors) {
                 return "RuntimeError occurred on tag '$name': " . $e->getMessage();
             }
         }
     }
 
-    public function calc($expression) {
+    public function calc($expression)
+    {
         return Calc::calc($expression);
     }
 
@@ -121,11 +126,12 @@ class STECore {
      * Returns:
      *  The output of the template.
      */
-    public function exectemplate($tpl) {
+    public function exectemplate($tpl)
+    {
         $output = "";
         $lastblock = $this->load($tpl);
 
-        foreach($this->blockorder as $blockname) {
+        foreach ($this->blockorder as $blockname) {
             $output .= $this->blocks[$blockname];
         }
 
@@ -147,7 +153,8 @@ class STECore {
      * Returns:
      *  A Reference to the variable.
      */
-    public function &get_var_reference($name, $create_if_not_exist) {
+    public function &get_var_reference($name, $create_if_not_exist)
+    {
         $ref = &$this->scope->get_var_reference($name, $create_if_not_exist);
         return $ref;
     }
@@ -164,7 +171,8 @@ class STECore {
      * Throws:
      *  <RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
      */
-    public function set_var_by_name($name, $val) {
+    public function set_var_by_name($name, $val)
+    {
         $this->scope->set_var_by_name($name, $val);
     }
 
@@ -179,7 +187,8 @@ class STECore {
      * Throws:
      *  <RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
      */
-    public function set_local_var($name, $val) {
+    public function set_local_var($name, $val)
+    {
         $this->scope->set_local_var($name, $val);
     }
 
@@ -197,7 +206,8 @@ class STECore {
      * Returns:
      *  The variables value.
      */
-    public function get_var_by_name($name) {
+    public function get_var_by_name($name)
+    {
         return $this->scope->get_var_by_name($name);
     }
 
@@ -218,18 +228,21 @@ class STECore {
      * Returns:
      *  The result of the template (if $quiet == false).
      */
-    public function load($tpl, $quiet = false) {
+    public function load($tpl, $quiet = false)
+    {
         $tpldir_b4 = $this->cur_tpl_dir;
 
         /* Resolve ".", ".." and protect from possible LFI */
         $tpl = str_replace("\\", "/", $tpl);
-        if($tpl[0] != "/") {
+        if ($tpl[0] != "/") {
             $tpl = $this->cur_tpl_dir . "/" . $tpl;
         }
-        $pathex = array_filter(explode("/", $tpl), function($s) { return ($s != ".") and (!empty($s)); });
+        $pathex = array_filter(explode("/", $tpl), function ($s) {
+            return ($s != ".") and (!empty($s));
+        });
         $pathex = array_merge($pathex);
-        while(($i = array_search("..", $pathex)) !== false) {
-            if($i == 0) {
+        while (($i = array_search("..", $pathex)) !== false) {
+            if ($i == 0) {
                 $pathex = array_slice($pathex, 1);
             } else {
                 $pathex = array_merge(array_slice($pathex, 0, $i), array_slice($pathex, $i + 2));
@@ -238,18 +251,18 @@ class STECore {
         $tpl = implode("/", $pathex);
         $this->cur_tpl_dir = dirname($tpl);
 
-        if($quiet) {
+        if ($quiet) {
             $blocks_back     = clone $this->blocks;
             $blockorder_back = clone $this->blockorder;
         }
 
         $mode = StorageAccess::MODE_TRANSCOMPILED;
         $content = $this->storage_access->load($tpl, $mode);
-        if($mode == StorageAccess::MODE_SOURCE) {
+        if ($mode == StorageAccess::MODE_SOURCE) {
             try {
                 $ast     = Parser::parse($content, $tpl);
                 $transc  = Transcompiler::transcompile($ast);
-            } catch(ParseCompileError $e) {
+            } catch (ParseCompileError $e) {
                 $e->rewrite($content);
                 throw $e;
             }
@@ -261,7 +274,7 @@ class STECore {
 
         $this->cur_tpl_dir = $tpldir_b4;
 
-        if($quiet) {
+        if ($quiet) {
             $this->blocks     = $blocks_back;
             $this->blockorder = $blockorder_back;
         } else {
@@ -279,13 +292,15 @@ class STECore {
      * Returns:
      *  true/false.
      */
-    public function evalbool($txt) {
+    public function evalbool($txt)
+    {
         return trim(@(string)$txt) != "";
     }
 
-    public function make_closure($fx) {
+    public function make_closure($fx)
+    {
         $bound_scope = $this->scope;
-        return function() use($bound_scope, $fx) {
+        return function () use ($bound_scope, $fx) {
             $args = func_get_args();
             $ste = $args[0];
 
@@ -297,7 +312,7 @@ class STECore {
                 $result = call_user_func_array($fx, $args);
                 $ste->scope = $prev;
                 return $result;
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 $ste->scope = $prev;
                 throw $e;
             }

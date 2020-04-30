@@ -14,29 +14,31 @@ $ste = new ste\STECore(
 );
 
 # Set STE to a more verbose behavior:
-$ste->mute_runtime_errors = False;
+$ste->mute_runtime_errors = false;
 
 # First, lets define some custom tags.
 
 # <ste:uppercase> will exchange all letters with their uppercase complement
-$ste->register_tag("uppercase",
-    function($ste, $params, $sub)
-    {
+$ste->register_tag(
+    "uppercase",
+    function ($ste, $params, $sub) {
         $text = $sub($ste);       # Get the tags content
         return strtoupper($text); # Return the new text.
     }
 );
 
 # <ste:repeat> will repeat its content n times (<ste:for> could be used too, but i needed more examples :-P )
-$ste->register_tag("repeat",
-    function($ste, $params, $sub)
-    {
+$ste->register_tag(
+    "repeat",
+    function ($ste, $params, $sub) {
         $output = "";
-        if(!is_numeric($params["n"]))
+        if (!is_numeric($params["n"])) {
             throw new ste\RuntimeError("Sorry, but parameter n must be a number...");
+        }
 
-        for($i = 0; $i < $params["n"]; ++$i)
+        for ($i = 0; $i < $params["n"]; ++$i) {
             $output .= $sub($ste);
+        }
 
         return $output;
     }

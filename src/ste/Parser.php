@@ -10,7 +10,8 @@ namespace kch42\ste;
  * The class, where the parser lives in. Can not be constructed manually.
  * Use the static method parse.
  */
-class Parser {
+class Parser
+{
     private $text;
     private $name;
     private $off;
@@ -21,15 +22,17 @@ class Parser {
 
     const ESCAPES_DEFAULT = '$?~{}|\\';
 
-    private function __construct($text, $name) {
+    private function __construct($text, $name)
+    {
         $this->text = $text;
         $this->name = $name;
         $this->off  = 0;
         $this->len  = mb_strlen($text);
     }
 
-    private function next($n = 1) {
-        if($n <= 0) {
+    private function next($n = 1)
+    {
+        if ($n <= 0) {
             throw new \InvalidArgumentException("\$n must be > 0");
         }
         $c = mb_substr($this->text, $this->off, $n);
@@ -37,48 +40,53 @@ class Parser {
         return $c;
     }
 
-    private function eof() {
+    private function eof()
+    {
         return ($this->off == $this->len);
     }
 
-    private function back($n = 1) {
-        if($n <= 0) {
+    private function back($n = 1)
+    {
+        if ($n <= 0) {
             throw new \InvalidArgumentException("\$n must be > 0");
         }
         $this->off = max($this->off - $n, 0);
     }
 
-    private function search_off($needle) {
+    private function search_off($needle)
+    {
         return mb_strpos($this->text, $needle, $this->off);
     }
 
-    private function search_multi($needles) {
+    private function search_multi($needles)
+    {
         $oldoff = $this->off;
 
         $minoff = $this->len;
-        $which = NULL;
+        $which = null;
 
-        foreach($needles as $key => $needle) {
-            if(($off = $this->search_off($needle)) === false) {
+        foreach ($needles as $key => $needle) {
+            if (($off = $this->search_off($needle)) === false) {
                 continue;
             }
 
-            if($off < $minoff) {
+            if ($off < $minoff) {
                 $minoff = $off;
                 $which = $key;
             }
         }
 
-        $this->off = $minoff + (($which === NULL) ? 0 : mb_strlen((string) $needles[$which]));
+        $this->off = $minoff + (($which === null) ? 0 : mb_strlen((string) $needles[$which]));
 
         return array($which, $minoff, mb_substr($this->text, $oldoff, $minoff - $oldoff), $oldoff);
     }
 
-    private function search($needle) {
+    private function search($needle)
+    {
         $oldoff = $this->off;
 
         $off = $this->search_off($needle);
-        if($off === false) {
+        if ($off === false) {
             $this->off = $this->len;
             return array(false, mb_substr($this->text, $oldoff), $oldoff);
         }
@@ -87,10 +95,11 @@ class Parser {
         return array($off, mb_substr($this->text, $oldoff, $off - $oldoff), $oldoff);
     }
 
-    private function take_while($cb) {
+    private function take_while($cb)
+    {
         $s = "";
-        while(($c = $this->next()) !== "") {
-            if(!call_user_func($cb, $c)) {
+        while (($c = $this->next()) !== "") {
+            if (!call_user_func($cb, $c)) {
                 $this->back();
                 return $s;
             }
@@ -99,14 +108,18 @@ class Parser {
         return $s;
     }
 
-    private function skip_ws() {
+    private function skip_ws()
+    {
         $this->take_while("ctype_space");
     }
 
-    private function get_name() {
+    private function get_name()
+    {
         $off = $this->off;
-        $name = $this->take_while(function($c) { return ctype_alnum($c) || ($c == "_"); });
-        if(mb_strlen($name) == 0) {
+        $name = $this->take_while(function ($c) {
+            return ctype_alnum($c) || ($c == "_");
+        });
+        if (mb_strlen($name) == 0) {
             throw new ParseCompileError("Expected a name (alphanumeric chars + '_', at least one char)", $this->name, $off);
         }
         return $name;
@@ -128,7 +141,8 @@ class Parser {
      * Throws:
      *  <ParseCompileError>
      */
-    public static function parse($text, $name) {
+    public static function parse($text, $name)
+    {
         $obj = new self($text, $name);
         $res = $obj->parse_text(
             self::ESCAPES_DEFAULT, /* Escapes */
@@ -137,39 +151,40 @@ class Parser {
         return self::tidyup_ast($res[0]);
     }
 
-    private static function tidyup_ast($ast) {
+    private static function tidyup_ast($ast)
+    {
         $out = array();
 
-        $prevtext = NULL;
+        $prevtext = null;
         $first = true;
 
-        foreach($ast as $node) {
-            if($node instanceof TextNode) {
-                if($prevtext === NULL) {
+        foreach ($ast as $node) {
+            if ($node instanceof TextNode) {
+                if ($prevtext === null) {
                     $prevtext = $node;
                 } else {
                     $prevtext->text .= $node->text;
                 }
             } else {
-                if($prevtext !== NULL) {
-                    if($first) {
+                if ($prevtext !== null) {
+                    if ($first) {
                         $prevtext->text = ltrim($prevtext->text);
                     }
-                    if($prevtext->text != "") {
+                    if ($prevtext->text != "") {
                         $out[] = $prevtext;
                     }
                 }
-                $prevtext = NULL;
+                $prevtext = null;
                 $first = false;
 
-                if($node instanceof TagNode) {
+                if ($node instanceof TagNode) {
                     $node->sub = self::tidyup_ast($node->sub);
-                    foreach($node->params as $k => &$v) {
+                    foreach ($node->params as $k => &$v) {
                         $v = self::tidyup_ast($v);
                     }
                     unset($v);
                 } else { /* VariableNode */
-                    foreach($node->arrayfields as &$v) {
+                    foreach ($node->arrayfields as &$v) {
                         $v = self::tidyup_ast($v);
                     }
                     unset($v);
@@ -179,11 +194,11 @@ class Parser {
             }
         }
 
-        if($prevtext !== NULL) {
-            if($first) {
+        if ($prevtext !== null) {
+            if ($first) {
                 $prevtext->text = ltrim($prevtext->text);
             }
-            if($prevtext->text != "") {
+            if ($prevtext->text != "") {
                 $out[] = $prevtext;
             }
         }
@@ -191,7 +206,8 @@ class Parser {
         return $out;
     }
 
-    private function parse_text($escapes, $flags, $breakon = NULL, $separator = NULL, $nullaction = NULL, $opentag = NULL, $openedat = -1) {
+    private function parse_text($escapes, $flags, $breakon = null, $separator = null, $nullaction = null, $opentag = null, $openedat = -1)
+    {
         $elems = array();
         $astlist = array();
 
@@ -203,30 +219,30 @@ class Parser {
             "var" => '$',
         );
 
-        if($flags & self::PARSE_TAG) {
+        if ($flags & self::PARSE_TAG) {
             $needles["tagopen"] = '<ste:';
             $needles["closetagopen"] = '</ste:';
         }
-        if($flags & self::PARSE_SHORT) {
+        if ($flags & self::PARSE_SHORT) {
             $needles["shortifopen"] = '?{';
             $needles["shortcompopen"] = '~{';
         }
 
-        if($separator !== NULL) {
+        if ($separator !== null) {
             $needles["sep"] = $separator;
         }
-        if($breakon !== NULL) {
+        if ($breakon !== null) {
             $needles["break"] = $breakon;
         }
 
-        for(;;) {
+        for (;;) {
             list($which, $off, $before, $offbefore) = $this->search_multi($needles);
 
             $astlist[] = new TextNode($this->name, $offbefore, $before);
 
-            switch($which) {
-            case NULL:
-                if($nullaction === NULL) {
+            switch ($which) {
+            case null:
+                if ($nullaction === null) {
                     $elems[] = $astlist;
                     return $elems;
                 } else {
@@ -235,14 +251,14 @@ class Parser {
                 break;
             case "commentopen":
                 list($off, $before, $offbefore) = $this->search("</ste:comment>");
-                if($off === false) {
+                if ($off === false) {
                     throw new ParseCompileError("ste:comment was not closed", $this->name, $offbefore);
                 }
                 break;
             case "rawopen":
                 $off_start = $off;
                 list($off, $before, $offbefore) = $this->search("</ste:rawtext>");
-                if($off === false) {
+                if ($off === false) {
                     throw new ParseCompileError("ste:rawtext was not closed", $this->name, $off_start);
                 }
                 $astlist[] = new TextNode($this->name, $off_start, $before);
@@ -255,14 +271,14 @@ class Parser {
                 $name = $this->get_name();
                 $this->skip_ws();
                 $off = $this->off;
-                if($this->next() != ">") {
+                if ($this->next() != ">") {
                     throw new ParseCompileError("Expected '>' in closing ste-Tag", $this->name, $off);
                 }
 
-                if($opentag === NULL) {
+                if ($opentag === null) {
                     throw new ParseCompileError("Found closing ste:$name tag, but no tag was opened", $this->name, $off_start);
                 }
-                if($opentag != $name) {
+                if ($opentag != $name) {
                     throw new ParseCompileError("Open ste:$opentag was not closed", $this->name, $openedat);
                 }
 
@@ -270,7 +286,7 @@ class Parser {
                 return $elems;
             case "escape":
                 $c = $this->next();
-                if(mb_strpos($escapes, $c) !== false) {
+                if (mb_strpos($escapes, $c) !== false) {
                     $astlist[] = new TextNode($this->name, $off, $c);
                 } else {
                     $astlist[] = new TextNode($this->name, $off, '\\');
@@ -279,7 +295,7 @@ class Parser {
                 break;
             case "shortifopen":
                 $shortelems = $this->parse_short("?{", $off);
-                if(count($shortelems) != 3) {
+                if (count($shortelems) != 3) {
                     throw new ParseCompileError("A short if tag must have the form ?{..|..|..}", $this->name, $off);
                 }
 
@@ -302,7 +318,7 @@ class Parser {
                 break;
             case "shortcompopen":
                 $shortelems = $this->parse_short("~{", $off);
-                if(count($shortelems) != 3) {
+                if (count($shortelems) != 3) {
                     throw new ParseCompileError("A short comparasion tag must have the form ~{..|..|..}", $this->name, $off);
                 }
 
@@ -336,7 +352,8 @@ class Parser {
         return $elems;
     }
 
-    private function parse_short($shortname, $openedat) {
+    private function parse_short($shortname, $openedat)
+    {
         $tplname = $this->name;
 
         return $this->parse_text(
@@ -344,43 +361,45 @@ class Parser {
             self::PARSE_SHORT | self::PARSE_TAG, /* Flags */
             '}', /* Break on */
             '|', /* Separator */
-            function() use ($shortname, $tplname, $openedat) { /* NULL action */
+            function () use ($shortname, $tplname, $openedat) { /* NULL action */
                 throw new ParseCompileError("Unclosed $shortname", $tplname, $openedat);
             },
-            NULL, /* Open tag */
+            null, /* Open tag */
             $openedat /* Opened at */
         );
     }
 
-    private function parse_var($openedat, $curly) {
+    private function parse_var($openedat, $curly)
+    {
         $varnode = new VariableNode($this->name, $openedat);
         $varnode->name = $this->get_name();
-        if(!$this->eof()) {
+        if (!$this->eof()) {
             $varnode->arrayfields = $this->parse_array();
         }
 
-        if(($curly) && ($this->next() != "}")) {
+        if (($curly) && ($this->next() != "}")) {
             throw new ParseCompileError("Unclosed '\${'", $this->name, $openedat);
         }
         return $varnode;
     }
 
-    private function parse_array() {
+    private function parse_array()
+    {
         $tplname = $this->name;
 
         $arrayfields = array();
 
-        while($this->next() == "[") {
+        while ($this->next() == "[") {
             $openedat = $this->off - 1;
             $res = $this->parse_text(
                 self::ESCAPES_DEFAULT, /* Escapes */
                 0, /* Flags */
                 ']', /* Break on */
-                NULL, /* Separator */
-                function() use ($tplname, $openedat) { /* NULL action */
+                null, /* Separator */
+                function () use ($tplname, $openedat) { /* NULL action */
                     throw new ParseCompileError("Unclosed array access '[...]'", $tplname, $openedat);
                 },
-                NULL, /* Open tag */
+                null, /* Open tag */
                 $openedat /* Opened at */
             );
             $arrayfields[] = $res[0];
@@ -390,7 +409,8 @@ class Parser {
         return $arrayfields;
     }
 
-    private function parse_tag($openedat) {
+    private function parse_tag($openedat)
+    {
         $tplname = $this->name;
 
         $this->skip_ws();
@@ -399,13 +419,13 @@ class Parser {
         $tag->params = array();
         $tag->sub = array();
 
-        for(;;) {
+        for (;;) {
             $this->skip_ws();
 
-            switch($this->next()) {
+            switch ($this->next()) {
             case '/': /* Self-closing tag */
                 $this->skip_ws();
-                if($this->next() != '>') {
+                if ($this->next() != '>') {
                     throw new ParseCompileError("Unclosed opening <ste: tag (expected >)", $this->name, $openedat);
                 }
 
@@ -414,9 +434,9 @@ class Parser {
                 $sub = $this->parse_text(
                     self::ESCAPES_DEFAULT, /* Escapes */
                     self::PARSE_SHORT | self::PARSE_TAG, /* Flags */
-                    NULL, /* Break on */
-                    NULL, /* Separator */
-                    function() use ($name, $tplname, $openedat) { /* NULL action */
+                    null, /* Break on */
+                    null, /* Separator */
+                    function () use ($name, $tplname, $openedat) { /* NULL action */
                         throw new ParseCompileError("Open ste:$name tag was not closed", $tplname, $openedat);
                     },
                     $tag->name, /* Open tag */
@@ -430,13 +450,13 @@ class Parser {
                 $param = $this->get_name();
 
                 $this->skip_ws();
-                if($this->next() != '=') {
+                if ($this->next() != '=') {
                     throw new ParseCompileError("Expected '=' after tag parameter name", $this->name, $this->off - 1);
                 }
                 $this->skip_ws();
 
                 $quot = $this->next();
-                if(($quot != '"') && ($quot != "'")) {
+                if (($quot != '"') && ($quot != "'")) {
                     throw new ParseCompileError("Expected ' or \" after '=' of tag parameter", $this->name, $this->off - 1);
                 }
 
@@ -445,11 +465,11 @@ class Parser {
                     self::ESCAPES_DEFAULT . $quot, /* Escapes */
                     0, /* Flags */
                     $quot, /* Break on */
-                    NULL, /* Separator */
-                    function() use ($quot, $tplname, $off) { /* NULL action */
+                    null, /* Separator */
+                    function () use ($quot, $tplname, $off) { /* NULL action */
                         throw new ParseCompileError("Open tag parameter value ($quot) was not closed", $tplname, $off);
                     },
-                    NULL, /* Open tag */
+                    null, /* Open tag */
                     $off /* Opened at */
                 );
                 $tag->params[$param] = $paramval[0];

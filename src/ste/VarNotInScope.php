@@ -2,4 +2,6 @@
 
 namespace kch42\ste;
 
-class VarNotInScope extends \Exception {}
+class VarNotInScope extends \Exception
+{
+}

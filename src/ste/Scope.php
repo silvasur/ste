@@ -2,23 +2,25 @@
 
 namespace kch42\ste;
 
-class Scope implements \ArrayAccess {
-    private $parent = NULL;
+class Scope implements \ArrayAccess
+{
+    private $parent = null;
     public $vars = array();
 
-    private static function parse_name($name) {
+    private static function parse_name($name)
+    {
         $remain = $name;
         $fields = array();
 
-        while($remain !== "") {
+        while ($remain !== "") {
             $br_open = strpos($remain, '[');
-            if($br_open === false) {
+            if ($br_open === false) {
                 $fields[] = $remain;
                 break;
             }
 
             $br_close = strpos($remain, ']', $br_open);
-            if($br_close === false) {
+            if ($br_close === false) {
                 throw new RuntimeError("Invalid varname \"$name\". Missing closing \"]\".");
             }
 
@@ -27,11 +29,11 @@ class Scope implements \ArrayAccess {
             $field = substr($remain, $br_open+1, $br_close-$br_open-1);
             $more = substr($remain, $br_close+1);
 
-            if(strpos($field, '[') !== false) {
+            if (strpos($field, '[') !== false) {
                 throw new RuntimeError("A variable field must not contain a '[' character.");
             }
 
-            if((strlen($more) > 0) && ($more[0] !== '[')) {
+            if ((strlen($more) > 0) && ($more[0] !== '[')) {
                 // TODO: better error message, not very non-programmer friendly...
                 throw new RuntimeError("A variable name must be of format name('[' name ']')*.");
             }
@@ -42,13 +44,14 @@ class Scope implements \ArrayAccess {
         return $fields;
     }
 
-    private function &get_topvar_reference($name, $localonly) {
-        if(array_key_exists($name, $this->vars)) {
+    private function &get_topvar_reference($name, $localonly)
+    {
+        if (array_key_exists($name, $this->vars)) {
             $ref = &$this->vars[$name];
             return $ref;
         }
 
-        if((!$localonly) && ($this->parent !== NULL)) {
+        if ((!$localonly) && ($this->parent !== null)) {
             $ref = &$this->parent->get_topvar_reference($name, $localonly);
             return $ref;
         }
@@ -56,21 +59,22 @@ class Scope implements \ArrayAccess {
         throw new VarNotInScope();
     }
 
-    public function &get_var_reference($name, $create_if_not_exist, $localonly=false) {
-        $nullref = NULL;
+    public function &get_var_reference($name, $create_if_not_exist, $localonly=false)
+    {
+        $nullref = null;
 
         $fields = self::parse_name($name);
-        if(count($fields) == 0) {
+        if (count($fields) == 0) {
             return $nullref; // TODO: or should we throw an exception here?
         }
 
         $first = $fields[0];
 
-        $ref = NULL;
+        $ref = null;
         try {
             $ref = &$this->get_topvar_reference($first, $localonly);
-        } catch(VarNotInScope $e) {
-            if($create_if_not_exist) {
+        } catch (VarNotInScope $e) {
+            if ($create_if_not_exist) {
                 $this->vars[$first] = (count($fields) > 0) ? array() : "";
                 $ref = &$this->vars[$first];
             } else {
@@ -78,19 +82,19 @@ class Scope implements \ArrayAccess {
             }
         }
 
-        for($i = 1; $i < count($fields); $i++) {
+        for ($i = 1; $i < count($fields); $i++) {
             $field = $fields[$i];
 
-            if(!is_array($ref)) {
+            if (!is_array($ref)) {
                 return $nullref;
             }
 
-            if(!array_key_exists($field, $ref)) {
-                if(!$create_if_not_exist) {
+            if (!array_key_exists($field, $ref)) {
+                if (!$create_if_not_exist) {
                     return $nullref;
                 }
 
-                if($i < count($fields) - 1) {
+                if ($i < count($fields) - 1) {
                     $ref[$field] = array();
                 } else {
                     $ref[$field] = "";
@@ -103,22 +107,26 @@ class Scope implements \ArrayAccess {
         return $ref;
     }
 
-    public function set_var_by_name($name, $val) {
+    public function set_var_by_name($name, $val)
+    {
         $ref = &$this->get_var_reference($name, true);
         $ref = $val;
     }
 
-    public function set_local_var($name, $val) {
+    public function set_local_var($name, $val)
+    {
         $ref = &$this->get_var_reference($name, true, true);
         $ref = $val;
     }
 
-    public function get_var_by_name($name) {
+    public function get_var_by_name($name)
+    {
         $ref = $this->get_var_reference($name, false);
-        return $ref === NULL ? "" : $ref;
+        return $ref === null ? "" : $ref;
     }
 
-    public function new_subscope() {
+    public function new_subscope()
+    {
         $o = new self();
         $o->parent = $this;
         return $o;
@@ -126,21 +134,25 @@ class Scope implements \ArrayAccess {
 
     /* implementing ArrayAccess */
 
-    public function offsetSet($offset, $value) {
+    public function offsetSet($offset, $value)
+    {
         $this->set_var_by_name($offset, $value);
     }
-    public function offsetGet($offset) {
+    public function offsetGet($offset)
+    {
         return $this->get_var_by_name($offset);
     }
-    public function offsetExists($offset) {
+    public function offsetExists($offset)
+    {
         try {
             $this->get_topvar_reference($offset);
             return true;
-        } catch(VarNotInScope $e) {
+        } catch (VarNotInScope $e) {
             return false;
         }
     }
-    public function offsetUnset($offset) {
+    public function offsetUnset($offset)
+    {
         unset($this->vars[$offset]);
     }
 }

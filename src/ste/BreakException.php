@@ -2,4 +2,6 @@
 
 namespace kch42\ste;
 
-class BreakException extends \Exception { }
+class BreakException extends \Exception
+{
+}

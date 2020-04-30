@@ -38,22 +38,52 @@ require_once(__DIR__ . "/src/ste/STECore.php");
 
 /* Providing "proxy classes", so old applications can continue using the ste namespace */
 
-class ASTNode extends \kch42\ste\ASTNode {}
-class TagNode extends \kch42\ste\TagNode {}
-class TextNode extends \kch42\ste\TextNode {}
-class VariableNode extends \kch42\ste\VariableNode {}
-class ParseCompileError extends \kch42\ste\ParseCompileError {}
-class RuntimeError extends \kch42\ste\RuntimeError {}
-class FatalRuntimeError extends \kch42\ste\FatalRuntimeError {}
-class StorageAccessFailure extends \kch42\ste\StorageAccessFailure {}
-class CantLoadTemplate extends \kch42\ste\CantLoadTemplate {}
-class CantSaveTemplate extends \kch42\ste\CantSaveTemplate {}
-class FilesystemStorageAccess extends \kch42\ste\FilesystemStorageAccess {}
-class Parser extends \kch42\ste\Parser {}
-class Transcompiler extends \kch42\ste\Transcompiler {}
-class STECore extends \kch42\ste\STECore {}
+class ASTNode extends \kch42\ste\ASTNode
+{
+}
+class TagNode extends \kch42\ste\TagNode
+{
+}
+class TextNode extends \kch42\ste\TextNode
+{
+}
+class VariableNode extends \kch42\ste\VariableNode
+{
+}
+class ParseCompileError extends \kch42\ste\ParseCompileError
+{
+}
+class RuntimeError extends \kch42\ste\RuntimeError
+{
+}
+class FatalRuntimeError extends \kch42\ste\FatalRuntimeError
+{
+}
+class StorageAccessFailure extends \kch42\ste\StorageAccessFailure
+{
+}
+class CantLoadTemplate extends \kch42\ste\CantLoadTemplate
+{
+}
+class CantSaveTemplate extends \kch42\ste\CantSaveTemplate
+{
+}
+class FilesystemStorageAccess extends \kch42\ste\FilesystemStorageAccess
+{
+}
+class Parser extends \kch42\ste\Parser
+{
+}
+class Transcompiler extends \kch42\ste\Transcompiler
+{
+}
+class STECore extends \kch42\ste\STECore
+{
+}
 
-interface StorageAccess extends \kch42\ste\StorageAccess {}
+interface StorageAccess extends \kch42\ste\StorageAccess
+{
+}
 
 /* We also put the storage mode constants here (they were outside of the interface before for some reason I can't remember...) */
 

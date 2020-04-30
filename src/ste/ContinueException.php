@@ -2,4 +2,6 @@
 
 namespace kch42\ste;
 
-class ContinueException extends \Exception { }
+class ContinueException extends \Exception
+{
+}
