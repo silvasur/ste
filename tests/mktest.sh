@@ -6,8 +6,11 @@ touch "$1/want"
 
 echo '<?php
 
-function test_func($ste) {
-	
+use kch42\ste\STECore;
+
+function test_func(STECore $ste)
+{
+
 }' > "$1/code.php"
 
 echo 'have
