@@ -151,9 +151,9 @@ class Transcompiler
             $code .= $pre . "switch(trim(" . $val . "))\n{\n\t";
             $code .= implode("", array_map(
                 function ($op) use ($a,$b) {
-                        list($op_stetpl, $op_php) = $op;
-                        return "case '$op_stetpl':\n\t\$outputstack[\$outputstack_i] .= (($a) $op_php ($b)) ? 'yes' : '';\n\tbreak;\n\t";
-                    },
+                    list($op_stetpl, $op_php) = $op;
+                    return "case '$op_stetpl':\n\t\$outputstack[\$outputstack_i] .= (($a) $op_php ($b)) ? 'yes' : '';\n\tbreak;\n\t";
+                },
                 $operators
             ));
             $code .= "default: throw new \\kch42\\ste\\RuntimeError('Unknown operator in <ste:cmp>.');\n}\n";
