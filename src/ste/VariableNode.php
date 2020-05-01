@@ -22,7 +22,7 @@ class VariableNode extends ASTNode
                 && ($af[0] instanceof TextNode)
                 && is_numeric($af[0]->text)
             ) {
-                $varaccess .= '[' . $af->text . ']';
+                $varaccess .= '[' . $af[0]->text . ']';
             } else {
                 $varaccess .= '[' . implode(".", array_map(function ($node) {
                     if ($node instanceof TextNode) {
