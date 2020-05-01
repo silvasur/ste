@@ -1,20 +1,25 @@
 <?php
 
-// File: Parser.php
-
-// Namespace: kch42\ste
 namespace kch42\ste;
 
-/*
- * Class: Parser
+use LogicException;
+
+/**
  * The class, where the parser lives in. Can not be constructed manually.
  * Use the static method parse.
  */
 class Parser
 {
+    /** @var string */
     private $text;
+
+    /** @var string */
     private $name;
+
+    /** @var int */
     private $off;
+
+    /** @var int */
     private $len;
 
     const PARSE_SHORT = 1;
@@ -22,6 +27,10 @@ class Parser
 
     const ESCAPES_DEFAULT = '$?~{}|\\';
 
+    /**
+     * @param string $text
+     * @param string $name
+     */
     private function __construct($text, $name)
     {
         $this->text = $text;
@@ -30,6 +39,10 @@ class Parser
         $this->len  = mb_strlen($text);
     }
 
+    /**
+     * @param int $n
+     * @return string
+     */
     private function next($n = 1)
     {
         if ($n <= 0) {
@@ -40,11 +53,17 @@ class Parser
         return $c;
     }
 
+    /**
+     * @return bool
+     */
     private function eof()
     {
         return ($this->off == $this->len);
     }
 
+    /**
+     * @param int $n
+     */
     private function back($n = 1)
     {
         if ($n <= 0) {
@@ -53,11 +72,19 @@ class Parser
         $this->off = max($this->off - $n, 0);
     }
 
+    /**
+     * @param string $needle
+     * @return false|int
+     */
     private function search_off($needle)
     {
         return mb_strpos($this->text, $needle, $this->off);
     }
 
+    /**
+     * @param string[] $needles
+     * @return array 4-tuple of found key, offset, text preceding offset, old offset
+     */
     private function search_multi($needles)
     {
         $oldoff = $this->off;
@@ -81,6 +108,10 @@ class Parser
         return array($which, $minoff, mb_substr($this->text, $oldoff, $minoff - $oldoff), $oldoff);
     }
 
+    /**
+     * @param string $needle
+     * @return array 3-tuple of offset (or false), text preceding offset, old offset
+     */
     private function search($needle)
     {
         $oldoff = $this->off;
@@ -95,7 +126,11 @@ class Parser
         return array($off, mb_substr($this->text, $oldoff, $off - $oldoff), $oldoff);
     }
 
-    private function take_while($cb)
+    /**
+     * @param callable $cb
+     * @return string
+     */
+    private function take_while(callable $cb)
     {
         $s = "";
         while (($c = $this->next()) !== "") {
@@ -113,6 +148,10 @@ class Parser
         $this->take_while("ctype_space");
     }
 
+    /**
+     * @return string
+     * @throws ParseCompileError
+     */
     private function get_name()
     {
         $off = $this->off;
@@ -125,21 +164,16 @@ class Parser
         return $name;
     }
 
-    /*
-     * Function: parse
+    /**
      * Parses the input into an AST.
      *
-     * You only need this function, if you want to manually trnascompile a template.
+     * You only need this function, if you want to manually compile a template.
      *
-     * Parameters:
-     *  $text - The input code.
-     *  $name - The name of the template.
+     * @param string $text The input code.
+     * @param string $name The name of the template.
      *
-     * Returns:
-     *  An array of <ASTNode> objects.
-     *
-     * Throws:
-     *  <ParseCompileError>
+     * @return ASTNode[]
+     * @throws ParseCompileError
      */
     public static function parse($text, $name)
     {
@@ -151,10 +185,15 @@ class Parser
         return self::tidyup_ast($res[0]);
     }
 
+    /**
+     * @param ASTNode[] $ast
+     * @return ASTNode[]
+     */
     private static function tidyup_ast($ast)
     {
         $out = array();
 
+        /** @var TextNode|null $prevtext */
         $prevtext = null;
         $first = true;
 
@@ -206,6 +245,17 @@ class Parser
         return $out;
     }
 
+    /**
+     * @param string $escapes
+     * @param int $flags
+     * @param string|null $breakon
+     * @param string|null $separator
+     * @param null $nullaction
+     * @param string|null $opentag
+     * @param int $openedat
+     * @return ASTNode[][]
+     * @throws ParseCompileError
+     */
     private function parse_text($escapes, $flags, $breakon = null, $separator = null, $nullaction = null, $opentag = null, $openedat = -1)
     {
         $elems = array();
@@ -250,14 +300,14 @@ class Parser
                 }
                 break;
             case "commentopen":
-                list($off, $before, $offbefore) = $this->search("</ste:comment>");
+                list($off, , $offbefore) = $this->search("</ste:comment>");
                 if ($off === false) {
                     throw new ParseCompileError("ste:comment was not closed", $this->name, $offbefore);
                 }
                 break;
             case "rawopen":
                 $off_start = $off;
-                list($off, $before, $offbefore) = $this->search("</ste:rawtext>");
+                list($off, $before, ) = $this->search("</ste:rawtext>");
                 if ($off === false) {
                     throw new ParseCompileError("ste:rawtext was not closed", $this->name, $off_start);
                 }
@@ -352,6 +402,12 @@ class Parser
         return $elems;
     }
 
+    /**
+     * @param string $shortname
+     * @param int $openedat
+     * @return ASTNode[][]
+     * @throws ParseCompileError
+     */
     private function parse_short($shortname, $openedat)
     {
         $tplname = $this->name;
@@ -369,6 +425,12 @@ class Parser
         );
     }
 
+    /**
+     * @param int $openedat
+     * @param bool $curly
+     * @return VariableNode
+     * @throws ParseCompileError
+     */
     private function parse_var($openedat, $curly)
     {
         $varnode = new VariableNode($this->name, $openedat);
@@ -377,12 +439,16 @@ class Parser
             $varnode->arrayfields = $this->parse_array();
         }
 
-        if (($curly) && ($this->next() != "}")) {
+        if ($curly && ($this->next() != "}")) {
             throw new ParseCompileError("Unclosed '\${'", $this->name, $openedat);
         }
         return $varnode;
     }
 
+    /**
+     * @return ASTNode[]
+     * @throws ParseCompileError
+     */
     private function parse_array()
     {
         $tplname = $this->name;
@@ -409,6 +475,11 @@ class Parser
         return $arrayfields;
     }
 
+    /**
+     * @param int $openedat
+     * @return TagNode
+     * @throws ParseCompileError
+     */
     private function parse_tag($openedat)
     {
         $tplname = $this->name;
@@ -475,5 +546,8 @@ class Parser
                 $tag->params[$param] = $paramval[0];
             }
         }
+
+        // Help PhpStorm detect that we shouldn't be here
+        throw new LogicException("Somehow we left the infinite loop?");
     }
 }

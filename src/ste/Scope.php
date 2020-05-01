@@ -4,9 +4,17 @@ namespace kch42\ste;
 
 class Scope implements \ArrayAccess
 {
+    /** @var self|null */
     private $parent = null;
+
+    /** @var array */
     public $vars = array();
 
+    /**
+     * @param string $name
+     * @return string[]
+     * @throws RuntimeError
+     */
     private static function parse_name($name)
     {
         $remain = $name;
@@ -44,6 +52,12 @@ class Scope implements \ArrayAccess
         return $fields;
     }
 
+    /**
+     * @param string $name
+     * @param bool $localonly
+     * @return mixed A reference to the resolved variable
+     * @throws VarNotInScope
+     */
     private function &get_topvar_reference($name, $localonly)
     {
         if (array_key_exists($name, $this->vars)) {
@@ -59,6 +73,13 @@ class Scope implements \ArrayAccess
         throw new VarNotInScope();
     }
 
+    /**
+     * @param string $name
+     * @param bool $create_if_not_exist
+     * @param bool $localonly
+     * @return mixed A reference to the resolved variable
+     * @throws RuntimeError
+     */
     public function &get_var_reference($name, $create_if_not_exist, $localonly=false)
     {
         $nullref = null;
@@ -107,24 +128,42 @@ class Scope implements \ArrayAccess
         return $ref;
     }
 
+    /**
+     * @param string $name
+     * @param mixed $val
+     * @throws RuntimeError
+     */
     public function set_var_by_name($name, $val)
     {
         $ref = &$this->get_var_reference($name, true);
         $ref = $val;
     }
 
+    /**
+     * @param string $name
+     * @param mixed $val
+     * @throws RuntimeError
+     */
     public function set_local_var($name, $val)
     {
         $ref = &$this->get_var_reference($name, true, true);
         $ref = $val;
     }
 
+    /**
+     * @param string $name
+     * @return mixed Returns an empty string, if not found or unset
+     * @throws RuntimeError
+     */
     public function get_var_by_name($name)
     {
         $ref = $this->get_var_reference($name, false);
         return $ref === null ? "" : $ref;
     }
 
+    /**
+     * @return self
+     */
     public function new_subscope()
     {
         $o = new self();

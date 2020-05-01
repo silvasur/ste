@@ -1,13 +1,9 @@
 <?php
 
-// File: Transcompiler.php
-
-// Namespace: kch42\ste
 namespace kch42\ste;
 
-/*
- * Class: Transcompiler
- * Contains the STE transcompiler. You'll only need this, if you want to manually transcompile a STE template.
+/**
+ * Contains the STE compiler. You'll only need this, if you want to manually compile a STE template.
  */
 class Transcompiler
 {
@@ -18,33 +14,44 @@ class Transcompiler
         return $typ . '_' . str_replace('.', '_', uniqid('', true));
     }
 
+    private static function mark_builtin_callable(callable $c)
+    {
+        return $c;
+    }
+
     public static function init_builtins()
     {
         if (self::$builtins !== null) {
             return;
         }
 
+        /** @var callable[] builtins */
         self::$builtins = array(
-            "if" => array("\\kch42\\ste\\Transcompiler", "builtin_if"),
-            "cmp" => array("\\kch42\\ste\\Transcompiler", "builtin_cmp"),
-            "not" => array("\\kch42\\ste\\Transcompiler", "builtin_not"),
-            "even" => array("\\kch42\\ste\\Transcompiler", "builtin_even"),
-            "for" => array("\\kch42\\ste\\Transcompiler", "builtin_for"),
-            "foreach" => array("\\kch42\\ste\\Transcompiler", "builtin_foreach"),
-            "infloop" => array("\\kch42\\ste\\Transcompiler", "builtin_infloop"),
-            "break" => array("\\kch42\\ste\\Transcompiler", "builtin_break"),
-            "continue" => array("\\kch42\\ste\\Transcompiler", "builtin_continue"),
-            "block" => array("\\kch42\\ste\\Transcompiler", "builtin_block"),
-            "load" => array("\\kch42\\ste\\Transcompiler", "builtin_load"),
-            "mktag" => array("\\kch42\\ste\\Transcompiler", "builtin_mktag"),
-            "tagcontent" => array("\\kch42\\ste\\Transcompiler", "builtin_tagcontent"),
-            "set" => array("\\kch42\\ste\\Transcompiler", "builtin_set"),
-            "setlocal" => array("\\kch42\\ste\\Transcompiler", "builtin_setlocal"),
-            "get" => array("\\kch42\\ste\\Transcompiler", "builtin_get"),
-            "calc" => array("\\kch42\\ste\\Transcompiler", "builtin_calc")
+            "if" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_if")),
+            "cmp" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_cmp")),
+            "not" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_not")),
+            "even" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_even")),
+            "for" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_for")),
+            "foreach" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_foreach")),
+            "infloop" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_infloop")),
+            "break" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_break")),
+            "continue" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_continue")),
+            "block" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_block")),
+            "load" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_load")),
+            "mktag" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_mktag")),
+            "tagcontent" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_tagcontent")),
+            "set" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_set")),
+            "setlocal" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_setlocal")),
+            "get" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_get")),
+            "calc" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_calc"))
         );
     }
 
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_if($ast)
     {
         $output = "";
@@ -53,9 +60,9 @@ class Transcompiler
         $else = null;
 
         foreach ($ast->sub as $node) {
-            if (($node instanceof TagNode) and ($node->name == "then")) {
+            if (($node instanceof TagNode) && $node->name == "then") {
                 $then = $node->sub;
-            } elseif (($node instanceof TagNode) and ($node->name == "else")) {
+            } elseif (($node instanceof TagNode) && $node->name == "else") {
                 $else = $node->sub;
             } else {
                 $condition[] = $node;
@@ -78,6 +85,12 @@ class Transcompiler
         }
         return $output;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_cmp($ast)
     {
         $operators = array(
@@ -116,7 +129,10 @@ class Transcompiler
         if (!isset($ast->params["op"])) {
             throw new ParseCompileError("self::Transcompile error: op not given in <ste:cmp>.", $ast->tpl, $ast->offset);
         }
-        if ((count($ast->params["op"]) == 1) and ($ast->params["op"][0] instanceof TextNode)) {
+        if (
+            count($ast->params["op"]) == 1
+            && ($ast->params["op"][0] instanceof TextNode)
+        ) {
             /* Operator is known at compile time, this saves *a lot* of output code! */
             $op = trim($ast->params["op"][0]->text);
             $op_php = null;
@@ -144,6 +160,12 @@ class Transcompiler
         }
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_not($ast)
     {
         $code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
@@ -151,6 +173,12 @@ class Transcompiler
         $code .= "\$outputstack_i--;\n\$outputstack[\$outputstack_i] .= (!\$ste->evalbool(array_pop(\$outputstack))) ? 'yes' : '';\n";
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_even($ast)
     {
         $code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
@@ -158,6 +186,12 @@ class Transcompiler
         $code .= "\$outputstack_i--;\n\$tmp_even = array_pop(\$outputstack);\n\$outputstack[\$outputstack_i] .= (is_numeric(\$tmp_even) and (\$tmp_even % 2 == 0)) ? 'yes' : '';\n";
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_for($ast)
     {
         $code = "";
@@ -179,7 +213,10 @@ class Transcompiler
         $step = null; /* i.e. not known at compilation time */
         if (empty($ast->params["step"])) {
             $step = 1;
-        } elseif ((count($ast->params["step"]) == 1) and ($ast->params["step"][0] instanceof TextNode)) {
+        } elseif (
+            count($ast->params["step"]) == 1
+            && ($ast->params["step"][0] instanceof TextNode)
+        ) {
             $step = $ast->params["step"][0]->text + 0;
         } else {
             list($val, $pre) = self::_transcompile($ast->params["step"], true);
@@ -216,6 +253,12 @@ class Transcompiler
 
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_foreach($ast)
     {
         $loopname = self::tempvar("foreachloop");
@@ -282,18 +325,40 @@ class Transcompiler
 
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_infloop($ast)
     {
         return "while(true)\n{\n" . self::indent_code(self::loopbody(self::indent_code(self::_transcompile($ast->sub)))) . "\n}\n";
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     */
     private static function builtin_break($ast)
     {
         return "throw new \\kch42\\ste\\BreakException();\n";
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     */
     private static function builtin_continue($ast)
     {
         return "throw new \\kch42\\ste\\ContinueException();\n";
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_block($ast)
     {
         if (empty($ast->params["name"])) {
@@ -315,6 +380,12 @@ class Transcompiler
 
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_load($ast)
     {
         if (empty($ast->params["name"])) {
@@ -325,6 +396,12 @@ class Transcompiler
         $code .= "\$outputstack[\$outputstack_i] .= \$ste->load(" . $val . ");\n";
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_mktag($ast)
     {
         $code = "";
@@ -356,10 +433,21 @@ class Transcompiler
 
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     */
     private static function builtin_tagcontent($ast)
     {
         return "\$outputstack[\$outputstack_i] .= \$sub(\$ste);";
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_set($ast)
     {
         if (empty($ast->params["var"])) {
@@ -376,6 +464,12 @@ class Transcompiler
 
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_setlocal($ast)
     {
         if (empty($ast->params["var"])) {
@@ -392,6 +486,12 @@ class Transcompiler
 
         return $code;
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_get($ast)
     {
         if (empty($ast->params["var"])) {
@@ -401,6 +501,12 @@ class Transcompiler
         list($val, $pre) = self::_transcompile($ast->params["var"], true);
         return "$pre\$outputstack[\$outputstack_i] .= \$ste->get_var_by_name(" . $val . ");";
     }
+
+    /**
+     * @param TagNode $ast
+     * @return string
+     * @throws ParseCompileError
+     */
     private static function builtin_calc($ast)
     {
         $code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
@@ -425,6 +531,12 @@ class Transcompiler
         return "try\n{\n" . self::indent_code($code) . "\n}\ncatch(\\kch42\\ste\\BreakException \$e) { break; }\ncatch(\\kch42\\ste\\ContinueException \$e) { continue; }\n";
     }
 
+    /**
+     * @param ASTNode[] $ast
+     * @param bool $avoid_outputstack
+     * @return array|string
+     * @throws ParseCompileError
+     */
     private static function _transcompile($ast, $avoid_outputstack = false)
     { /* The real self::transcompile function, does not add boilerplate code. */
         $code = "";
@@ -477,16 +589,15 @@ class Transcompiler
         return $code;
     }
 
-    /*
-     * Function: transcompile
-     * Transcompiles an abstract syntax tree to PHP.
-     * You only need this function, if you want to manually transcompile a template.
+    /**
+     * Compiles an abstract syntax tree to PHP.
+     * You only need this function, if you want to manually compile a template.
      *
-     * Parameters:
-     *  $ast - The abstract syntax tree to transcompile.
+     * @param ASTNode[] $ast The abstract syntax tree to compile.
      *
-     * Returns:
-     *  PHP code. The PHP code is an anonymous function expecting a <STECore> instance as its parameter and returns a string (everything that was not pached into a section).
+     * @return string PHP code. The PHP code is an anonymous function expecting an {@see STECore} instance as its
+     *                parameter and returns a string (everything that was not packed into a section).
+     * @throws ParseCompileError
      */
     public static function transcompile($ast)
     { /* self::Transcompile and add some boilerplate code. */

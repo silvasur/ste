@@ -9,7 +9,7 @@ use \kch42\ste;
 $ste = new ste\STECore(
     new ste\FilesystemStorageAccess(                # The STECore needs a StorageAccess implementation, we are using the FilesystemStorageAccess, which comes with STE.
         dirname(__FILE__) . "/templates/src",    # FilesystemStorageAccess needs a directory, where the Templates are...
-        dirname(__FILE__) . "/templates/transc"  # ...and a directory for the transcompiled templates (write permissions needed).
+        dirname(__FILE__) . "/templates/transc"  # ...and a directory for the compiled templates (write permissions needed).
     )
 );
 

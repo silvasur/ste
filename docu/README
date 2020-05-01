@@ -1,4 +1,3 @@
-Run ../mkdoku.sh to generate the documentation of the PHP source.
-You will need NaturalDocs[1] for that.
+Run `composer install` to install phpdoc.
 
-[1]: http://www.naturaldocs.org/
+Run ../mkdoku.sh to generate the documentation of the PHP source using phpdoc.

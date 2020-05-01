@@ -20,5 +20,8 @@
 	"description": "A compiling template engine with an XML-ish syntax",
 	"type": "library",
 	"keywords": ["templating"],
-	"homepage": "http://github.com/silvasur/ste"
+	"homepage": "http://github.com/silvasur/ste",
+	"require-dev": {
+		"phpdocumentor/phpdocumentor": "^2.9"
+	}
 }

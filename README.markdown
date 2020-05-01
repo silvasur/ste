@@ -26,7 +26,7 @@ Why should you use it?
 * It has a simple, yet powerful plugin interface. You can easily define your
   own template functions / tags. It is even possible to write them in the
   template language itself, which makes it kind of a programming language...
-* It can transcompile templates into PHP.
+* It can compile templates into PHP.
 * You can use anonymous functions to define custom tags.
 
 Documentation

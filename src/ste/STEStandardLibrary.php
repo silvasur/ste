@@ -13,6 +13,12 @@ class STEStandardLibrary
         }
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     */
     public static function escape($ste, $params, $sub)
     {
         if ($ste->evalbool(@$params["lines"])) {
@@ -22,11 +28,24 @@ class STEStandardLibrary
         }
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     */
     public static function strlen($ste, $params, $sub)
     {
         return strlen($sub($ste));
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     * @throws RuntimeError
+     */
     public static function arraylen($ste, $params, $sub)
     {
         if (empty($params["array"])) {
@@ -36,6 +55,13 @@ class STEStandardLibrary
         return (is_array($a)) ? count($a) : "";
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     * @throws RuntimeError
+     */
     public static function inc($ste, $params, $sub)
     {
         if (empty($params["var"])) {
@@ -45,6 +71,13 @@ class STEStandardLibrary
         $ref++;
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     * @throws RuntimeError
+     */
     public static function dec($ste, $params, $sub)
     {
         if (empty($params["var"])) {
@@ -54,11 +87,24 @@ class STEStandardLibrary
         $ref--;
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     */
     public static function date($ste, $params, $sub)
     {
         return @strftime($sub($ste), empty($params["timestamp"]) ? @time() : (int) $params["timestamp"]);
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     * @throws RuntimeError
+     */
     public static function in_array($ste, $params, $sub)
     {
         if (empty($params["array"])) {
@@ -71,6 +117,13 @@ class STEStandardLibrary
         return in_array($sub($ste), $ar) ? "y" : "";
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     * @throws RuntimeError
+     */
     public static function join($ste, $params, $sub)
     {
         if (empty($params["array"])) {
@@ -79,6 +132,13 @@ class STEStandardLibrary
         return implode($sub($ste), $ste->get_var_by_name($params["array"]));
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     * @throws RuntimeError
+     */
     public static function split($ste, $params, $sub)
     {
         if (empty($params["array"])) {
@@ -90,6 +150,13 @@ class STEStandardLibrary
         $ste->set_var_by_name($params["array"], explode($params["delim"], $sub($ste)));
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     * @throws RuntimeError
+     */
     public static function array_add($ste, $params, $sub)
     {
         if (empty($params["array"])) {
@@ -104,6 +171,13 @@ class STEStandardLibrary
         }
     }
 
+    /**
+     * @param STECore $ste
+     * @param array $params
+     * @param callable $sub
+     * @return string
+     * @throws RuntimeError
+     */
     public static function array_filter($ste, $params, $sub)
     {
         if (empty($params["array"])) {

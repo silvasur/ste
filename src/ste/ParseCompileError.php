@@ -2,6 +2,9 @@
 
 namespace kch42\ste;
 
+/**
+ * An exception thrown by the parser or compiler
+ */
 class ParseCompileError extends \Exception
 {
     public $msg;
@@ -16,10 +19,13 @@ class ParseCompileError extends \Exception
         $this->message = "$msg (Template $tpl, Offset $offset)";
     }
 
+    /**
+     * Update the message to include a human readable offset.
+     * @param string $code
+     */
     public function rewrite($code)
     {
         $line = substr_count(str_replace("\r\n", "\n", substr($code, 0, $this->off)), "\n") + 1;
         $this->message = "{$this->msg} (Template {$this->tpl}, Line $line)";
-        $this->is_rewritten = true;
     }
 }

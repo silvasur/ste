@@ -2,15 +2,25 @@
 
 namespace kch42\ste;
 
-/* Class Calc contains static methods needed by <ste:calc /> */
+/**
+ * Class Calc contains static methods needed by <ste:calc />
+ */
 class Calc
 {
     private function __construct()
     {
     }
 
-    /* We could also just eval() the $infix_math code, but this is much cooler :-D (Parser inception) */
-    public static function shunting_yard($infix_math)
+    /**
+     * Parse a mathematical expression with the shunting yard algorithm (https://en.wikipedia.org/wiki/Shunting-yard_algorithm)
+     *
+     * We could also just eval() the $infix_math code, but this is much cooler :-D (Parser inception)
+
+     * @param string $infix_math
+     * @return array
+     * @throws RuntimeError
+     */
+    private static function shunting_yard($infix_math)
     {
         $operators = array(
             "+" => array("l", 2),
@@ -68,11 +78,17 @@ class Calc
             } else {
                 $priority = $operators[$token][1];
                 if ($operators[$token][0] == "l") {
-                    while ((!empty($op_stack)) and ($priority <= $operators[$op_stack[count($op_stack)-1]][1])) {
+                    while (
+                        !empty($op_stack)
+                        && $priority <= $operators[$op_stack[count($op_stack)-1]][1]
+                    ) {
                         $output_queue[] = array_pop($op_stack);
                     }
                 } else {
-                    while ((!empty($op_stack)) and ($priority < $operators[$op_stack[count($op_stack)-1]][1])) {
+                    while (
+                        !empty($op_stack)
+                        && $priority < $operators[$op_stack[count($op_stack)-1]][1]
+                    ) {
                         $output_queue[] = array_pop($op_stack);
                     }
                 }
@@ -91,7 +107,12 @@ class Calc
         return $output_queue;
     }
 
-    public static function pop2(&$array)
+    /**
+     * @param array $array
+     * @return array
+     * @throws RuntimeError
+     */
+    private static function pop2(&$array)
     {
         $rv = array(array_pop($array), array_pop($array));
         if (array_search(null, $rv, true) !== false) {
@@ -100,7 +121,12 @@ class Calc
         return $rv;
     }
 
-    public static function calc_rpn($rpn)
+    /**
+     * @param array $rpn A mathematical expression in reverse polish notation
+     * @return int|float
+     * @throws RuntimeError
+     */
+    private static function calc_rpn($rpn)
     {
         $stack = array();
         foreach ($rpn as $token) {
@@ -140,6 +166,14 @@ class Calc
         return array_pop($stack);
     }
 
+    /**
+     * Calculate a simple mathematical expression. Supported operators are +, -, *, /, ^.
+     * You can use ( and ) to group expressions together.
+     *
+     * @param string $expr
+     * @return float|int
+     * @throws RuntimeError
+     */
     public static function calc($expr)
     {
         return self::calc_rpn(self::shunting_yard($expr));

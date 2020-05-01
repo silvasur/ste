@@ -1,25 +1,21 @@
 <?php
 
-// File: FilesystemStorageAccess.php
-
-// Namespace: kch42\ste
 namespace kch42\ste;
 
-/*
- * Class: FilesystemStorageAccess
- * The default <StorageAccess> implementation for loading / saving templates into a directory structure.
+/**
+ * The default {@see StorageAccess} implementation for loading / saving templates into a directory structure.
  */
 class FilesystemStorageAccess implements StorageAccess
 {
+    /** @var string */
     protected $sourcedir;
+
+    /** @var string */
     protected $transcompileddir;
 
-    /*
-     * Constructor: __construct
-     *
-     * Parameters:
-     *  $src - The directory with the sources (Writing permissions are not mandatory, because STE does not save template sources).
-     *  $transc - The directory with the transcompiled templates (the PHP instance / the HTTP Server needs writing permissions to this directory).
+    /**
+     * @param string $src - The directory with the sources (Writing permissions are not mandatory, because STE does not save template sources).
+     * @param string $transc - The directory with the compiled templates (the PHP instance / the HTTP Server needs writing permissions to this directory).
      */
     public function __construct($src, $transc)
     {
@@ -43,13 +39,16 @@ class FilesystemStorageAccess implements StorageAccess
         $src_stat    = @stat($src_fn);
         $transc_stat = @stat($transc_fn);
 
-        if (($src_stat === false) and ($transc_stat === false)) {
+        if ($src_stat === false && $transc_stat === false) {
             throw new CantLoadTemplate("Template not found.");
         } elseif ($transc_stat === false) {
             $mode = StorageAccess::MODE_SOURCE;
             return file_get_contents($src_fn);
         } elseif ($src_stat === false) {
             include($transc_fn);
+            if (!isset($transcompile_fx)) {
+                throw new CantLoadTemplate("Compiled template file $transc_fn does not set \$transcompile_fx");
+            }
             return $transcompile_fx;
         } else {
             if ($src_stat["mtime"] > $transc_stat["mtime"]) {
@@ -57,6 +56,9 @@ class FilesystemStorageAccess implements StorageAccess
                 return file_get_contents($src_fn);
             } else {
                 include($transc_fn);
+                if (!isset($transcompile_fx)) {
+                    throw new CantLoadTemplate("Compiled template file $transc_fn does not set \$transcompile_fx");
+                }
                 return $transcompile_fx;
             }
         }
