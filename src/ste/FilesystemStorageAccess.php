@@ -66,7 +66,7 @@ class FilesystemStorageAccess implements StorageAccess
     {
         $fn = (($mode == StorageAccess::MODE_SOURCE) ? $this->sourcedir : $this->transcompileddir) . "/" . $tpl . (($mode == StorageAccess::MODE_TRANSCOMPILED) ? ".php" : "");
         @mkdir(dirname($fn), 0777, true);
-        if (file_put_contents($fn, "<?php\n\$transcompile_fx = $data; ?>") === false) {
+        if (file_put_contents($fn, "<?php\n\$transcompile_fx = $data;") === false) {
             throw new CantSaveTemplate("Unable to save template.");
         }
     }
