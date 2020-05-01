@@ -252,8 +252,8 @@ class STECore
         $this->cur_tpl_dir = dirname($tpl);
 
         if ($quiet) {
-            $blocks_back     = clone $this->blocks;
-            $blockorder_back = clone $this->blockorder;
+            $blocks_back     = $this->blocks;
+            $blockorder_back = $this->blockorder;
         }
 
         $mode = StorageAccess::MODE_TRANSCOMPILED;
