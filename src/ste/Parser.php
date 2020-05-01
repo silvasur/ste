@@ -43,12 +43,21 @@ class Parser
      * @param int $n
      * @return string
      */
-    private function next($n = 1)
+    private function peek($n = 1)
     {
         if ($n <= 0) {
             throw new \InvalidArgumentException("\$n must be > 0");
         }
-        $c = mb_substr($this->text, $this->off, $n);
+        return mb_substr($this->text, $this->off, $n);
+    }
+
+    /**
+     * @param int $n
+     * @return string
+     */
+    private function next($n = 1)
+    {
+        $c = $this->peek($n);
         $this->off = min($this->off + $n, $this->len);
         return $c;
     }
@@ -455,7 +464,9 @@ class Parser
 
         $arrayfields = array();
 
-        while ($this->next() == "[") {
+        while ($this->peek() == "[") {
+            $this->next();
+
             $openedat = $this->off - 1;
             $res = $this->parse_text(
                 self::ESCAPES_DEFAULT, /* Escapes */
@@ -471,7 +482,6 @@ class Parser
             $arrayfields[] = $res[0];
         }
 
-        $this->back();
         return $arrayfields;
     }
 
