@@ -198,60 +198,61 @@ class Parser
      * @param ASTNode[] $ast
      * @return ASTNode[]
      */
-    private static function tidyup_ast($ast)
+    private static function combine_consecutive_text(array $ast)
     {
         $out = array();
 
-        /** @var TextNode|null $prevtext */
-        $prevtext = null;
-        $first = true;
+        /** @var TextNode|null $last_text */
+        $last_text = null;
+
+        $put_last_text = static function () use (&$out, &$last_text) {
+            if ($last_text === null) {
+                return;
+            }
+
+            if ($last_text->text !== "") {
+                $out[] = $last_text;
+            }
+
+            $last_text = null;
+        };
 
         foreach ($ast as $node) {
             if ($node instanceof TextNode) {
-                if ($prevtext === null) {
-                    $prevtext = $node;
+                if ($last_text !== null) {
+                    $last_text->text .= $node->text;
                 } else {
-                    $prevtext->text .= $node->text;
+                    $last_text = $node;
                 }
             } else {
-                if ($prevtext !== null) {
-                    if ($first) {
-                        $prevtext->text = ltrim($prevtext->text);
-                    }
-                    if ($prevtext->text != "") {
-                        $out[] = $prevtext;
-                    }
-                }
-                $prevtext = null;
-                $first = false;
-
-                if ($node instanceof TagNode) {
-                    $node->sub = self::tidyup_ast($node->sub);
-                    foreach ($node->params as $k => &$v) {
-                        $v = self::tidyup_ast($v);
-                    }
-                    unset($v);
-                } else { /* VariableNode */
-                    foreach ($node->arrayfields as &$v) {
-                        $v = self::tidyup_ast($v);
-                    }
-                    unset($v);
-                }
-
+                $put_last_text();
                 $out[] = $node;
             }
         }
 
-        if ($prevtext !== null) {
-            if ($first) {
-                $prevtext->text = ltrim($prevtext->text);
-            }
-            if ($prevtext->text != "") {
-                $out[] = $prevtext;
+        $put_last_text();
+
+        return $out;
+    }
+
+    /**
+     * @param ASTNode[] $ast
+     * @return ASTNode[]
+     */
+    private static function tidyup_ast(array $ast)
+    {
+        foreach ($ast as $node) {
+            if ($node instanceof TagNode) {
+                $node->sub = self::tidyup_ast($node->sub);
+                $node->params = array_map(array(__CLASS__, 'tidyup_ast'), $node->params);
+            } elseif ($node instanceof VariableNode) {
+                $node->arrayfields = array_map(array(__CLASS__, 'tidyup_ast'), $node->arrayfields);
             }
         }
 
-        return $out;
+        $ast = self::combine_consecutive_text($ast);
+
+        return $ast;
     }
 
     /**
