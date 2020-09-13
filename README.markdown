@@ -34,6 +34,6 @@ Documentation
 
 The `docu` directory contains the documentation of the template language.
 If you need the documentation of the php code / the API, you can create it with the `mkdocu.sh` script.
-You will need [NaturalDocs](http://www.naturaldocs.org/) for that.
+This is done using [phpDocumentor](https://phpdoc.org/). It will be installed as a dev-depencency by composer.
 
-There is also a mirror of the documentation [here](http://r7r.kch42.net/ste_docu/).
+There is also a mirror of the documentation [here](http://r7r.silvasur.net/ste_docu/).
