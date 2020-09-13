@@ -1,5 +1,5 @@
 <ste:load name="custom_tags.tpl" />
-<ste:load name="master.html" />
+<ste:load name="base.html" />
 <ste:comment>Lets overwrite the content section</ste:comment>
 <ste:block name="content">
 	<h2>Some Articles</h2>
@@ -29,7 +29,7 @@
 			<p>There are <a href="#">more articles</a>.</p>
 		</ste:then>
 	</ste:if>
-	
+
 	<h2>Some more useless demo stuff...</h2>
 		<h3>Counting from 10 to 0...</h3>
 		<p>but take only the even ones and multiply by 5...</p>
@@ -41,15 +41,15 @@
 				</ste:then>
 			</ste:if>
 		</ste:for>
-		
+
 		<h3>Repeat some text...</h3>
 		<ste:repeat n="10">
 			<p>Bla</p>
 		</ste:repeat>
-		
+
 		<h3>Get a variable's content dynamically</h3>
 		<ste:get var="${foo}[$bar]" />
-		
+
 		<h3>We will call ste:repeat with a non-numerical value for n here to see the handling of a RuntimeError</h3>
 		<ste:repeat n="lol">
 			<p>Bla</p>

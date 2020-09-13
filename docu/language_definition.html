@@ -407,29 +407,29 @@
 			<p>This self-closing tag loads and executes another template. The <code>name</code> parameter (mandatory) defines the template to load.</p>
 			<p>Because each template must be parseable and compilable by itself, this is not a inclusion of another template. So you can not do this:</p>
 			<p>
-				slave.tpl:<br />
+				sub.tpl:<br />
 <code><pre>&lt;ste:foo&gt;<br />	bla</pre></code>
-				master.tpl<br />
-<code><pre>&lt;ste:load name="slave.tpl" /&gt;<br />&lt;/ste:foo&gt;</pre></code>
+				base.tpl<br />
+<code><pre>&lt;ste:load name="sub.tpl" /&gt;<br />&lt;/ste:foo&gt;</pre></code>
 			</p>
 			<p>But you can do this:</p>
 			<p>
-				slave.tpl:<br />
+				sub.tpl:<br />
 <code><pre>&lt;ste:foo&gt;$bar&lt;/ste:foo&gt;</pre></code>
-				master.tpl<br />
-<code><pre>&lt;ste:baz&gt;<br />	&lt;ste:load name="slave.tpl" /&gt;<br />&lt;/ste:baz&gt;</pre></code>
+				base.tpl<br />
+<code><pre>&lt;ste:baz&gt;<br />	&lt;ste:load name="sub.tpl" /&gt;<br />&lt;/ste:baz&gt;</pre></code>
 			</p>
 
 		<h3 id="builtin_block">ste:block</h3>
-			<p>ste:block provides an easy way for writing master templates. Every block has a name. When a block is defined twice, the second one will overwrite the first one.</p>
+			<p>ste:block provides an easy way for writing base templates. Every block has a name. When a block is defined twice, the second one will overwrite the first one.</p>
 			<p>The name can be set with the <code>name</code> parameter.</p>
 			<p>
 				Example:<br />
-				master.tpl
+				base.tpl
 <code><pre>&lt;h1&gt;Content:&lt;/h1&gt;<br />&lt;ste:block name="content"&gt;<br />	Default content<br />&lt;/ste:block&gt;<br />&lt;div class="sidebar"&gt;<br />	&lt;ste:block name="sidebar"&gt;<br />		Default sidebar<br />	&lt;/ste:block&gt;<br />&lt;/div&gt;</pre></code>
-				slave.tpl:<br />
-<code><pre>&lt;ste:load name="master.tpl" /&gt;<br />&lt;ste:block name="content"&gt;<br />	Much cooler content :-)<br />&lt;/ste:block&gt;</pre></code>
-				When executing slave.tpl, master.tpl will be loaded and its <code>content</code> block will be replaced with the new one (<code>Much cooler content :-)</code>) but leave the original <code>sidebar</code> block.
+				sub.tpl:<br />
+<code><pre>&lt;ste:load name="base.tpl" /&gt;<br />&lt;ste:block name="content"&gt;<br />	Much cooler content :-)<br />&lt;/ste:block&gt;</pre></code>
+				When executing sub.tpl, base.tpl will be loaded and its <code>content</code> block will be replaced with the new one (<code>Much cooler content :-)</code>) but leave the original <code>sidebar</code> block.
 			</p>
 			<p>Blocks can not be nested.</p>
 
