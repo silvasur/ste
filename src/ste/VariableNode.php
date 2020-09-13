@@ -8,7 +8,7 @@ class VariableNode extends ASTNode
     public $name;
 
     /** @var ASTNode[][] */
-    public $arrayfields = array();
+    public $arrayfields = [];
 
     /**
      * @return string

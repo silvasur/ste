@@ -26,25 +26,25 @@ class Transcompiler
         }
 
         /** @var callable[] builtins */
-        self::$builtins = array(
-            "if" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_if")),
-            "cmp" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_cmp")),
-            "not" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_not")),
-            "even" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_even")),
-            "for" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_for")),
-            "foreach" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_foreach")),
-            "infloop" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_infloop")),
-            "break" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_break")),
-            "continue" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_continue")),
-            "block" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_block")),
-            "load" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_load")),
-            "mktag" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_mktag")),
-            "tagcontent" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_tagcontent")),
-            "set" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_set")),
-            "setlocal" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_setlocal")),
-            "get" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_get")),
-            "calc" => self::mark_builtin_callable(array("\\kch42\\ste\\Transcompiler", "builtin_calc"))
-        );
+        self::$builtins = [
+            "if" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_if"]),
+            "cmp" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_cmp"]),
+            "not" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_not"]),
+            "even" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_even"]),
+            "for" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_for"]),
+            "foreach" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_foreach"]),
+            "infloop" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_infloop"]),
+            "break" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_break"]),
+            "continue" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_continue"]),
+            "block" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_block"]),
+            "load" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_load"]),
+            "mktag" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_mktag"]),
+            "tagcontent" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_tagcontent"]),
+            "set" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_set"]),
+            "setlocal" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_setlocal"]),
+            "get" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_get"]),
+            "calc" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_calc"])
+        ];
     }
 
     /**
@@ -55,7 +55,7 @@ class Transcompiler
     private static function builtin_if($ast)
     {
         $output = "";
-        $condition = array();
+        $condition = [];
         $then = null;
         $else = null;
 
@@ -93,14 +93,14 @@ class Transcompiler
      */
     private static function builtin_cmp($ast)
     {
-        $operators = array(
-            array('eq', '=='),
-            array('neq', '!='),
-            array('lt', '<'),
-            array('lte', '<='),
-            array('gt', '>'),
-            array('gte', '>=')
-        );
+        $operators = [
+            ['eq', '=='],
+            ['neq', '!='],
+            ['lt', '<'],
+            ['lte', '<='],
+            ['gt', '>'],
+            ['gte', '>=']
+        ];
 
         $code = "";
 
@@ -298,8 +298,8 @@ class Transcompiler
             $loopbody .= "\$${loopname}_counter++;\n\$ste->set_var_by_name(\$${loopname}_countervar, \$${loopname}_counter);\n";
         }
 
-        $loop = array();
-        $else = array();
+        $loop = [];
+        $else = [];
         foreach ($ast->sub as $node) {
             if (($node instanceof TagNode) && ($node->name == "else")) {
                 $else = array_merge($else, $node->sub);
@@ -541,7 +541,7 @@ class Transcompiler
     { /* The real self::transcompile function, does not add boilerplate code. */
         $code = "";
 
-        $text_and_var_buffer = array();
+        $text_and_var_buffer = [];
 
         foreach ($ast as $node) {
             if ($node instanceof TextNode) {
@@ -551,7 +551,7 @@ class Transcompiler
             } elseif ($node instanceof TagNode) {
                 if (!empty($text_and_var_buffer)) {
                     $code .= "\$outputstack[\$outputstack_i] .= " . implode(" . ", $text_and_var_buffer) . ";\n";
-                    $text_and_var_buffer = array();
+                    $text_and_var_buffer = [];
                 }
                 if (isset(self::$builtins[$node->name])) {
                     $code .= call_user_func(self::$builtins[$node->name], $node);
@@ -572,7 +572,7 @@ class Transcompiler
         }
 
         if ($avoid_outputstack && ($code == "")) {
-            return array(implode(" . ", $text_and_var_buffer), "");
+            return [implode(" . ", $text_and_var_buffer), ""];
         }
 
         if (!empty($text_and_var_buffer)) {
@@ -583,7 +583,7 @@ class Transcompiler
             $tmpvar = self::tempvar("tmp");
             $code = "\$outputstack[] = '';\n\$outputstack_i++;" . $code;
             $code .= "\$$tmpvar = array_pop(\$outputstack);\n\$outputstack_i--;\n";
-            return array("\$$tmpvar", $code);
+            return ["\$$tmpvar", $code];
         }
 
         return $code;

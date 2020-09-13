@@ -14,10 +14,10 @@ class Test extends BaseTest
 
     protected function setUpSte(STECore $ste): void
     {
-        $ste->set_var_by_name("data", array(
-            array('content' => 'foo', 'foo' => true),
-            array('content' => 'bar', 'foo' => false),
-            array('content' => 'baz', 'foo' => false),
-        ));
+        $ste->set_var_by_name("data", [
+            ['content' => 'foo', 'foo' => true],
+            ['content' => 'bar', 'foo' => false],
+            ['content' => 'baz', 'foo' => false],
+        ]);
     }
 }

@@ -14,12 +14,12 @@ class Test extends BaseTest
 
     protected function setUpSte(STECore $ste): void
     {
-        $names = array(
+        $names = [
             "foo",
             "ab_cd",
             "foo123baz",
             "x0123",
-        );
+        ];
     
         foreach ($names as $name) {
             $ste->register_tag(

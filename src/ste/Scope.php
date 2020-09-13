@@ -8,7 +8,7 @@ class Scope implements \ArrayAccess
     private $parent = null;
 
     /** @var array */
-    public $vars = array();
+    public $vars = [];
 
     /**
      * @param string $name
@@ -18,7 +18,7 @@ class Scope implements \ArrayAccess
     private static function parse_name($name)
     {
         $remain = $name;
-        $fields = array();
+        $fields = [];
 
         while ($remain !== "") {
             $br_open = strpos($remain, '[');
@@ -96,7 +96,7 @@ class Scope implements \ArrayAccess
             $ref = &$this->get_topvar_reference($first, $localonly);
         } catch (VarNotInScope $e) {
             if ($create_if_not_exist) {
-                $this->vars[$first] = (count($fields) > 0) ? array() : "";
+                $this->vars[$first] = (count($fields) > 0) ? [] : "";
                 $ref = &$this->vars[$first];
             } else {
                 return $nullref;
@@ -116,7 +116,7 @@ class Scope implements \ArrayAccess
                 }
 
                 if ($i < count($fields) - 1) {
-                    $ref[$field] = array();
+                    $ref[$field] = [];
                 } else {
                     $ref[$field] = "";
                 }

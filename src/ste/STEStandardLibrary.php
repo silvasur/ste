@@ -8,7 +8,7 @@ class STEStandardLibrary
     {
         foreach (get_class_methods(__CLASS__) as $method) {
             if ($method[0] != "_") {
-                $ste->register_tag($method, array(__CLASS__, $method));
+                $ste->register_tag($method, [__CLASS__, $method]);
             }
         }
     }

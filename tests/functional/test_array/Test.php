@@ -14,14 +14,14 @@ class Test extends BaseTest
 
     protected function setUpSte(STECore $ste): void
     {
-        $ste->vars["foo"] = array(
-            "a" => array(
+        $ste->vars["foo"] = [
+            "a" => [
                 "blabla" => "OK"
-            ),
+            ],
             "b" => "bla"
-        );
-        $ste->vars["bar"] = array(
+        ];
+        $ste->vars["bar"] = [
             "baz" => "a"
-        );
+        ];
     }
 }

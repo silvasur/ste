@@ -8,10 +8,10 @@ class TagNode extends ASTNode
     public $name;
 
     /** @var ASTNode[][] */
-    public $params = array();
+    public $params = [];
 
     /** @var ASTNode[] */
-    public $sub = array();
+    public $sub = [];
 
     /**
      * @param string $tpl

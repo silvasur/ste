@@ -45,22 +45,22 @@ $ste->register_tag(
 );
 
 # assign some data
-$ste->vars["users"] = array(
-    array("name" => "Foo", "username" => "foo", "online" => true),
-    array("name" => "Bar", "username" => "bar", "online" => false),
-    array("name" => "Baz", "username" => "baz", "online" => true)
-);
+$ste->vars["users"] = [
+    ["name" => "Foo", "username" => "foo", "online" => true],
+    ["name" => "Bar", "username" => "bar", "online" => false],
+    ["name" => "Baz", "username" => "baz", "online" => true]
+];
 $ste->vars["title"] = "cool";
-$ste->vars["articles"] = array(
-    array("author" => "foo", "title" => "cool article", "timestamp" => 1316553353, "excerpt" => "bla", "full" => "blablabla"),
-    array("author" => "bar", "title" => "awesome",      "timestamp" => 1316552000, "excerpt" => "...", "full" => ".........."),
-    array("author" => "baz", "title" => "<ingenious",   "timestamp" => 1316551000, "excerpt" => "...", "full" => ".........."),
-    array("author" => "baz", "title" => "whatever...",  "timestamp" => 1316550000, "excerpt" => "...", "full" => "..........")
-);
+$ste->vars["articles"] = [
+    ["author" => "foo", "title" => "cool article", "timestamp" => 1316553353, "excerpt" => "bla", "full" => "blablabla"],
+    ["author" => "bar", "title" => "awesome",      "timestamp" => 1316552000, "excerpt" => "...", "full" => ".........."],
+    ["author" => "baz", "title" => "<ingenious",   "timestamp" => 1316551000, "excerpt" => "...", "full" => ".........."],
+    ["author" => "baz", "title" => "whatever...",  "timestamp" => 1316550000, "excerpt" => "...", "full" => ".........."]
+];
 
 $ste->vars["foo"] = "baz";
 $ste->vars["bar"] = "lol";
-$ste->vars["baz"] = array("lol" => "cool");
+$ste->vars["baz"] = ["lol" => "cool"];
 
 # Execute the template and output the result
 echo $ste->exectemplate("articles.html");

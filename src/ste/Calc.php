@@ -22,27 +22,27 @@ class Calc
      */
     private static function shunting_yard($infix_math)
     {
-        $operators = array(
-            "+" => array("l", 2),
-            "-" => array("l", 2),
-            "*" => array("l", 3),
-            "/" => array("l", 3),
-            "^" => array("r", 4),
-            "_" => array("r", 5),
-            "(" => array("", 0),
-            ")" => array("", 0)
-        );
+        $operators = [
+            "+" => ["l", 2],
+            "-" => ["l", 2],
+            "*" => ["l", 3],
+            "/" => ["l", 3],
+            "^" => ["r", 4],
+            "_" => ["r", 5],
+            "(" => ["", 0],
+            ")" => ["", 0]
+        ];
 
         preg_match_all("/\s*(?:(?:[+\\-\\*\\/\\^\\(\\)])|(\\d*[\\.]?\\d*))\\s*/s", $infix_math, $tokens, PREG_PATTERN_ORDER);
         $tokens_raw   = array_filter(array_map('trim', $tokens[0]), function ($x) {
             return ($x === "0") || (!empty($x));
         });
-        $output_queue = array();
-        $op_stack     = array();
+        $output_queue = [];
+        $op_stack     = [];
 
         $lastpriority = null;
         /* Make - unary, if neccessary */
-        $tokens = array();
+        $tokens = [];
         foreach ($tokens_raw as $token) {
             $priority = isset($operators[$token]) ? $operators[$token][1] : -1;
             if (($token == "-") && (($lastpriority === null) || ($lastpriority >= 0))) {
@@ -114,7 +114,7 @@ class Calc
      */
     private static function pop2(&$array)
     {
-        $rv = array(array_pop($array), array_pop($array));
+        $rv = [array_pop($array), array_pop($array)];
         if (array_search(null, $rv, true) !== false) {
             throw new RuntimeError("Not enough numbers on stack. Invalid formula.");
         }
@@ -128,7 +128,7 @@ class Calc
      */
     private static function calc_rpn($rpn)
     {
-        $stack = array();
+        $stack = [];
         foreach ($rpn as $token) {
             switch ($token) {
             case "+":

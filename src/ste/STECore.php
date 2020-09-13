@@ -63,10 +63,10 @@ class STECore
         $this->storage_access = $storage_access;
         $this->cur_tpl_dir = "/";
         STEStandardLibrary::_register_lib($this);
-        $this->blockorder = array();
-        $this->blocks = array();
+        $this->blockorder = [];
+        $this->blocks = [];
 
-        $this->vars = array();
+        $this->vars = [];
         $this->scope = new Scope();
         $this->scope->vars =& $this->vars;
     }

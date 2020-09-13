@@ -114,7 +114,7 @@ class Parser
 
         $this->off = $minoff + (($which === null) ? 0 : mb_strlen((string) $needles[$which]));
 
-        return array($which, $minoff, mb_substr($this->text, $oldoff, $minoff - $oldoff), $oldoff);
+        return [$which, $minoff, mb_substr($this->text, $oldoff, $minoff - $oldoff), $oldoff];
     }
 
     /**
@@ -128,11 +128,11 @@ class Parser
         $off = $this->search_off($needle);
         if ($off === false) {
             $this->off = $this->len;
-            return array(false, mb_substr($this->text, $oldoff), $oldoff);
+            return [false, mb_substr($this->text, $oldoff), $oldoff];
         }
 
         $this->off = $off + mb_strlen($needle);
-        return array($off, mb_substr($this->text, $oldoff, $off - $oldoff), $oldoff);
+        return [$off, mb_substr($this->text, $oldoff, $off - $oldoff), $oldoff];
     }
 
     /**
@@ -200,7 +200,7 @@ class Parser
      */
     private static function combine_consecutive_text(array $ast)
     {
-        $out = array();
+        $out = [];
 
         /** @var TextNode|null $last_text */
         $last_text = null;
@@ -244,9 +244,9 @@ class Parser
         foreach ($ast as $node) {
             if ($node instanceof TagNode) {
                 $node->sub = self::tidyup_ast($node->sub);
-                $node->params = array_map(array(__CLASS__, 'tidyup_ast'), $node->params);
+                $node->params = array_map([__CLASS__, 'tidyup_ast'], $node->params);
             } elseif ($node instanceof VariableNode) {
-                $node->arrayfields = array_map(array(__CLASS__, 'tidyup_ast'), $node->arrayfields);
+                $node->arrayfields = array_map([__CLASS__, 'tidyup_ast'], $node->arrayfields);
             }
         }
 
@@ -268,16 +268,16 @@ class Parser
      */
     private function parse_text($escapes, $flags, $breakon = null, $separator = null, $nullaction = null, $opentag = null, $openedat = -1)
     {
-        $elems = array();
-        $astlist = array();
+        $elems = [];
+        $astlist = [];
 
-        $needles = array(
+        $needles = [
             "commentopen" => "<ste:comment>",
             "rawopen" => "<ste:rawtext>",
             "escape" => '\\',
             "varcurlyopen" => '${',
             "var" => '$',
-        );
+        ];
 
         if ($flags & self::PARSE_TAG) {
             $needles["tagopen"] = '<ste:';
@@ -394,7 +394,7 @@ class Parser
                 break;
             case "sep":
                 $elems[] = $astlist;
-                $astlist = array();
+                $astlist = [];
                 break;
             case "varcurlyopen":
                 $astlist[] = $this->parse_var($off, true);
@@ -463,7 +463,7 @@ class Parser
     {
         $tplname = $this->name;
 
-        $arrayfields = array();
+        $arrayfields = [];
 
         while ($this->peek() == "[") {
             $this->next();
@@ -498,8 +498,8 @@ class Parser
         $this->skip_ws();
         $tag = new TagNode($this->name, $openedat);
         $name = $tag->name = $this->get_name();
-        $tag->params = array();
-        $tag->sub = array();
+        $tag->params = [];
+        $tag->sub = [];
 
         for (;;) {
             $this->skip_ws();
