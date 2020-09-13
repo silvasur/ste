@@ -14,7 +14,7 @@ abstract class ASTNode
      * @param string $tpl
      * @param int $off
      */
-    public function __construct($tpl, $off)
+    public function __construct(string $tpl, int $off)
     {
         $this->tpl    = $tpl;
         $this->offset = $off;

@@ -9,12 +9,12 @@ class Transcompiler
 {
     private static $builtins = null;
 
-    public static function tempvar($typ)
+    public static function tempvar($typ): string
     {
         return $typ . '_' . str_replace('.', '_', uniqid('', true));
     }
 
-    private static function mark_builtin_callable(callable $c)
+    private static function mark_builtin_callable(callable $c): callable
     {
         return $c;
     }
@@ -52,7 +52,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_if($ast)
+    private static function builtin_if(TagNode $ast): string
     {
         $output = "";
         $condition = [];
@@ -91,7 +91,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_cmp($ast)
+    private static function builtin_cmp(TagNode $ast): string
     {
         $operators = [
             ['eq', '=='],
@@ -166,7 +166,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_not($ast)
+    private static function builtin_not(TagNode $ast): string
     {
         $code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
         $code .= self::_transcompile($ast->sub);
@@ -179,7 +179,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_even($ast)
+    private static function builtin_even(TagNode $ast): string
     {
         $code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
         $code .= self::_transcompile($ast->sub);
@@ -192,7 +192,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_for($ast)
+    private static function builtin_for(TagNode $ast): string
     {
         $code = "";
         $loopname = self::tempvar("forloop");
@@ -259,7 +259,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_foreach($ast)
+    private static function builtin_foreach(TagNode $ast): string
     {
         $loopname = self::tempvar("foreachloop");
         $code = "";
@@ -331,7 +331,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_infloop($ast)
+    private static function builtin_infloop(TagNode $ast): string
     {
         return "while(true)\n{\n" . self::indent_code(self::loopbody(self::indent_code(self::_transcompile($ast->sub)))) . "\n}\n";
     }
@@ -340,7 +340,7 @@ class Transcompiler
      * @param TagNode $ast
      * @return string
      */
-    private static function builtin_break($ast)
+    private static function builtin_break(TagNode $ast): string
     {
         return "throw new \\kch42\\ste\\BreakException();\n";
     }
@@ -349,7 +349,7 @@ class Transcompiler
      * @param TagNode $ast
      * @return string
      */
-    private static function builtin_continue($ast)
+    private static function builtin_continue(TagNode $ast): string
     {
         return "throw new \\kch42\\ste\\ContinueException();\n";
     }
@@ -359,7 +359,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_block($ast)
+    private static function builtin_block(TagNode $ast): string
     {
         if (empty($ast->params["name"])) {
             throw new ParseCompileError("self::Transcompile Error: name missing in <ste:block>.", $ast->tpl, $ast->offset);
@@ -386,7 +386,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_load($ast)
+    private static function builtin_load(TagNode $ast): string
     {
         if (empty($ast->params["name"])) {
             throw new ParseCompileError("self::Transcompile Error: name missing in <ste:load>.", $ast->tpl, $ast->offset);
@@ -402,7 +402,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_mktag($ast)
+    private static function builtin_mktag(TagNode $ast): string
     {
         $code = "";
 
@@ -438,7 +438,7 @@ class Transcompiler
      * @param TagNode $ast
      * @return string
      */
-    private static function builtin_tagcontent($ast)
+    private static function builtin_tagcontent(TagNode $ast): string
     {
         return "\$outputstack[\$outputstack_i] .= \$sub(\$ste);";
     }
@@ -448,7 +448,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_set($ast)
+    private static function builtin_set(TagNode $ast): string
     {
         if (empty($ast->params["var"])) {
             throw new ParseCompileError("self::Transcompile Error: var missing in <ste:set>.", $ast->tpl, $ast->offset);
@@ -470,7 +470,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_setlocal($ast)
+    private static function builtin_setlocal(TagNode $ast): string
     {
         if (empty($ast->params["var"])) {
             throw new ParseCompileError("self::Transcompile Error: var missing in <ste:set>.", $ast->tpl, $ast->offset);
@@ -492,7 +492,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_get($ast)
+    private static function builtin_get(TagNode $ast): string
     {
         if (empty($ast->params["var"])) {
             throw new ParseCompileError("self::Transcompile Error: var missing in <ste:get>.", $ast->tpl, $ast->offset);
@@ -507,7 +507,7 @@ class Transcompiler
      * @return string
      * @throws ParseCompileError
      */
-    private static function builtin_calc($ast)
+    private static function builtin_calc(TagNode $ast): string
     {
         $code = "\$outputstack[] = '';\n\$outputstack_i++;\n";
         $code .= self::_transcompile($ast->sub);
@@ -516,7 +516,7 @@ class Transcompiler
         return $code;
     }
 
-    private static function indent_code($code)
+    private static function indent_code(string $code): string
     {
         return implode(
             "\n",
@@ -526,7 +526,7 @@ class Transcompiler
         );
     }
 
-    private static function loopbody($code)
+    private static function loopbody(string $code): string
     {
         return "try\n{\n" . self::indent_code($code) . "\n}\ncatch(\\kch42\\ste\\BreakException \$e) { break; }\ncatch(\\kch42\\ste\\ContinueException \$e) { continue; }\n";
     }
@@ -537,7 +537,7 @@ class Transcompiler
      * @return array|string
      * @throws ParseCompileError
      */
-    private static function _transcompile($ast, $avoid_outputstack = false)
+    private static function _transcompile(array $ast, bool $avoid_outputstack = false)
     { /* The real self::transcompile function, does not add boilerplate code. */
         $code = "";
 
@@ -599,7 +599,7 @@ class Transcompiler
      *                parameter and returns a string (everything that was not packed into a section).
      * @throws ParseCompileError
      */
-    public static function transcompile($ast)
+    public static function transcompile(array $ast): string
     { /* self::Transcompile and add some boilerplate code. */
         $boilerplate = "\$outputstack = array('');\n\$outputstack_i = 0;\n";
         return "function(\$ste)\n{\n" . self::indent_code($boilerplate . self::_transcompile($ast) . "return array_pop(\$outputstack);") . "\n}";

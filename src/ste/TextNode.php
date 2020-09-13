@@ -12,7 +12,7 @@ class TextNode extends ASTNode
      * @param int $off
      * @param string $text
      */
-    public function __construct($tpl, $off, $text = "")
+    public function __construct(string $tpl, int $off, string $text = "")
     {
         parent::__construct($tpl, $off);
         $this->text = $text;

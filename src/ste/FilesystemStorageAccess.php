@@ -17,13 +17,13 @@ class FilesystemStorageAccess implements StorageAccess
      * @param string $src - The directory with the sources (Writing permissions are not mandatory, because STE does not save template sources).
      * @param string $transc - The directory with the compiled templates (the PHP instance / the HTTP Server needs writing permissions to this directory).
      */
-    public function __construct($src, $transc)
+    public function __construct(string $src, string $transc)
     {
         $this->sourcedir        = $src;
         $this->transcompileddir = $transc;
     }
 
-    public function load($tpl, &$mode)
+    public function load(string $tpl, string &$mode)
     {
         $src_fn    = $this->sourcedir        . "/" . $tpl;
         $transc_fn = $this->transcompileddir . "/" . $tpl . ".php";
@@ -64,7 +64,7 @@ class FilesystemStorageAccess implements StorageAccess
         }
     }
 
-    public function save($tpl, $data, $mode)
+    public function save(string $tpl, string $data, $mode): void
     {
         $fn = (($mode == StorageAccess::MODE_SOURCE) ? $this->sourcedir : $this->transcompileddir) . "/" . $tpl . (($mode == StorageAccess::MODE_TRANSCOMPILED) ? ".php" : "");
         @mkdir(dirname($fn), 0777, true);

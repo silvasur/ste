@@ -4,7 +4,7 @@ namespace kch42\ste;
 
 class STEStandardLibrary
 {
-    public static function _register_lib($ste)
+    public static function _register_lib(STECore $ste): void
     {
         foreach (get_class_methods(__CLASS__) as $method) {
             if ($method[0] != "_") {
@@ -19,7 +19,7 @@ class STEStandardLibrary
      * @param callable $sub
      * @return string
      */
-    public static function escape($ste, $params, $sub)
+    public static function escape(STECore $ste, array $params, callable $sub)
     {
         if ($ste->evalbool(@$params["lines"])) {
             return nl2br(htmlspecialchars(str_replace("\r\n", "\n", $sub($ste))));
@@ -34,7 +34,7 @@ class STEStandardLibrary
      * @param callable $sub
      * @return string
      */
-    public static function strlen($ste, $params, $sub)
+    public static function strlen(STECore $ste, array $params, callable $sub)
     {
         return strlen($sub($ste));
     }
@@ -46,7 +46,7 @@ class STEStandardLibrary
      * @return string
      * @throws RuntimeError
      */
-    public static function arraylen($ste, $params, $sub)
+    public static function arraylen(STECore $ste, array $params, callable $sub)
     {
         if (empty($params["array"])) {
             throw new RuntimeError("Missing array parameter in <ste:arraylen>.");
@@ -61,7 +61,7 @@ class STEStandardLibrary
      * @param callable $sub
      * @throws RuntimeError
      */
-    public static function inc($ste, $params, $sub)
+    public static function inc(STECore $ste, array $params, callable $sub)
     {
         if (empty($params["var"])) {
             throw new RuntimeError("Missing var parameter in <ste:inc>.");
@@ -76,7 +76,7 @@ class STEStandardLibrary
      * @param callable $sub
      * @throws RuntimeError
      */
-    public static function dec($ste, $params, $sub)
+    public static function dec(STECore $ste, array $params, callable $sub)
     {
         if (empty($params["var"])) {
             throw new RuntimeError("Missing var parameter in <ste:dec>.");
@@ -91,7 +91,7 @@ class STEStandardLibrary
      * @param callable $sub
      * @return string
      */
-    public static function date($ste, $params, $sub)
+    public static function date(STECore $ste, array $params, callable $sub)
     {
         return @strftime($sub($ste), empty($params["timestamp"]) ? @time() : (int) $params["timestamp"]);
     }
@@ -103,7 +103,7 @@ class STEStandardLibrary
      * @return string
      * @throws RuntimeError
      */
-    public static function in_array($ste, $params, $sub)
+    public static function in_array(STECore $ste, array $params, callable $sub)
     {
         if (empty($params["array"])) {
             throw new RuntimeError("Missing array parameter in <ste:in_array>.");
@@ -122,7 +122,7 @@ class STEStandardLibrary
      * @return string
      * @throws RuntimeError
      */
-    public static function join($ste, $params, $sub)
+    public static function join(STECore $ste, array $params, callable $sub)
     {
         if (empty($params["array"])) {
             throw new RuntimeError("Missing array parameter in <ste:join>.");
@@ -136,7 +136,7 @@ class STEStandardLibrary
      * @param callable $sub
      * @throws RuntimeError
      */
-    public static function split($ste, $params, $sub)
+    public static function split(STECore $ste, array $params, callable $sub)
     {
         if (empty($params["array"])) {
             throw new RuntimeError("Missing array parameter in <ste:split>.");
@@ -153,7 +153,7 @@ class STEStandardLibrary
      * @param callable $sub
      * @throws RuntimeError
      */
-    public static function array_add($ste, $params, $sub)
+    public static function array_add(STECore $ste, array $params, callable $sub)
     {
         if (empty($params["array"])) {
             throw new RuntimeError("Missing array parameter in <ste:array_add>.");
@@ -173,7 +173,7 @@ class STEStandardLibrary
      * @param callable $sub
      * @throws RuntimeError
      */
-    public static function array_filter($ste, $params, $sub)
+    public static function array_filter(STECore $ste, array $params, callable $sub)
     {
         if (empty($params["array"])) {
             throw new RuntimeError("Missing array parameter in <ste:array_filter>.");

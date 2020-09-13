@@ -90,7 +90,7 @@ class STECore
      *
      * @throws Exception If the tag could not be registered (if $callback is not callable or if $name is empty)
      */
-    public function register_tag($name, $callback)
+    public function register_tag(string $name, callable $callback): void
     {
         if (!is_callable($callback)) {
             throw new Exception("Can not register tag \"$name\", not callable.");
@@ -113,7 +113,7 @@ class STECore
      * @return string The output of the tag or, if a {@see RuntimeError} was thrown, the appropriate result
      *                (see {@see STECore::$mute_runtime_errors}).
      */
-    public function call_tag($name, $params, $sub)
+    public function call_tag(string $name, array $params, callable $sub): string
     {
         try {
             if (!isset($this->tags[$name])) {
@@ -140,7 +140,7 @@ class STECore
      * @return float|int
      * @throws RuntimeError
      */
-    public function calc($expression)
+    public function calc(string $expression)
     {
         return Calc::calc($expression);
     }
@@ -153,6 +153,7 @@ class STECore
      * @param string $tpl The name of the template to execute.
      *
      * @throws CantLoadTemplate If the template could not be loaded.
+     * @throws CantSaveTemplate If the template could not be saved (after compilation).
      * @throws ParseCompileError If the template could not be parsed or compiled.
      * @throws FatalRuntimeError If a tag threw it or if a tag was not found and <$fatal_error_on_missing_tag> is true.
      *
@@ -161,7 +162,7 @@ class STECore
      *
      * @return string The output of the template.
      */
-    public function exectemplate($tpl)
+    public function exectemplate(string $tpl): string
     {
         $output = "";
         $lastblock = $this->load($tpl);
@@ -183,7 +184,7 @@ class STECore
      * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
      * @return mixed A Reference to the variable.
      */
-    public function &get_var_reference($name, $create_if_not_exist)
+    public function &get_var_reference(string $name, bool $create_if_not_exist)
     {
         $ref = &$this->scope->get_var_reference($name, $create_if_not_exist);
         return $ref;
@@ -198,7 +199,7 @@ class STECore
      *
      * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
      */
-    public function set_var_by_name($name, $val)
+    public function set_var_by_name(string $name, $val): void
     {
         $this->scope->set_var_by_name($name, $val);
     }
@@ -212,7 +213,7 @@ class STECore
      *
      * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
      */
-    public function set_local_var($name, $val)
+    public function set_local_var(string $name, $val): void
     {
         $this->scope->set_local_var($name, $val);
     }
@@ -223,10 +224,10 @@ class STECore
      *
      * @param string $name The variables name.
      *
-     * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
      * @return mixed The variables value
+     * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
      */
-    public function get_var_by_name($name)
+    public function get_var_by_name(string $name)
     {
         return $this->scope->get_var_by_name($name);
     }
@@ -247,7 +248,7 @@ class STECore
      *
      * @return string|null The result of the template (if $quiet == false).
      */
-    public function load($tpl, $quiet = false)
+    public function load(string $tpl, bool $quiet = false): ?string
     {
         $tpldir_b4 = $this->cur_tpl_dir;
 
@@ -303,14 +304,14 @@ class STECore
         }
     }
 
-    /*
+    /**
      * Test, if a text represents false (an empty / only whitespace text) or true (everything else).
      *
      * @param string $txt The text to test.
      *
      * @return bool
      */
-    public function evalbool($txt)
+    public function evalbool(string $txt): bool
     {
         return trim(@(string)$txt) != "";
     }
@@ -321,7 +322,7 @@ class STECore
      * @param callable $fx
      * @return \Closure
      */
-    public function make_closure($fx)
+    public function make_closure(callable $fx): \Closure
     {
         $bound_scope = $this->scope;
         return function () use ($bound_scope, $fx) {

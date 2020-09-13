@@ -13,7 +13,7 @@ class VariableNode extends ASTNode
     /**
      * @return string
      */
-    public function transcompile()
+    public function transcompile(): string
     {
         $varaccess = '@$ste->scope[' . (is_numeric($this->name) ? $this->name : '"' . Misc::escape_text($this->name) . '"'). ']';
         foreach ($this->arrayfields as $af) {

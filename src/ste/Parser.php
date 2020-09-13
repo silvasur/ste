@@ -22,16 +22,16 @@ class Parser
     /** @var int */
     private $len;
 
-    const PARSE_SHORT = 1;
-    const PARSE_TAG   = 2;
+    private const PARSE_SHORT = 1;
+    private const PARSE_TAG   = 2;
 
-    const ESCAPES_DEFAULT = '$?~{}|\\';
+    private const ESCAPES_DEFAULT = '$?~{}|\\';
 
     /**
      * @param string $text
      * @param string $name
      */
-    private function __construct($text, $name)
+    private function __construct(string $text, string $name)
     {
         $this->text = $text;
         $this->name = $name;
@@ -43,7 +43,7 @@ class Parser
      * @param int $n
      * @return string
      */
-    private function peek($n = 1)
+    private function peek(int $n = 1): string
     {
         if ($n <= 0) {
             throw new \InvalidArgumentException("\$n must be > 0");
@@ -55,7 +55,7 @@ class Parser
      * @param int $n
      * @return string
      */
-    private function next($n = 1)
+    private function next(int $n = 1): string
     {
         $c = $this->peek($n);
         $this->off = min($this->off + $n, $this->len);
@@ -65,7 +65,7 @@ class Parser
     /**
      * @return bool
      */
-    private function eof()
+    private function eof(): bool
     {
         return ($this->off == $this->len);
     }
@@ -73,7 +73,7 @@ class Parser
     /**
      * @param int $n
      */
-    private function back($n = 1)
+    private function back(int $n = 1): void
     {
         if ($n <= 0) {
             throw new \InvalidArgumentException("\$n must be > 0");
@@ -85,7 +85,7 @@ class Parser
      * @param string $needle
      * @return false|int
      */
-    private function search_off($needle)
+    private function search_off(string $needle)
     {
         return mb_strpos($this->text, $needle, $this->off);
     }
@@ -94,7 +94,7 @@ class Parser
      * @param string[] $needles
      * @return array 4-tuple of found key, offset, text preceding offset, old offset
      */
-    private function search_multi($needles)
+    private function search_multi(array $needles): array
     {
         $oldoff = $this->off;
 
@@ -121,7 +121,7 @@ class Parser
      * @param string $needle
      * @return array 3-tuple of offset (or false), text preceding offset, old offset
      */
-    private function search($needle)
+    private function search(string $needle): array
     {
         $oldoff = $this->off;
 
@@ -139,7 +139,7 @@ class Parser
      * @param callable $cb
      * @return string
      */
-    private function take_while(callable $cb)
+    private function take_while(callable $cb): string
     {
         $s = "";
         while (($c = $this->next()) !== "") {
@@ -152,7 +152,7 @@ class Parser
         return $s;
     }
 
-    private function skip_ws()
+    private function skip_ws(): void
     {
         $this->take_while("ctype_space");
     }
@@ -161,7 +161,7 @@ class Parser
      * @return string
      * @throws ParseCompileError
      */
-    private function get_name()
+    private function get_name(): string
     {
         $off = $this->off;
         $name = $this->take_while(function ($c) {
@@ -184,7 +184,7 @@ class Parser
      * @return ASTNode[]
      * @throws ParseCompileError
      */
-    public static function parse($text, $name)
+    public static function parse(string $text, string $name): array
     {
         $obj = new self($text, $name);
         $res = $obj->parse_text(
@@ -198,7 +198,7 @@ class Parser
      * @param ASTNode[] $ast
      * @return ASTNode[]
      */
-    private static function combine_consecutive_text(array $ast)
+    private static function combine_consecutive_text(array $ast): array
     {
         $out = [];
 
@@ -239,7 +239,7 @@ class Parser
      * @param ASTNode[] $ast
      * @return ASTNode[]
      */
-    private static function tidyup_ast(array $ast)
+    private static function tidyup_ast(array $ast): array
     {
         foreach ($ast as $node) {
             if ($node instanceof TagNode) {
@@ -266,7 +266,7 @@ class Parser
      * @return ASTNode[][]
      * @throws ParseCompileError
      */
-    private function parse_text($escapes, $flags, $breakon = null, $separator = null, $nullaction = null, $opentag = null, $openedat = -1)
+    private function parse_text(string $escapes, int $flags, $breakon = null, $separator = null, $nullaction = null, $opentag = null, $openedat = -1): array
     {
         $elems = [];
         $astlist = [];
@@ -418,7 +418,7 @@ class Parser
      * @return ASTNode[][]
      * @throws ParseCompileError
      */
-    private function parse_short($shortname, $openedat)
+    private function parse_short(string $shortname, int $openedat): array
     {
         $tplname = $this->name;
 
@@ -441,7 +441,7 @@ class Parser
      * @return VariableNode
      * @throws ParseCompileError
      */
-    private function parse_var($openedat, $curly)
+    private function parse_var(int $openedat, bool $curly): VariableNode
     {
         $varnode = new VariableNode($this->name, $openedat);
         $varnode->name = $this->get_name();
@@ -491,7 +491,7 @@ class Parser
      * @return TagNode
      * @throws ParseCompileError
      */
-    private function parse_tag($openedat)
+    private function parse_tag(int $openedat)
     {
         $tplname = $this->name;
 

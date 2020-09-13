@@ -15,13 +15,13 @@ class TestStorage implements StorageAccess
         $this->dir = $dir;
     }
 
-    public function load($tpl, &$mode)
+    public function load(string $tpl, string &$mode)
     {
         $mode = StorageAccess::MODE_SOURCE;
         return file_get_contents($this->dir . DIRECTORY_SEPARATOR . $tpl);
     }
 
-    public function save($tpl, $data, $mode)
+    public function save(string $tpl, string $data, $mode): void
     {
         if ($mode != StorageAccess::MODE_TRANSCOMPILED) {
             return;

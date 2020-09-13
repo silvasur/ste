@@ -9,10 +9,10 @@ namespace kch42\ste;
 interface StorageAccess
 {
     /** @var int The template's source */
-    const MODE_SOURCE        = 0;
+    public const MODE_SOURCE        = 0;
 
     /** @var int The compiled template */
-    const MODE_TRANSCOMPILED = 1;
+    public const MODE_TRANSCOMPILED = 1;
 
     /**
      * Loading a template.
@@ -30,7 +30,7 @@ interface StorageAccess
      *
      * @return string|callable Either the sourcecode or a callable function (first, and only parameter: an {@see STECore} instance).
      */
-    public function load($tpl, &$mode);
+    public function load(string $tpl, string &$mode);
 
     /**
      * Saves a template.
@@ -41,5 +41,5 @@ interface StorageAccess
      *
      * @throws CantSaveTemplate If the template could not be saved.
      */
-    public function save($tpl, $data, $mode);
+    public function save(string $tpl, string $data, int $mode): void;
 }

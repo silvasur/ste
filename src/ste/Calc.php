@@ -20,7 +20,7 @@ class Calc
      * @return array
      * @throws RuntimeError
      */
-    private static function shunting_yard($infix_math)
+    private static function shunting_yard(string $infix_math): array
     {
         $operators = [
             "+" => ["l", 2],
@@ -112,7 +112,7 @@ class Calc
      * @return array
      * @throws RuntimeError
      */
-    private static function pop2(&$array)
+    private static function pop2(array &$array): array
     {
         $rv = [array_pop($array), array_pop($array)];
         if (array_search(null, $rv, true) !== false) {
@@ -126,7 +126,7 @@ class Calc
      * @return int|float
      * @throws RuntimeError
      */
-    private static function calc_rpn($rpn)
+    private static function calc_rpn(array $rpn)
     {
         $stack = [];
         foreach ($rpn as $token) {
@@ -174,7 +174,7 @@ class Calc
      * @return float|int
      * @throws RuntimeError
      */
-    public static function calc($expr)
+    public static function calc(string $expr)
     {
         return self::calc_rpn(self::shunting_yard($expr));
     }

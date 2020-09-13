@@ -15,7 +15,7 @@ class Scope implements \ArrayAccess
      * @return string[]
      * @throws RuntimeError
      */
-    private static function parse_name($name)
+    private static function parse_name(string $name): array
     {
         $remain = $name;
         $fields = [];
@@ -58,7 +58,7 @@ class Scope implements \ArrayAccess
      * @return mixed A reference to the resolved variable
      * @throws VarNotInScope
      */
-    private function &get_topvar_reference($name, $localonly)
+    private function &get_topvar_reference(string $name, bool $localonly)
     {
         if (array_key_exists($name, $this->vars)) {
             $ref = &$this->vars[$name];
@@ -80,7 +80,7 @@ class Scope implements \ArrayAccess
      * @return mixed A reference to the resolved variable
      * @throws RuntimeError
      */
-    public function &get_var_reference($name, $create_if_not_exist, $localonly=false)
+    public function &get_var_reference(string $name, bool $create_if_not_exist, $localonly=false)
     {
         $nullref = null;
 
@@ -133,7 +133,7 @@ class Scope implements \ArrayAccess
      * @param mixed $val
      * @throws RuntimeError
      */
-    public function set_var_by_name($name, $val)
+    public function set_var_by_name(string $name, $val): void
     {
         $ref = &$this->get_var_reference($name, true);
         $ref = $val;
@@ -144,7 +144,7 @@ class Scope implements \ArrayAccess
      * @param mixed $val
      * @throws RuntimeError
      */
-    public function set_local_var($name, $val)
+    public function set_local_var(string $name, $val): void
     {
         $ref = &$this->get_var_reference($name, true, true);
         $ref = $val;
@@ -155,7 +155,7 @@ class Scope implements \ArrayAccess
      * @return mixed Returns an empty string, if not found or unset
      * @throws RuntimeError
      */
-    public function get_var_by_name($name)
+    public function get_var_by_name(string $name)
     {
         $ref = $this->get_var_reference($name, false);
         return $ref === null ? "" : $ref;
@@ -164,7 +164,7 @@ class Scope implements \ArrayAccess
     /**
      * @return self
      */
-    public function new_subscope()
+    public function new_subscope(): self
     {
         $o = new self();
         $o->parent = $this;

@@ -18,7 +18,7 @@ class TagNode extends ASTNode
      * @param int $off
      * @param string $name
      */
-    public function __construct($tpl, $off, $name = "")
+    public function __construct(string $tpl, int $off, string $name = "")
     {
         parent::__construct($tpl, $off);
         $this->name = $name;
