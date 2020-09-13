@@ -59,7 +59,6 @@ class STEStandardLibrary
      * @param STECore $ste
      * @param array $params
      * @param callable $sub
-     * @return string
      * @throws RuntimeError
      */
     public static function inc($ste, $params, $sub)
@@ -75,7 +74,6 @@ class STEStandardLibrary
      * @param STECore $ste
      * @param array $params
      * @param callable $sub
-     * @return string
      * @throws RuntimeError
      */
     public static function dec($ste, $params, $sub)
@@ -136,7 +134,6 @@ class STEStandardLibrary
      * @param STECore $ste
      * @param array $params
      * @param callable $sub
-     * @return string
      * @throws RuntimeError
      */
     public static function split($ste, $params, $sub)
@@ -154,7 +151,6 @@ class STEStandardLibrary
      * @param STECore $ste
      * @param array $params
      * @param callable $sub
-     * @return string
      * @throws RuntimeError
      */
     public static function array_add($ste, $params, $sub)
@@ -175,7 +171,6 @@ class STEStandardLibrary
      * @param STECore $ste
      * @param array $params
      * @param callable $sub
-     * @return string
      * @throws RuntimeError
      */
     public static function array_filter($ste, $params, $sub)
