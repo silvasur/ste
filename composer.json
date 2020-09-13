@@ -8,6 +8,11 @@
 			"kch42\\ste\\": "src/ste"
 		}
 	},
+	"autoload-dev": {
+		"psr-4": {
+			"tests\\": "tests"
+		}
+	},
 	"license": "MIT",
 	"authors": [
 		{
@@ -22,6 +27,7 @@
 	"keywords": ["templating"],
 	"homepage": "http://github.com/silvasur/ste",
 	"require-dev": {
-		"phpdocumentor/phpdocumentor": "^2.9"
+		"phpdocumentor/phpdocumentor": "^2.9",
+		"phpunit/phpunit": "^9"
 	}
 }
