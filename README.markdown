@@ -15,7 +15,7 @@ Just put `kch42/ste` in your requirements (I suggest using the version `1.*`) an
 Requirements
 ------------
 
-PHP >= 5.3
+PHP >= 7.3
 
 Why should you use it?
 ----------------------
