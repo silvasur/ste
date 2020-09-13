@@ -173,20 +173,15 @@ class STECore
         return $output . $lastblock;
     }
 
-    /*
-     * Function: get_var_reference
+    /**
      * Get a reference to a template variable using a variable name.
      * This can be used,if your custom tag takes a variable name as a parameter.
      *
-     * Parameters:
-     *  $name - The variables name.
-     *  $create_if_not_exist - Should the variable be created, if it does not exist? Otherwise NULL will be returned, if the variable does not exist.
+     * @param string $name The variables name.
+     * @param bool $create_if_not_exist Should the variable be created, if it does not exist? Otherwise NULL will be returned, if the variable does not exist.
      *
-     * Throws:
-     *  <RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
-     *
-     * Returns:
-     *  A Reference to the variable.
+     * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
+     * @return mixed A Reference to the variable.
      */
     public function &get_var_reference($name, $create_if_not_exist)
     {
@@ -194,52 +189,42 @@ class STECore
         return $ref;
     }
 
-    /*
-     * Function: set_var_by_name
+    /**
      * Set a template variable by its name.
      * This can be used,if your custom tag takes a variable name as a parameter.
      *
-     * Parameters:
-     *  $name - The variables name.
-     *  $val - The new value.
+     * @param string $name The variables name.
+     * @param mixed $val The new value.
      *
-     * Throws:
-     *  <RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
+     * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
      */
     public function set_var_by_name($name, $val)
     {
         $this->scope->set_var_by_name($name, $val);
     }
 
-    /*
-     * Function: set_local_var
-     * Like <set_var_by_name>, but only sets the variable in the global scope (<set_var_by_name> will overwrite the variable in the parent scope, if it's defined there) .
+    /**
+     * Like {@see STECore::set_var_by_name}, but only sets the variable in the global scope
+     * ({@see STECore::set_var_by_name} will overwrite the variable in the parent scope, if it's defined there) .
      *
-     * Parameters:
-     *  $name - The variables name.
-     *  $val - The new value.
+     * @param string $name The variables name.
+     * @param mixed $val The new value.
      *
-     * Throws:
-     *  <RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
+     * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
      */
     public function set_local_var($name, $val)
     {
         $this->scope->set_local_var($name, $val);
     }
 
-    /*
-     * Function: get_var_by_name
+    /**
      * Get a template variable by its name.
      * This can be used,if your custom tag takes a variable name as a parameter.
      *
-     * Parameters:
-     *  $name - The variables name.
+     * @param string $name The variables name.
      *
-     * Throws:
-     *  <RuntimeError> if the variable name can not be parsed (e.g. unbalanced brackets).
-     *
-     * Returns:
-     *  The variables value.
+     * @throws RuntimeError If the variable name can not be parsed (e.g. unbalanced brackets).
+     * @return mixed The variables value
      */
     public function get_var_by_name($name)
     {
