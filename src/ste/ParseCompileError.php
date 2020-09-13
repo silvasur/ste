@@ -16,7 +16,8 @@ class ParseCompileError extends \Exception
         $this->msg = $msg;
         $this->tpl = $tpl;
         $this->off = $offset;
-        $this->message = "$msg (Template $tpl, Offset $offset)";
+
+        parent::__construct("$msg (Template $tpl, Offset $offset)", $code, $previous);
     }
 
     /**

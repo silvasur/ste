@@ -51,7 +51,7 @@ class STEStandardLibrary
         if (empty($params["array"])) {
             throw new RuntimeError("Missing array parameter in <ste:arraylen>.");
         }
-        $a = $ste->get_var_by_name($params["array"], false);
+        $a = $ste->get_var_by_name($params["array"]);
         return (is_array($a)) ? count($a) : "";
     }
 

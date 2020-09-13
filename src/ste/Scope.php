@@ -184,7 +184,7 @@ class Scope implements \ArrayAccess
     public function offsetExists($offset)
     {
         try {
-            $this->get_topvar_reference($offset);
+            $this->get_topvar_reference($offset, false);
             return true;
         } catch (VarNotInScope $e) {
             return false;
