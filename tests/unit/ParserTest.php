@@ -8,6 +8,7 @@ use kch42\ste\Parser;
 use kch42\ste\TextNode;
 use kch42\ste\VariableNode;
 use kch42\ste\TagNode;
+use kch42\ste\ParseCompileError;
 
 class ParserTest extends TestCase
 {
@@ -171,6 +172,86 @@ class ParserTest extends TestCase
                 ]),
                 new VariableNode('-', 34, 'bar', []),
             ]],
+        ];
+    }
+
+    /**
+     * @dataProvider failsToParseDataProvider
+     * @param string $input
+     */
+    public function testFailsToParse(string $input)
+    {
+        self::expectException(ParseCompileError::class);
+
+        Parser::parse($input, '-');
+    }
+
+    public function failsToParseDataProvider()
+    {
+        return [
+            // Incomplete tag
+            ['<ste:foo'],
+            ['<ste:'],
+            ['<ste:>'],
+            ['<ste:foo /'],
+
+            // Incomplete closing tag
+            ['<ste:foo>bar</'],
+            ['<ste:foo>bar</ste'],
+            ['<ste:foo>bar</ste:'],
+            ['<ste:foo>bar</ste:foo'],
+            ['<ste:foo></'],
+            ['<ste:foo></ste'],
+            ['<ste:foo></ste:'],
+            ['<ste:foo></ste:foo'],
+
+            // Missing parameter value
+            ['<ste:foo bar= />'],
+
+            // Unclosed parameter
+            ['<ste:foo bar=" />'],
+            ['<ste:foo bar="baz />'],
+
+            // Unclosed tag
+            ['<ste:foo>bar'],
+
+            // Trailing closing tag
+            ['</ste:foo>'],
+            ['abc</ste:foo>'],
+            ['<ste:foo></ste:foo></ste:foo>'],
+
+            // Open/close tag mismatch
+            ['<ste:foo>bar</ste:baz>'],
+
+            // Nesting error
+            ['<ste:foo><ste:bar></ste:foo></ste:bar>'],
+
+            // Invalid parameter name
+            ['<ste:foo $bar />'],
+
+            // Unclosed variable
+            ['${foo'],
+            ['${${foo}'],
+
+            // Unclosed array
+            ['$foo[bar'],
+
+            // Incomplete variable
+            ['$'],
+            ['foo$'],
+            ['foo${}'],
+
+            // Incomplete shorthands
+            ['?{foo|bar}'],
+            ['?{foo|bar|baz'],
+            ['?{foo|'],
+            ['?{foo}'],
+            ['?{'],
+            ['~{foo|bar}'],
+            ['~{foo|bar|baz'],
+            ['~{foo|'],
+            ['~{foo}'],
+            ['~{'],
         ];
     }
 }
