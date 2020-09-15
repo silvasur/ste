@@ -17,10 +17,14 @@ class TagNode extends ASTNode
      * @param string $tpl
      * @param int $off
      * @param string $name
+     * @param ASTNode[][] $params
+     * @param ASTNode[] $sub
      */
-    public function __construct(string $tpl, int $off, string $name = "")
+    public function __construct(string $tpl, int $off, string $name = "", array $params = [], array $sub = [])
     {
         parent::__construct($tpl, $off);
         $this->name = $name;
+        $this->params = $params;
+        $this->sub = $sub;
     }
 }

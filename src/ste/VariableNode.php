@@ -8,7 +8,21 @@ class VariableNode extends ASTNode
     public $name;
 
     /** @var ASTNode[][] */
-    public $arrayfields = [];
+    public $arrayfields;
+
+    /**
+     * @param string $tpl
+     * @param int $off
+     * @param string $name
+     * @param ASTNode[][] $arrayfields
+     */
+    public function __construct(string $tpl, int $off, string $name, array $arrayfields)
+    {
+        parent::__construct($tpl, $off);
+
+        $this->name = $name;
+        $this->arrayfields = $arrayfields;
+    }
 
     /**
      * @return string

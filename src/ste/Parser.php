@@ -443,11 +443,14 @@ class Parser
      */
     private function parse_var(int $openedat, bool $curly): VariableNode
     {
-        $varnode = new VariableNode($this->name, $openedat);
-        $varnode->name = $this->get_name();
+        $varname = $this->get_name();
+
+        $arrayfields = [];
         if (!$this->eof()) {
-            $varnode->arrayfields = $this->parse_array();
+            $arrayfields = $this->parse_array();
         }
+
+        $varnode = new VariableNode($this->name, $openedat, $varname, $arrayfields);
 
         if ($curly && ($this->next() != "}")) {
             throw new ParseCompileError("Unclosed '\${'", $this->name, $openedat);
