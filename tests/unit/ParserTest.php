@@ -172,6 +172,21 @@ class ParserTest extends TestCase
                 ]),
                 new VariableNode('-', 34, 'bar', []),
             ]],
+
+            ['<ste:comment>ignored</ste:comment>', []],
+
+            ['foo<ste:comment>ignored</ste:comment>bar', [
+                // These are not two TextNodes as the parser will collapse adjacent TextNodes
+                new TextNode('-', 0, 'foobar'),
+            ]],
+
+            ['<ste:rawtext><ste:foo a="bla">$abc</ste:foo></ste:rawtext>', [
+                new TextNode('-', 0, '<ste:foo a="bla">$abc</ste:foo>'),
+            ]],
+
+            ['<ste:rawtext><ste:foo a="bla"><ste:rawtext>$abc</ste:foo></ste:rawtext>', [
+                new TextNode('-', 0, '<ste:foo a="bla"><ste:rawtext>$abc</ste:foo>'),
+            ]],
         ];
     }
 
@@ -252,6 +267,10 @@ class ParserTest extends TestCase
             ['~{foo|'],
             ['~{foo}'],
             ['~{'],
+
+            // Unclosing pseudotags
+            ['<ste:comment>foo'],
+            ['<ste:rawtext>foo'],
         ];
     }
 }
