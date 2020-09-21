@@ -1,6 +1,6 @@
 <?php
 
-namespace kch42\ste;
+namespace r7r\ste;
 
 /**
  * An Exception that a tag can throw, if a non-fatal runtime error occurred.

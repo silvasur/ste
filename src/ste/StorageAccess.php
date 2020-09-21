@@ -1,6 +1,6 @@
 <?php
 
-namespace kch42\ste;
+namespace r7r\ste;
 
 /**
  * A StorageAccess implementation is used to access the templates from any storage.

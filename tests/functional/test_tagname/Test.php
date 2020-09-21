@@ -2,7 +2,7 @@
 
 namespace tests\functional\test_tagname;
 
-use kch42\ste\STECore;
+use r7r\ste\STECore;
 use tests\functional\BaseTest;
 
 class Test extends BaseTest
@@ -20,7 +20,7 @@ class Test extends BaseTest
             "foo123baz",
             "x0123",
         ];
-    
+
         foreach ($names as $name) {
             $ste->register_tag(
                 $name,

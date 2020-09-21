@@ -3,7 +3,7 @@
 
 namespace tests\functional;
 
-use kch42\ste\StorageAccess;
+use r7r\ste\StorageAccess;
 
 class TestStorage implements StorageAccess
 {

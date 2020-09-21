@@ -1,6 +1,6 @@
 <?php
 
-namespace kch42\ste;
+namespace r7r\ste;
 
 /**
  * An exception thrown by the parser or compiler

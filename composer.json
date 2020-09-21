@@ -1,11 +1,11 @@
 {
-	"name": "kch42/ste",
+	"name": "r7r/ste",
 	"require": {
 		"php": ">=7.3.0"
 	},
 	"autoload": {
 		"psr-4": {
-			"kch42\\ste\\": "src/ste"
+			"r7r\\ste\\": "src/ste"
 		}
 	},
 	"autoload-dev": {

@@ -1,6 +1,6 @@
 <?php
 
-namespace kch42\ste;
+namespace r7r\ste;
 
 /**
  * Class Calc contains static methods needed by <ste:calc />

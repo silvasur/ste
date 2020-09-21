@@ -1,6 +1,6 @@
 <?php
 
-namespace kch42\ste;
+namespace r7r\ste;
 
 /**
  * Contains the STE compiler. You'll only need this, if you want to manually compile a STE template.
@@ -27,23 +27,23 @@ class Transcompiler
 
         /** @var callable[] builtins */
         self::$builtins = [
-            "if" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_if"]),
-            "cmp" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_cmp"]),
-            "not" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_not"]),
-            "even" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_even"]),
-            "for" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_for"]),
-            "foreach" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_foreach"]),
-            "infloop" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_infloop"]),
-            "break" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_break"]),
-            "continue" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_continue"]),
-            "block" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_block"]),
-            "load" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_load"]),
-            "mktag" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_mktag"]),
-            "tagcontent" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_tagcontent"]),
-            "set" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_set"]),
-            "setlocal" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_setlocal"]),
-            "get" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_get"]),
-            "calc" => self::mark_builtin_callable(["\\kch42\\ste\\Transcompiler", "builtin_calc"])
+            "if" => self::mark_builtin_callable([self::class, "builtin_if"]),
+            "cmp" => self::mark_builtin_callable([self::class, "builtin_cmp"]),
+            "not" => self::mark_builtin_callable([self::class, "builtin_not"]),
+            "even" => self::mark_builtin_callable([self::class, "builtin_even"]),
+            "for" => self::mark_builtin_callable([self::class, "builtin_for"]),
+            "foreach" => self::mark_builtin_callable([self::class, "builtin_foreach"]),
+            "infloop" => self::mark_builtin_callable([self::class, "builtin_infloop"]),
+            "break" => self::mark_builtin_callable([self::class, "builtin_break"]),
+            "continue" => self::mark_builtin_callable([self::class, "builtin_continue"]),
+            "block" => self::mark_builtin_callable([self::class, "builtin_block"]),
+            "load" => self::mark_builtin_callable([self::class, "builtin_load"]),
+            "mktag" => self::mark_builtin_callable([self::class, "builtin_mktag"]),
+            "tagcontent" => self::mark_builtin_callable([self::class, "builtin_tagcontent"]),
+            "set" => self::mark_builtin_callable([self::class, "builtin_set"]),
+            "setlocal" => self::mark_builtin_callable([self::class, "builtin_setlocal"]),
+            "get" => self::mark_builtin_callable([self::class, "builtin_get"]),
+            "calc" => self::mark_builtin_callable([self::class, "builtin_calc"])
         ];
     }
 
@@ -156,7 +156,7 @@ class Transcompiler
                 },
                 $operators
             ));
-            $code .= "default: throw new \\kch42\\ste\\RuntimeError('Unknown operator in <ste:cmp>.');\n}\n";
+            $code .= "default: throw new \\r7r\\ste\\RuntimeError('Unknown operator in <ste:cmp>.');\n}\n";
         }
         return $code;
     }
@@ -235,7 +235,7 @@ class Transcompiler
         $loopbody = self::indent_code("{\n" . self::loopbody(self::indent_code($loopbody)) . "\n}\n");
 
         if ($step === null) {
-            $code .= "if(\$${loopname}_step == 0)\n\tthrow new \\kch42\\ste\\RuntimeError('step can not be 0 in <ste:for>.');\n";
+            $code .= "if(\$${loopname}_step == 0)\n\tthrow new \\r7r\\ste\\RuntimeError('step can not be 0 in <ste:for>.');\n";
             $code .= "if(\$${loopname}_step > 0)\n{\n";
             $code .= "\tfor(\$${loopname}_counter = \$${loopname}_start; \$${loopname}_counter <= \$${loopname}_stop; \$${loopname}_counter += \$${loopname}_step)\n";
             $code .= $loopbody;
@@ -342,7 +342,7 @@ class Transcompiler
      */
     private static function builtin_break(TagNode $ast): string
     {
-        return "throw new \\kch42\\ste\\BreakException();\n";
+        return "throw new \\r7r\\ste\\BreakException();\n";
     }
 
     /**
@@ -351,7 +351,7 @@ class Transcompiler
      */
     private static function builtin_continue(TagNode $ast): string
     {
-        return "throw new \\kch42\\ste\\ContinueException();\n";
+        return "throw new \\r7r\\ste\\ContinueException();\n";
     }
 
     /**
@@ -421,7 +421,7 @@ class Transcompiler
             $code .= self::_transcompile($ast->params["mandatory"]);
             $code .= "\$outputstack_i--;\n\$mandatory_params = explode('|', array_pop(\$outputstack));\n";
 
-            $fxbody .= "foreach(\$mandatory_params as \$mp)\n{\n\tif(!isset(\$params[\$mp]))\n\t\tthrow new \\kch42\\ste\\RuntimeError(\"\$mp missing in <ste:\" . $tagname . \">.\");\n}";
+            $fxbody .= "foreach(\$mandatory_params as \$mp)\n{\n\tif(!isset(\$params[\$mp]))\n\t\tthrow new \\r7r\\ste\\RuntimeError(\"\$mp missing in <ste:\" . $tagname . \">.\");\n}";
         }
 
         $fxbody .= self::_transcompile($ast->sub);
@@ -528,7 +528,7 @@ class Transcompiler
 
     private static function loopbody(string $code): string
     {
-        return "try\n{\n" . self::indent_code($code) . "\n}\ncatch(\\kch42\\ste\\BreakException \$e) { break; }\ncatch(\\kch42\\ste\\ContinueException \$e) { continue; }\n";
+        return "try\n{\n" . self::indent_code($code) . "\n}\ncatch(\\r7r\\ste\\BreakException \$e) { break; }\ncatch(\\r7r\\ste\\ContinueException \$e) { continue; }\n";
     }
 
     /**

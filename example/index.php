@@ -3,7 +3,7 @@
 # Example program to demonstrate the STE...
 
 require_once(dirname(__FILE__) . "/../steloader.php");
-use \kch42\ste;
+use r7r\ste;
 
 # Initialize an STECore instance
 $ste = new ste\STECore(

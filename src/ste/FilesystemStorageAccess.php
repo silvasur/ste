@@ -1,6 +1,6 @@
 <?php
 
-namespace kch42\ste;
+namespace r7r\ste;
 
 /**
  * The default {@see StorageAccess} implementation for loading / saving templates into a directory structure.

@@ -2,7 +2,7 @@
 
 namespace ste;
 
-/* This file is for backwards compatibility only. Use an autoloader and the \kch42\ste namespace in new applications instead! */
+/* This file is for backwards compatibility only. Use an autoloader and the \r7r\ste namespace in new applications instead! */
 
 require_once(__DIR__ . "/src/ste/Misc.php");
 
@@ -38,54 +38,54 @@ require_once(__DIR__ . "/src/ste/STECore.php");
 
 /* Providing "proxy classes", so old applications can continue using the ste namespace */
 
-class ASTNode extends \kch42\ste\ASTNode
+class ASTNode extends \r7r\ste\ASTNode
 {
 }
-class TagNode extends \kch42\ste\TagNode
+class TagNode extends \r7r\ste\TagNode
 {
 }
-class TextNode extends \kch42\ste\TextNode
+class TextNode extends \r7r\ste\TextNode
 {
 }
-class VariableNode extends \kch42\ste\VariableNode
+class VariableNode extends \r7r\ste\VariableNode
 {
 }
-class ParseCompileError extends \kch42\ste\ParseCompileError
+class ParseCompileError extends \r7r\ste\ParseCompileError
 {
 }
-class RuntimeError extends \kch42\ste\RuntimeError
+class RuntimeError extends \r7r\ste\RuntimeError
 {
 }
-class FatalRuntimeError extends \kch42\ste\FatalRuntimeError
+class FatalRuntimeError extends \r7r\ste\FatalRuntimeError
 {
 }
-class StorageAccessFailure extends \kch42\ste\StorageAccessFailure
+class StorageAccessFailure extends \r7r\ste\StorageAccessFailure
 {
 }
-class CantLoadTemplate extends \kch42\ste\CantLoadTemplate
+class CantLoadTemplate extends \r7r\ste\CantLoadTemplate
 {
 }
-class CantSaveTemplate extends \kch42\ste\CantSaveTemplate
+class CantSaveTemplate extends \r7r\ste\CantSaveTemplate
 {
 }
-class FilesystemStorageAccess extends \kch42\ste\FilesystemStorageAccess
+class FilesystemStorageAccess extends \r7r\ste\FilesystemStorageAccess
 {
 }
-class Parser extends \kch42\ste\Parser
+class Parser extends \r7r\ste\Parser
 {
 }
-class Transcompiler extends \kch42\ste\Transcompiler
+class Transcompiler extends \r7r\ste\Transcompiler
 {
 }
-class STECore extends \kch42\ste\STECore
+class STECore extends \r7r\ste\STECore
 {
 }
 
-interface StorageAccess extends \kch42\ste\StorageAccess
+interface StorageAccess extends \r7r\ste\StorageAccess
 {
 }
 
 /* We also put the storage mode constants here (they were outside of the interface before for some reason I can't remember...) */
 
-const MODE_SOURCE = \kch42\ste\StorageAccess::MODE_SOURCE;
-const MODE_TRANSCOMPILED = \kch42\ste\StorageAccess::MODE_TRANSCOMPILED;
+const MODE_SOURCE = \r7r\ste\StorageAccess::MODE_SOURCE;
+const MODE_TRANSCOMPILED = \r7r\ste\StorageAccess::MODE_TRANSCOMPILED;

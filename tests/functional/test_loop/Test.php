@@ -2,7 +2,7 @@
 
 namespace tests\functional\test_loop;
 
-use kch42\ste\STECore;
+use r7r\ste\STECore;
 use tests\functional\BaseTest;
 
 class Test extends BaseTest

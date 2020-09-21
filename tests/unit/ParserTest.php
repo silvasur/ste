@@ -4,11 +4,11 @@
 namespace tests\unit;
 
 use PHPUnit\Framework\TestCase;
-use kch42\ste\Parser;
-use kch42\ste\TextNode;
-use kch42\ste\VariableNode;
-use kch42\ste\TagNode;
-use kch42\ste\ParseCompileError;
+use r7r\ste\Parser;
+use r7r\ste\TextNode;
+use r7r\ste\VariableNode;
+use r7r\ste\TagNode;
+use r7r\ste\ParseCompileError;
 
 class ParserTest extends TestCase
 {

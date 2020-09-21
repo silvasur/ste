@@ -4,7 +4,7 @@
 namespace tests\functional;
 
 use PHPUnit\Framework\TestCase;
-use kch42\ste\STECore;
+use r7r\ste\STECore;
 
 abstract class BaseTest extends TestCase
 {
