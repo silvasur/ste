@@ -9,7 +9,7 @@ Get it via composer / packagist
 
 [Composer](https://getcomposer.org) is a dependency manager and package manager for PHP. Using composer is the recommended way of installing STE.
 
-Just put `r7r/ste` in your requirements (I suggest using the version `1.*`) and execute `composer install`. Then include composer's autoloader and you can simply use all stuff in the `\r7r\ste` namespace without further `require`s or `include`s. Awesome!
+Just put `r7r/ste` in your requirements (I suggest using the version `2.*`) and execute `composer install`. Then include composer's autoloader and you can simply use all stuff in the `\r7r\ste` namespace without further `require`s or `include`s. Awesome!
 
 
 Requirements
