@@ -307,11 +307,11 @@ class STECore
     /**
      * Test, if a text represents false (an empty / only whitespace text) or true (everything else).
      *
-     * @param string $txt The text to test.
+     * @param mixed $txt The text to test.
      *
      * @return bool
      */
-    public function evalbool(string $txt): bool
+    public function evalbool($txt): bool
     {
         return trim(@(string)$txt) != "";
     }
