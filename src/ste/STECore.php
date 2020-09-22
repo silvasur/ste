@@ -123,7 +123,7 @@ class STECore
                     throw new RuntimeError("Can not call tag \"$name\": Does not exist.");
                 }
             }
-            return call_user_func($this->tags[$name], $this, $params, $sub);
+            return (string)call_user_func($this->tags[$name], $this, $params, $sub);
         } catch (RuntimeError $e) {
             if (!$this->mute_runtime_errors) {
                 return "RuntimeError occurred on tag '$name': " . $e->getMessage();
