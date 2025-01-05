@@ -4,6 +4,10 @@ STE Template Engine
 The STE Template Engine (STE) is a template engine for the PHP programming
 language.
 
+## ⚠️ No longer maintained ⚠️
+
+For now, I no longer maintain Ratatöskr / STE. I don't use it myself any more and to my knowledge nobody else does either. The time I'd need to invest to keep up with new PHP versions and other maintenance chores therefore don't seem worth it. I might revisit this in the future, but for now, I want to focus on other things.
+
 Get it via composer / packagist
 -------------------------------
 
@@ -35,5 +39,3 @@ Documentation
 The `docu` directory contains the documentation of the template language.
 If you need the documentation of the php code / the API, you can create it with the `mkdocu.sh` script.
 This is done using [phpDocumentor](https://phpdoc.org/). It will be installed as a dev-depencency by composer.
-
-There is also a mirror of the documentation [here](http://r7r.silvasur.net/ste_docu/).
